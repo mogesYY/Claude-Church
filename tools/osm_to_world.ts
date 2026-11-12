@@ -26,7 +26,7 @@ const OUT = path.join(ROOT, 'public/world');
 const CHUNK = 256;
 /** best-guess coordinates of 1260 5th St (used only if OSM has no address match) */
 const CHURCH_GUESS = { lat: 49.8322, lon: -99.9456 };
-const RADIUS = Number(process.env.RADIUS ?? 2300); // metres kept around the church (covers downtown + river edge)
+const RADIUS = Number(process.env.RADIUS ?? 620); // metres kept around the church — only what the story needs
 
 // ---------- helpers ----------
 function mulberry(seed: number) { let a = seed >>> 0; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -162,7 +162,7 @@ if (source === 'fallback') {
 // ---------- classify ----------
 const nodes = new Map<number, Pt>();
 for (const e of elements) if (e.type === 'node') nodes.set(e.id, proj(e.lat!, e.lon!));
-const inRange = (p: Pt) => Math.abs(p[0]) < RADIUS && Math.abs(p[1]) < RADIUS * 1.6 && p[1] < RADIUS * 0.75;
+const inRange = (p: Pt) => (source === 'osm' ? Math.abs(p[0]) < RADIUS && Math.abs(p[1]) < RADIUS : Math.abs(p[0]) < 2300 && Math.abs(p[1]) < 3700 && p[1] < 1700);
 
 const ROADW: Record<string, [number, number, boolean]> = { // width, lanes, sidewalks
   motorway: [15, 4, false], trunk: [15, 4, true], primary: [15, 4, true], secondary: [12.5, 2, true], tertiary: [11, 2, true],
@@ -181,12 +181,17 @@ for (const e of elements) {
   const pts = e.nodes.map((n) => nodes.get(n)).filter(Boolean) as Pt[];
   if (pts.length < 2 || !pts.some(inRange)) continue;
   if (t.highway && ROADW[t.highway]) {
-    if (t.area === 'yes' || t.footway === 'sidewalk' || t.footway === 'crossing' || t.access === 'private' && t.highway !== 'service') continue;
+    if (t.area === 'yes' || t.footway === 'sidewalk' || t.footway === 'crossing' || t.access === 'private') continue;
+    // driveways and parking aisles cut straight through house lots: they are not drawn or driven
+    if (t.highway === 'service' && (t.service === 'driveway' || t.service === 'parking_aisle' || t.service === 'drive-through')) continue;
+    if (t.highway === 'service' && t.service !== 'alley' && !t.name) { let L = 0; for (let i = 0; i < pts.length - 1; i++) L += Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); if (L < 60) continue; }
+    if (!pts.every((p) => Math.abs(p[0]) < RADIUS * 1.25 && Math.abs(p[1]) < RADIUS * 1.25) && source === 'osm') { /* clip long roads to the play area */ }
     let [w, lanes, sw] = ROADW[t.highway];
     if (t.lanes && Number(t.lanes) > 0 && lanes > 0) { lanes = Number(t.lanes); w = Math.max(w, lanes * 3.4 + 1.5); }
     if (t.highway === 'service' && t.service === 'parking_aisle') w = 5.5;
     const drivable = lanes > 0;
-    roads.push({ id: e.id, kind: t.highway, name: t.name ?? '', w, lanes, oneway: t.oneway === 'yes' || t.junction === 'roundabout', pts: pts.map((p) => [r1(p[0]), r1(p[1])]), sidewalk: sw, surface: t.surface ?? (t.service === 'alley' ? 'gravel' : 'asphalt') });
+    let rp = pts; if (source === 'osm') { const lim = RADIUS * 1.08; const ins = pts.map((p) => Math.abs(p[0]) < lim && Math.abs(p[1]) < lim); const f = ins.indexOf(true), l = ins.lastIndexOf(true); if (f < 0 || l - f < 1) continue; rp = pts.slice(f, l + 1); e.nodes = e.nodes.filter((n) => nodes.has(n)).slice(f, l + 1); }
+    roads.push({ id: e.id, kind: t.highway, name: t.name ?? '', w, lanes, oneway: t.oneway === 'yes' || t.junction === 'roundabout', pts: rp.map((p) => [r1(p[0]), r1(p[1])]), sidewalk: sw, surface: t.surface ?? (t.service === 'alley' ? 'gravel' : 'asphalt') });
     roadNodeIds.push(drivable ? e.nodes.filter((n) => nodes.has(n)) : []);
     if (drivable) for (const n of e.nodes) nodeUse.set(n, (nodeUse.get(n) ?? 0) + 1);
   } else if (t.building) {
@@ -210,6 +215,18 @@ for (const e of elements) {
       areas.push({ kind: 'water', name: t.name ?? 'river', pts: [...L, ...R.reverse()] });
     }
   }
+}
+
+// ---------- sanity: no building may sit on a road ----------
+{
+  const before = buildings.length;
+  for (let i = buildings.length - 1; i >= 0; i--) {
+    const b = buildings[i]; let bad = false;
+    const test = [centroid(b.pts), ...b.pts];
+    for (const r of roads) { if (r.lanes === 0) continue; const hw = r.w / 2 + 0.6; for (let k = 0; k < r.pts.length - 1 && !bad; k++) { const A = r.pts[k], B = r.pts[k + 1]; if (Math.min(A[0], B[0]) - 30 > test[0][0] || Math.max(A[0], B[0]) + 30 < test[0][0] || Math.min(A[1], B[1]) - 30 > test[0][1] || Math.max(A[1], B[1]) + 30 < test[0][1]) continue; for (const p of test) if (segDist(p, A, B) < hw) { bad = true; break; } } if (bad) break; }
+    if (bad) buildings.splice(i, 1);
+  }
+  if (before !== buildings.length) console.log(`removed ${before - buildings.length} footprints that overlapped a road`);
 }
 
 // ---------- church placement ----------
@@ -255,7 +272,7 @@ const roadClear = (p: Pt, r: number) => { const cx = Math.floor(p[0] / cellSize)
 const blockers = areas.filter((a) => a.kind !== 'wood');
 const inArea = (p: Pt) => blockers.some((a) => pip(p, a.pts));
 let genCount = 0, gid = -1;
-for (const r of roads) {
+for (const r of source === 'osm' ? [] : roads) { // real footprints exist: never invent houses
   if (!['residential', 'tertiary', 'unclassified', 'secondary'].includes(r.kind)) continue;
   const rnd = mulberry(r.id * 7919 + 13);
   for (let i = 0; i < r.pts.length - 1; i++) {

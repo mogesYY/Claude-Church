@@ -23,7 +23,7 @@ URL options: `?q=low|high|ultra` graphics preset · `?chapter=1..5` jump to a ch
 | Enter / exit car | F | Y | 🚗 |
 | Drive | W/S, A/D, Space brake | RT/LT, stick, B | ▲ ▼ + stick |
 | Lights · wipers · horn · radio | L · V · H · R | D-pad / R3 | — |
-| Phone (map, missions, settings, photo mode) | Tab or P | Start | ☰ |
+| Pause menu (map, missions, settings, photo mode, quit) | Esc, Tab or P | Start | ☰ |
 
 ## Tech
 three.js `WebGPURenderer` (automatic WebGL2 fallback) · TypeScript · Vite · Rapier physics (character controller + raycast vehicles) · everything procedural (no downloaded art) · OpenStreetMap importer (`tools/osm_to_world.ts`) · `three-gpu-pathtracer` photo mode · English + Amharic UI.

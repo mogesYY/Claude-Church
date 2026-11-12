@@ -28,9 +28,11 @@ export class Ctx {
   async say(key: string, hold = false) {
     const l = this.story.dialog[key] ?? { en: key }; const g = this.g; this.check();
     g.hud.subtitle(g.i18n.pick(l.sp ?? '', l.spAm), l.en, l.am); g.input.take('skip'); g.input.take('interact');
-    const dur = this.g.auto ? 0.25 : hold ? 1e9 : 1.6 + l.en.length * 0.058; let t = 0;
+    // spoken voice: Amharic if the device has an Amharic voice and that language is selected, otherwise English
+    if (!g.auto) { const useAm = g.i18n.lang === 'am' && !!l.am; if (!(useAm && g.audio.speak(l.am!, 'am', l.sp ?? ''))) g.audio.speak(l.en, 'en', l.sp ?? 'narrator'); }
+    const dur = this.g.auto ? 0.25 : hold ? 1e9 : 2.2 + l.en.length * 0.072; let t = 0;
     while (t < dur) { await g.nextFrame(); this.check(); t += g.dt; if (t > 0.35 && (g.input.take('skip') || g.input.take('interact'))) break; }
-    g.hud.hideSubtitle(); await this.wait(0.12);
+    g.hud.hideSubtitle(); g.audio.hush(); await this.wait(0.12);
   }
   async talk(...keys: string[]) { for (const k of keys) await this.say(k); }
 
@@ -130,7 +132,7 @@ export class Story {
     for (const p of this.props) g.engine.scene.remove(p); this.props = [];
     if (g.mode === 'car') g.exitCar(true);
     for (const c of this.cars) { g.traffic.keep.delete(c); } this.cars = []; g.traffic.clear(true);
-    g.weather.clearFires(); g.weather.smokeSources = []; g.audio.chant(null); g.audio.keberoOn = g.audio.tsenatselOn = false; g.audio.setFire(0); g.audio.setCrowd(0);
+    g.weather.clearFires(); g.weather.smokeSources = []; g.audio.chant(null); g.audio.hush(); g.audio.music(null); g.audio.keberoOn = g.audio.tsenatselOn = false; g.audio.setFire(0); g.audio.setCrowd(0);
     const r = g.church.refs; r.setCandles(0); r.censerLit = false; r.streamOn = false; r.umbrellas.visible = true; g.church.doorWant = 0;
     g.hud.objective(''); g.hud.prompt(null); g.hud.hideSubtitle(); g.hud.setTarget(null); g.hud.letterbox(false); g.hud.timer(''); this.marker(null); g.cutCam = null; g.input.enabled = true; g.scriptSpeed = 0; g.shoesOff = false; g.isaac.hold('R', null); g.isaac.hold('L', null); g.isaac.stop();
     g.player.setCollides(true); if (g.mode !== 'photo') g.mode = 'foot'; document.querySelector('.minigame')?.remove();

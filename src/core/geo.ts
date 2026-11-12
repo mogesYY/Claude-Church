@@ -128,3 +128,12 @@ export const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b
 export const smooth = (a: number, b: number, v: number) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 export function pointInPoly(x: number, z: number, poly: number[][]) { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[i], b = poly[j]; if ((a[1] > z) !== (b[1] > z) && x < ((b[0] - a[0]) * (z - a[1])) / (b[1] - a[1]) + a[0]) c = !c; } return c; }
 export function segDist(px: number, pz: number, ax: number, az: number, bx: number, bz: number) { const dx = bx - ax, dz = bz - az; const l2 = dx * dx + dz * dz || 1e-9; let t = ((px - ax) * dx + (pz - az) * dz) / l2; t = Math.max(0, Math.min(1, t)); return Math.hypot(px - ax - t * dx, pz - az - t * dz); }
+
+/** derive a tangent-space normal map from a canvas texture's brightness (cheap surface relief without downloads) */
+export function normalFrom(tex: THREE.Texture, strength = 2): THREE.CanvasTexture {
+  const src = tex.image as HTMLCanvasElement; const w = src.width, h = src.height; const d = src.getContext('2d')!.getImageData(0, 0, w, h).data;
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const ctx = c.getContext('2d')!; const out = ctx.createImageData(w, h);
+  const L = (x: number, y: number) => { const i = (((y + h) % h) * w + ((x + w) % w)) * 4; return (d[i] + d[i + 1] + d[i + 2]) / 765; };
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const dx = (L(x + 1, y) - L(x - 1, y)) * strength, dy = (L(x, y + 1) - L(x, y - 1)) * strength; const l = Math.hypot(dx, dy, 1); const i = (y * w + x) * 4; out.data[i] = (-dx / l * 0.5 + 0.5) * 255; out.data[i + 1] = (dy / l * 0.5 + 0.5) * 255; out.data[i + 2] = (1 / l * 0.5 + 0.5) * 255; out.data[i + 3] = 255; }
+  ctx.putImageData(out, 0, 0); const t = new THREE.CanvasTexture(c); t.wrapS = tex.wrapS; t.wrapT = tex.wrapT; t.colorSpace = THREE.NoColorSpace; t.anisotropy = 4; return t;
+}

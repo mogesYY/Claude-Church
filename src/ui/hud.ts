@@ -11,7 +11,7 @@ export class Hud {
   private barTop!: HTMLElement; private barBot!: HTMLElement; private phoneEl!: HTMLElement; private titleEl!: HTMLElement; private touchEl!: HTMLElement; private loadEl!: HTMLElement; private timerEl!: HTMLElement;
   waypoint: { x: number; z: number } | null = null; target: { x: number; z: number } | null = null; route: number[][] = [];
   phoneOpen = false; titleOpen = false; private toastT = 0; private routeT = 0; private tab = 'map';
-  hidden = false; private miniTick = 0;
+  hidden = false; private miniTick = 0; showFps = true; private fpsEl!: HTMLElement; private fpsT = 0;
 
   constructor(private g: Game) {
     const r = this.root;
@@ -22,6 +22,7 @@ export class Hud {
     );
     const mw = el('div', 'miniwrap'); this.mini = document.createElement('canvas'); this.mini.width = this.mini.height = 200; mw.append(this.mini); r.append(mw);
     r.append((this.phoneEl = el('div', 'phone')), (this.titleEl = el('div', 'title')), (this.touchEl = el('div', 'touch')), (this.loadEl = el('div', 'loading', `<div class="lt">${g.i18n.t('title')}</div><div class="ls">${g.i18n.t('loading')}</div>`)));
+    this.fpsEl = el('div', 'fps'); r.append(this.fpsEl); try { this.showFps = localStorage.getItem('ma.fps') !== '0'; } catch { /* ignore */ }
     this.buildMapBase(); this.buildTouch();
     g.i18n.listeners.push(() => { if (this.phoneOpen) this.renderPhone(); if (this.titleOpen) this.showTitle(); });
   }
@@ -73,7 +74,7 @@ export class Hud {
     x.save(); x.translate(W / 2, W / 2); x.rotate(rot); x.fillStyle = '#ff6a5a'; x.font = '700 12px Noto Sans'; x.textAlign = 'center'; x.fillText('N', 0, -W / 2 + 16); x.restore();
   }
 
-  setWaypoint(p: { x: number; z: number } | null) { this.waypoint = p; this.routeT = 0; this.toast(this.g.i18n.t(p ? 'waypointSet' : 'waypointClear')); }
+  setWaypoint(p: { x: number; z: number } | null) { this.waypoint = p; this.routeT = 0; this.updateRoute(true); this.toast(this.g.i18n.t(p ? 'waypointSet' : 'waypointClear')); }
   setTarget(p: { x: number; z: number } | null) { this.target = p; this.routeT = 0; }
 
   // ---------------------------------------------------------------- text
@@ -81,7 +82,7 @@ export class Hud {
   prompt(text: string | null) { const key = this.g.input.lastDevice === 'pad' ? 'Ⓧ' : this.g.input.lastDevice === 'touch' ? '●' : 'E'; this.promptEl.innerHTML = text ? `<b>${key}</b> ${text}` : ''; this.promptEl.style.opacity = text ? '1' : '0'; }
   promptRaw(html: string | null) { this.promptEl.innerHTML = html ?? ''; this.promptEl.style.opacity = html ? '1' : '0'; }
   subtitle(speaker: string, en: string, am?: string) { const l = this.g.i18n.lang; const main = l === 'am' && am ? am : en, alt = l === 'am' ? en : am; this.subEl.innerHTML = `${speaker ? `<div class="sp">${speaker}</div>` : ''}<div class="l1">${main}</div>${alt ? `<div class="l2">${alt}</div>` : ''}`; this.subEl.style.opacity = '1'; }
-  hideSubtitle() { this.subEl.style.opacity = '0'; }
+  hideSubtitle() { this.subEl.style.opacity = '0'; this.subEl.innerHTML = ''; }
   toast(text: string, secs = 3) { this.toastEl.textContent = text; this.toastEl.style.opacity = '1'; this.toastT = secs; }
   async card(title: string, sub = '', secs = 3.5) { this.cardEl.innerHTML = `<div class="ct">${title}</div><div class="cs">${sub}</div>`; this.cardEl.style.opacity = '1'; await this.g.wait(secs); this.cardEl.style.opacity = '0'; }
   async fade(to: number, secs = 0.8) { this.fadeEl.style.transition = `opacity ${secs}s`; this.fadeEl.style.opacity = String(to); await this.g.wait(secs + 0.05); }
@@ -92,46 +93,48 @@ export class Hud {
 
   // ---------------------------------------------------------------- title + phone
   showTitle() {
-    const g = this.g, t = (k: string) => g.i18n.t(k); this.titleOpen = true; this.titleEl.style.display = 'flex'; this.root.classList.add('cine');
+    const g = this.g, t = (k: string) => g.i18n.t(k); this.titleOpen = true; this.titleEl.style.display = 'flex'; this.root.classList.add('cine'); g.audio.music('menu');
     const has = g.save.has(); const prog = g.save.data.chapter;
-    this.titleEl.innerHTML = `<div class="tbox"><div class="cross">✥</div><h1>${t('title')}</h1><h2>${t('subtitle')}</h2>
+    this.titleEl.innerHTML = `<div class="tbox"><div class="cross"><svg viewBox='0 0 100 100'><g fill='none' stroke='#e2b33c' stroke-width='5' stroke-linejoin='round'><path d='M50 6 L60 20 L50 30 L40 20 Z M50 70 L60 80 L50 94 L40 80 Z M6 50 L20 40 L30 50 L20 60 Z M70 50 L80 40 L94 50 L80 60 Z'/><path d='M50 30 V70 M30 50 H70'/><rect x='38' y='38' width='24' height='24' transform='rotate(45 50 50)'/></g><circle cx='50' cy='50' r='5' fill='#c8232a'/></svg></div><div class="geez">${g.i18n.lang === 'en' ? 'መድኃኔ ዓለም' : 'MEDHANE ALEM'}</div><h1>${t('title')}</h1><h2>${t('subtitle')}</h2>
       <div class="tbtns">${has ? `<button data-a="continue">${t('continue')}</button>` : ''}<button data-a="new">${t('newGame')}</button><button data-a="roam">${t('freeRoam')}</button><button data-a="lang">${g.i18n.lang === 'en' ? 'አማርኛ' : 'English'}</button></div>
       <div class="chs">${g.story.chapters.map((c, i) => `<button class="ch" data-ch="${i}" ${i > prog ? 'disabled' : ''}><b>${i + 1}</b> ${g.i18n.pick(c.title, c.titleAm)}</button>`).join('')}</div>
       <div class="hint">${t('controls')}</div></div>`;
     this.titleEl.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
       const a = (b as HTMLElement).dataset.a, ch = (b as HTMLElement).dataset.ch; g.audio.unlock();
       if (a === 'lang') { g.i18n.toggle(); return; }
-      this.titleOpen = false; this.titleEl.style.display = 'none'; this.root.classList.remove('cine');
+      this.titleOpen = false; this.titleEl.style.display = 'none'; this.root.classList.remove('cine'); g.audio.music(null);
       if (a === 'continue') g.story.start(g.save.data.chapter, false); else if (a === 'new') { g.save.reset(); g.story.start(0, true); } else if (a === 'roam') g.story.freeRoam(); else if (ch !== undefined) g.story.start(+ch, +ch === 0);
     }));
   }
   togglePhone(force?: boolean) {
     const open = force ?? !this.phoneOpen; if (open === this.phoneOpen) return; this.phoneOpen = open; this.phoneEl.style.display = open ? 'flex' : 'none';
-    this.g.input.wantLock = !open; if (open) { document.exitPointerLock?.(); this.renderPhone(); }
+    this.g.input.wantLock = !open; if (open) { this.tab = 'pause'; document.exitPointerLock?.(); this.renderPhone(); this.g.audio.pauseAll(true); } else { this.g.audio.pauseAll(false); if (this.g.input.lastDevice === 'kbm') this.g.engine.canvas.requestPointerLock?.()?.catch?.(() => {}); }
   }
   private renderPhone() {
-    const g = this.g, t = (k: string) => g.i18n.t(k); const tabs = ['map', 'missions', 'settings'];
+    const g = this.g, t = (k: string) => g.i18n.t(k); const tabs = ['pause', 'map', 'missions', 'settings'];
     let body = '';
-    if (this.tab === 'map') body = `<canvas class="bigmap"></canvas><div class="mhint">${g.i18n.pick('Tap the map to set a waypoint · tap the marker to clear', 'መድረሻ ለመምረጥ ካርታውን ይንኩ')}</div>`;
+    if (this.tab === 'pause') body = `<div class="pmenu"><button data-a="close">${g.i18n.pick('Resume', 'ቀጥል')}</button><button data-tab="map">${t('map')}</button><button data-tab="missions">${t('missions')}</button><button data-tab="settings">${t('settings')}</button><button data-a="photo">${t('photo')}</button><button data-a="restart">${g.i18n.pick('Restart chapter', 'ምዕራፉን እንደገና ጀምር')}</button><button data-a="title" class="danger">${g.i18n.pick('Quit to main menu', 'ወደ ዋና ማውጫ ውጣ')}</button></div><div class="hint">${t('controls')}</div>`;
+    else if (this.tab === 'map') body = `<canvas class="bigmap"></canvas><div class="mhint">${g.i18n.pick('Tap the map to set a waypoint · tap the marker to clear', 'መድረሻ ለመምረጥ ካርታውን ይንኩ')}</div>`;
     else if (this.tab === 'missions') body = `<div class="mlist">${g.story.chapters.map((c, i) => `<div class="mi ${i === g.story.index ? 'cur' : ''}"><div><b>${t('chapter')} ${i + 1}: ${g.i18n.pick(c.title, c.titleAm)}</b><div class="md">${g.i18n.pick(c.desc, c.descAm)}</div></div><button data-ch="${i}" ${i > g.save.data.chapter ? 'disabled' : ''}>${i > g.save.data.chapter ? t('locked') : t('replay')}</button></div>`).join('')}<div class="mi"><div><b>${t('freeRoam')}</b></div><button data-a="roam">${t('replay')}</button></div></div>`;
     else {
       const opt = (label: string, key: string, vals: [string, string][], cur: string) => `<div class="row"><span>${label}</span><div>${vals.map(([v, l]) => `<button data-set="${key}" data-v="${v}" class="${v === cur ? 'on' : ''}">${l}</button>`).join('')}</div></div>`;
       body = `<div class="settings">${opt(t('language'), 'lang', [['en', 'English'], ['am', 'አማርኛ']], g.i18n.lang)}${opt(t('quality'), 'q', [['low', t('low')], ['high', t('high')], ['ultra', t('ultra')]], g.engine.quality)}${opt('Renderer', 'renderer', [['webgpu', 'WebGPU'], ['webgl', 'WebGL2']], g.engine.isWebGPU ? 'webgpu' : 'webgl')}
-        ${opt(t('moustache'), 'mo', [['1', t('on')], ['0', t('off')]], g.save.data.moustache ? '1' : '0')}${opt(t('volume'), 'vol', [['0', '0'], ['0.4', '40'], ['0.8', '80'], ['1', '100']], String(g.audio.volume))}
+        ${opt(t('moustache'), 'mo', [['1', t('on')], ['0', t('off')]], g.save.data.moustache ? '1' : '0')}${opt(t('volume'), 'vol', [['0', '0'], ['0.4', '40'], ['0.8', '80'], ['1', '100']], String(g.audio.volume))}${opt(g.i18n.pick('Music', 'ሙዚቃ'), 'mus', [['0', t('off')], ['0.5', '50'], ['1', '100']], String(g.audio.musicVol))}${opt(g.i18n.pick('Dialogue voice', 'የንግግር ድምፅ'), 'voice', [['1', t('on')], ['0', t('off')]], g.audio.voiceOn ? '1' : '0')}${opt(g.i18n.pick('FPS counter', 'FPS ቆጣሪ'), 'fps', [['1', t('on')], ['0', t('off')]], this.showFps ? '1' : '0')}${opt(g.i18n.pick('Mouse sensitivity', 'የማውስ ፍጥነት'), 'sens', [['0.6', g.i18n.pick('Low', 'ዝቅተኛ')], ['1', g.i18n.pick('Normal', 'መደበኛ')], ['1.6', g.i18n.pick('High', 'ከፍተኛ')]], String(g.input.sens))}
         ${g.story.roaming ? opt(t('outfit'), 'outfit', [['netela', t('netela')], ['casual', t('casual')], ['netelaPuffer', t('winterOutfit')]], g.outfit) + opt(t('season'), 'season', [['summer', t('summer')], ['autumn', t('autumn')], ['winter', t('winter')], ['spring', t('spring')]], g.world.season) + opt(t('time'), 'time', [['7', '07:00'], ['12', '12:00'], ['17', '17:00'], ['22', '22:00']], '') : ''}
         <div class="row"><button data-a="photo">${t('photo')}</button><button data-a="save">${t('save')}</button><button data-a="title">${g.i18n.pick('Main menu', 'ዋና ማውጫ')}</button></div><div class="hint">${t('controls')}</div></div>`;
     }
-    this.phoneEl.innerHTML = `<div class="pbox"><div class="ptabs">${tabs.map((k) => `<button data-tab="${k}" class="${k === this.tab ? 'on' : ''}">${t(k)}</button>`).join('')}<button data-a="close" class="x">✕</button></div><div class="pbody">${body}</div></div>`;
+    this.phoneEl.innerHTML = `<div class="pbox"><div class="ptitle">${g.i18n.pick('Paused', 'ቆሟል')}</div><div class="ptabs">${tabs.map((k) => `<button data-tab="${k}" class="${k === this.tab ? 'on' : ''}">${k === 'pause' ? g.i18n.pick('Menu', 'ማውጫ') : t(k)}</button>`).join('')}<button data-a="close" class="x">${g.i18n.pick('Resume', 'ቀጥል')} ✕</button></div><div class="pbody">${body}</div></div>`;
     this.phoneEl.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
       const d = (b as HTMLElement).dataset;
       if (d.tab) { this.tab = d.tab; this.renderPhone(); return; }
       if (d.a === 'close') return this.togglePhone(false);
       if (d.a === 'photo') { this.togglePhone(false); g.photo.enter(); return; }
       if (d.a === 'save') { g.save.write(); this.toast(t('saved')); return; }
+      if (d.a === 'restart') { this.togglePhone(false); if (g.story.index >= 0) g.story.start(g.story.index, false); else g.story.freeRoam(); return; }
       if (d.a === 'title') { this.togglePhone(false); g.story.abort(); this.showTitle(); return; }
       if (d.a === 'roam') { this.togglePhone(false); g.story.freeRoam(); return; }
       if (d.ch !== undefined) { this.togglePhone(false); g.story.start(+d.ch, false); return; }
-      if (d.set) { const v = d.v!; if (d.set === 'lang') g.i18n.set(v as any); else if (d.set === 'renderer') { try { localStorage.setItem('ma.renderer', v); sessionStorage.removeItem('ma.fallback'); } catch { /* ignore */ } const qs = new URLSearchParams(location.search); qs.delete('webgl'); qs.delete('webgpu'); qs.set(v, '1'); location.search = qs.toString(); return; } else if (d.set === 'q') { g.engine.setQuality(v as any); g.applyQuality(); } else if (d.set === 'mo') { g.save.data.moustache = v === '1'; g.setOutfit(g.outfit); } else if (d.set === 'vol') g.audio.setVolume(+v); else if (d.set === 'outfit') g.setOutfit(v as any); else if (d.set === 'season') g.setSeason(v as any); else if (d.set === 'time') { const dt = g.engine.date; g.engine.setDateTime(dt.getUTCMonth() + 1, dt.getUTCDate(), +v); } this.renderPhone(); }
+      if (d.set) { const v = d.v!; if (d.set === 'lang') g.i18n.set(v as any); else if (d.set === 'renderer') { try { localStorage.setItem('ma.renderer', v); sessionStorage.removeItem('ma.fallback'); } catch { /* ignore */ } const qs = new URLSearchParams(location.search); qs.delete('webgl'); qs.delete('webgpu'); qs.set(v, '1'); location.search = qs.toString(); return; } else if (d.set === 'q') { g.engine.setQuality(v as any); g.applyQuality(); } else if (d.set === 'mo') { g.save.data.moustache = v === '1'; g.setOutfit(g.outfit); } else if (d.set === 'vol') g.audio.setVolume(+v); else if (d.set === 'mus') g.audio.setMusicVol(+v); else if (d.set === 'voice') g.audio.setVoice(v === '1'); else if (d.set === 'fps') { this.showFps = v === '1'; try { localStorage.setItem('ma.fps', v); } catch { /* ignore */ } } else if (d.set === 'sens') { g.input.sens = +v; try { localStorage.setItem('ma.sens', v); } catch { /* ignore */ } } else if (d.set === 'outfit') g.setOutfit(v as any); else if (d.set === 'season') g.setSeason(v as any); else if (d.set === 'time') { const dt = g.engine.date; g.engine.setDateTime(dt.getUTCMonth() + 1, dt.getUTCDate(), +v); } this.renderPhone(); }
     }));
     const big = this.phoneEl.querySelector('.bigmap') as HTMLCanvasElement | null;
     if (big) {
@@ -142,11 +145,19 @@ export class Hud {
       big.addEventListener('click', (e) => { const r = big.getBoundingClientRect(); const wx = (e.clientX - r.left) / sc / PX + this.mapX0, wz = (e.clientY - r.top) / sc / PX + this.mapZ0; if (this.waypoint && Math.hypot(this.waypoint.x - wx, this.waypoint.z - wz) < 40) this.setWaypoint(null); else this.setWaypoint({ x: wx, z: wz }); this.updateRoute(true); this.renderPhone(); });
     }
   }
+  private routeDest: { x: number; z: number } | null = null; distEl: HTMLElement | null = null;
   private updateRoute(force = false) {
-    this.routeT -= 1; if (!force && this.routeT > 0) return; this.routeT = 90;
     const dest = this.waypoint ?? this.target; const p = this.g.focusPos;
-    if (!dest || Math.hypot(dest.x - p.x, dest.z - p.z) < 25) { this.route = []; if (this.waypoint && dest === this.waypoint && Math.hypot(dest.x - p.x, dest.z - p.z) < 25) this.waypoint = null; return; }
-    this.route = this.g.world.route(p.x, p.z, dest.x, dest.z);
+    // distance read-out
+    if (!this.distEl) { this.distEl = el('div', 'gpsdist'); this.root.append(this.distEl); }
+    if (dest) { const d = Math.hypot(dest.x - p.x, dest.z - p.z); this.distEl.textContent = d >= 1000 ? `${(d / 1000).toFixed(1)} km` : `${Math.round(d / 5) * 5} m`; this.distEl.style.opacity = d > 12 ? '1' : '0'; } else this.distEl.style.opacity = '0';
+    this.routeT -= this.g.dt; const changed = dest !== this.routeDest || (dest && this.routeDest && (dest.x !== this.routeDest.x || dest.z !== this.routeDest.z));
+    if (!force && !changed && this.routeT > 0) return; this.routeT = this.g.mode === 'car' ? 0.6 : 1.2; this.routeDest = dest ? { x: dest.x, z: dest.z } : null;
+    if (dest === this.waypoint && dest && Math.hypot(dest.x - p.x, dest.z - p.z) < 14) { this.waypoint = null; this.toast(this.g.i18n.pick('You have arrived', 'ደርሰዋል')); }
+    const d2 = this.waypoint ?? this.target;
+    // short hops on foot need no road routing; inside the church there is no GPS line at all
+    if (!d2 || Math.hypot(d2.x - p.x, d2.z - p.z) < 30 || this.g.engine.interior) { this.route = d2 && !this.g.engine.interior ? [[p.x, p.z], [d2.x, d2.z]] : []; this.g.world.showRoute(this.g.mode === 'car' ? this.route : []); return; }
+    this.route = this.g.world.route(p.x, p.z, d2.x, d2.z); this.g.world.showRoute(this.route);
   }
 
   // ---------------------------------------------------------------- touch
@@ -182,5 +193,6 @@ export class Hud {
     this.infoEl.textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')} · ${g.weather.tempC}°C`;
     const car = g.mode === 'car' ? g.activeCar : null; this.speedEl.style.opacity = car ? '1' : '0'; if (car) this.speedEl.innerHTML = `<b>${Math.round(Math.abs(car.speed) * 3.6)}</b> km/h`;
     this.touchEl.classList.toggle('car', !!car);
+    this.fpsEl.style.display = this.showFps ? 'block' : 'none'; this.fpsT -= dt; if (this.showFps && this.fpsT <= 0) { this.fpsT = 0.4; this.fpsEl.textContent = `${Math.round(g.fps)} FPS · ${g.engine.isWebGPU ? 'WebGPU' : 'WebGL2'} · ${g.engine.quality}`; }
   }
 }

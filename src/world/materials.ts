@@ -1,6 +1,6 @@
 // Shared procedural PBR-ish materials (canvas-generated textures; no downloads).
 import * as THREE from 'three/webgpu';
-import { canvasTex, speckle, mulberry } from '../core/geo';
+import { canvasTex, speckle, mulberry, normalFrom } from '../core/geo';
 
 export type Season = 'summer' | 'autumn' | 'winter' | 'spring';
 
@@ -64,12 +64,16 @@ export class Materials {
   wood = new THREE.MeshStandardMaterial({ map: woodTex(), vertexColors: true, roughness: 0.85 });
   chain = new THREE.MeshStandardMaterial({ map: chainTex(), transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.5, metalness: 0.7 });
   bark = new THREE.MeshStandardMaterial({ color: 0x4a3d33, roughness: 1 });
-  leaves = new THREE.MeshStandardMaterial({ color: 0x4f7a3a, roughness: 0.9 });
-  needles = new THREE.MeshStandardMaterial({ color: 0x2f5238, roughness: 0.9 });
+  leaves = new THREE.MeshStandardMaterial({ color: 0x3f8f34, roughness: 0.85 });
+  needles = new THREE.MeshStandardMaterial({ color: 0x1f5a36, roughness: 0.9 });
   snow = new THREE.MeshStandardMaterial({ color: 0xf4f7fb, roughness: 0.85 });
   metal = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.7 });
-  water = new THREE.MeshStandardMaterial({ color: 0x3d5560, roughness: 0.12, metalness: 0.2 });
+  water = new THREE.MeshStandardMaterial({ color: 0x2f6a8a, roughness: 0.08, metalness: 0.3 });
   lamp = new THREE.MeshStandardMaterial({ color: 0x555555, emissive: 0xffd9a0, emissiveIntensity: 0 });
+  constructor() {
+    // relief from the textures themselves: lap siding, stucco grain, shingles, asphalt aggregate
+    for (const [m, k] of [[this.siding, 3], [this.vsiding, 3], [this.stucco, 2.2], [this.roof, 3.2], [this.concrete, 1.4], [this.asphalt, 2.4], [this.gravel, 3], [this.facade, 2.6], [this.wood, 2]] as [THREE.MeshStandardMaterial, number][]) { m.normalMap = normalFrom(m.map!, k); m.normalScale.set(1, 1); }
+  }
   season: Season = 'summer';
   snowAmount = 0;
   private roofBase = new THREE.Color(1, 1, 1);
@@ -81,7 +85,7 @@ export class Materials {
     this.roof.color.copy(this.roofBase); this.roof.map!.needsUpdate = false;
     (this.roof as any).userData.snow = snow;
     this.leaves.visible = s !== 'winter';
-    this.leaves.color.set(s === 'autumn' ? 0xc79a2e : s === 'spring' ? 0x86b85c : 0x4f7a3a);
+    this.leaves.color.set(s === 'autumn' ? 0xe0a020 : s === 'spring' ? 0x8fd060 : 0x3f8f34);
     this.asphalt.color.set(s === 'winter' ? 0xdfe6ee : s === 'spring' ? 0x8a8a8a : 0xffffff);
     this.asphalt.roughness = s === 'winter' ? 0.55 : s === 'spring' ? 0.35 : 0.88;
     this.gravel.color.set(s === 'winter' ? 0xf2f5f9 : 0xffffff);

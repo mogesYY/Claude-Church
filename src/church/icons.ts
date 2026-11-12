@@ -52,11 +52,26 @@ function angel(c: Ctx, x: number, y: number, s: number, flip = 1, robeCol = '#b3
 }
 function sun(c: Ctx, x: number, y: number, r: number) { c.fillStyle = '#f0c040'; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
 
-export type IconKind = 'mary' | 'medhaneAlem' | 'michael' | 'george' | 'trinity' | 'crucifixion' | 'gabriel';
+export type IconKind = 'mary' | 'medhaneAlem' | 'michael' | 'george' | 'trinity' | 'crucifixion' | 'gabriel' | 'thorns' | 'grace' | 'gethsemane';
 
 function paint(kind: IconKind, c: Ctx, w: number, h: number) {
   const cx = w / 2;
-  if (kind === 'mary') {
+  if (kind === 'thorns') { // Christ crowned with thorns (dark, devotional print style)
+    frame(c, w, h, '#1a1410', '#2a1c12');
+    robe(c, cx, 420, 360, 300, '#7a1a1e', '#3a2a1a'); halo(c, cx, 290, 120); head(c, cx, 300, 96, { hair: '#2a160c', beard: '#2a160c', tilt: 0.14 });
+    c.strokeStyle = '#4a3a22'; c.lineWidth = 9; for (let i = 0; i < 3; i++) { c.beginPath(); c.ellipse(cx + 8, 228 + i * 9, 100, 26, 0.14, Math.PI * 1.02, Math.PI * 1.98); c.stroke(); }
+    c.strokeStyle = '#6a5632'; c.lineWidth = 3; for (let i = 0; i < 16; i++) { const a2 = Math.PI * (1.05 + i * 0.058); const x = cx + 8 + Math.cos(a2) * 100, y = 236 + Math.sin(a2) * 26; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a2) * 16, y + Math.sin(a2) * 22 - 6); c.stroke(); }
+  } else if (kind === 'grace') { // St Mary in white and blue, hands open
+    frame(c, w, h, '#7fb0de', '#e9e4d2');
+    c.fillStyle = '#eaf2fb'; for (let i = 0; i < 6; i++) { c.beginPath(); c.arc(70 + i * 76, 640 + (i % 2) * 16, 52, 0, 7); c.fill(); }
+    robe(c, cx, 250, 300, 420, '#f6f6f2', '#9fb8dc'); c.fillStyle = '#3f6fb8'; c.strokeStyle = INK; c.lineWidth = 3; c.beginPath(); c.moveTo(cx - 60, 250); c.quadraticCurveTo(cx - 210, 400, cx - 170, 670); c.lineTo(cx - 100, 670); c.quadraticCurveTo(cx - 120, 420, cx - 30, 300); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(cx + 60, 250); c.quadraticCurveTo(cx + 210, 400, cx + 170, 670); c.lineTo(cx + 100, 670); c.quadraticCurveTo(cx + 120, 420, cx + 30, 300); c.closePath(); c.fill(); c.stroke();
+    halo(c, cx, 180, 92); head(c, cx, 186, 64, { veil: '#f6f6f2', tilt: -0.05 }); hand(c, cx - 150, 470, 20); hand(c, cx + 150, 470, 20);
+  } else if (kind === 'gethsemane') { // Christ at prayer
+    frame(c, w, h, '#3a2630', '#5a3a22');
+    sun(c, w - 110, 110, 34); c.fillStyle = '#4a3a30'; c.beginPath(); c.moveTo(28, 692); c.lineTo(28, 560); c.quadraticCurveTo(200, 470, 330, 560); c.lineTo(484, 600); c.lineTo(484, 692); c.fill();
+    robe(c, cx - 30, 300, 320, 380, '#b3261e', GOLD); halo(c, cx + 10, 215, 96); head(c, cx + 10, 222, 70, { hair: '#2a160c', beard: '#2a160c', tilt: 0.3 }); hand(c, cx + 96, 392, 22); hand(c, cx + 128, 388, 22);
+  } else if (kind === 'mary') {
     frame(c, w, h, '#1f4f8f');
     angel(c, 96, 120, 46, 1); angel(c, w - 96, 120, 46, -1, '#1f6b3a');
     robe(c, cx, 280, 380, 420, '#3a2a7a', GOLD, true);

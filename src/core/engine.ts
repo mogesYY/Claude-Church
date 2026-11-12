@@ -1,6 +1,6 @@
 // Renderer, post-processing, sky/sun and quality presets.
 import * as THREE from 'three/webgpu';
-import { pass, mrt, output, normalView, velocity, metalness, roughness, vec4, uniform } from 'three/tsl';
+import { pass, mrt, output, normalView, velocity, metalness, roughness, vec4, uniform, saturation } from 'three/tsl';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { traa } from 'three/addons/tsl/display/TRAANode.js';
@@ -83,8 +83,8 @@ export class Engine {
     this.sky = new SkyMesh();
     this.sky.scale.setScalar(2000);
     this.sky.frustumCulled = false;
-    this.sky.turbidity.value = 4;
-    this.sky.rayleigh.value = 1.6;
+    this.sky.turbidity.value = 2.4;
+    this.sky.rayleigh.value = 2.3;
     this.sky.mieCoefficient.value = 0.004;
     this.sky.mieDirectionalG.value = 0.8;
     (this.sky.material as any).fog = false;
@@ -199,6 +199,8 @@ export class Engine {
       let final: any = lit.add(bloomPass);
       if (ultra) final = traa(final, depth, scenePass.getTextureNode('velocity'), this.camera);
       else final = fxaa(final);
+      // colour grade: a touch more saturation so the church colours, flags and vestments read vividly
+      try { final = vec4((saturation as any)(final.rgb, 1.22), final.a); } catch { /* older three: skip */ }
       post.outputNode = final;
       this.post = post;
     } catch (e) {
@@ -238,7 +240,7 @@ export class Engine {
     this.sky.sunPosition.value.copy(this.sunDir);
     const lightDir = this.sunDir.clone();
     let intensity = 4.2 * THREE.MathUtils.smoothstep(sp.elevation, -0.02, 0.25);
-    const col = new THREE.Color().setRGB(1, 0.96 - golden * 0.32, 0.9 - golden * 0.55);
+    const col = new THREE.Color().setRGB(1, 0.95 - golden * 0.3, 0.84 - golden * 0.5);
     if (sp.elevation < -0.02) { // moonlight from opposite side
       lightDir.set(-this.sunDir.x, Math.max(0.35, -this.sunDir.y), -this.sunDir.z).normalize();
       intensity = 0.18; col.setRGB(0.55, 0.65, 1);
@@ -248,7 +250,7 @@ export class Engine {
     this.lightDir.copy(lightDir);
     this.hemi.intensity = (0.1 + 0.36 * day) * (this.interior ? 0.55 : 1);
     this.hemi.color.setRGB(0.55 + 0.2 * day, 0.66 + 0.16 * day, 1);
-    this.hemi.groundColor.setRGB(0.25 + 0.1 * day, 0.24 + 0.1 * day, 0.22 + 0.08 * day);
+    this.hemi.groundColor.setRGB(0.3 + 0.12 * day, 0.27 + 0.1 * day, 0.2 + 0.06 * day);
     (this.stars.material as THREE.PointsMaterial).opacity = (1 - day) * 0.9;
     const tw = THREE.MathUtils.smoothstep(sp.elevation, -0.3, -0.05) * (1 - THREE.MathUtils.smoothstep(sp.elevation, 0.0, 0.16));
     (this.twilight.material as THREE.MeshBasicMaterial).opacity = tw * 0.9; this.twilight.rotation.y = Math.atan2(-this.sunDir.z, this.sunDir.x);

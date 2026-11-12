@@ -7,14 +7,14 @@ export type Outfit = 'netela' | 'netelaPuffer' | 'deacon' | 'casual' | 'winter' 
 export type HairStyle = 'fade' | 'short' | 'grey' | 'bald' | 'afro' | 'covered';
 export interface HumanOpts {
   seed?: number; height?: number; build?: number; skin?: number; outfit?: Outfit; hair?: HairStyle; moustache?: boolean; beard?: number | null;
-  female?: boolean; robeColor?: number; shirt?: number; pants?: number; headScale?: number; turban?: boolean; cap?: number | null; toque?: number | null; lod?: boolean;
+  female?: boolean; photo?: HTMLImageElement | null; robeColor?: number; shirt?: number; pants?: number; headScale?: number; turban?: boolean; cap?: number | null; toque?: number | null; lod?: boolean;
 }
 
 const BONES = ['hips', 'spine', 'chest', 'neck', 'head', 'shoulderL', 'upperArmL', 'foreArmL', 'handL', 'shoulderR', 'upperArmR', 'foreArmR', 'handR', 'upLegL', 'legL', 'footL', 'upLegR', 'legR', 'footR', 'clothB', 'clothL', 'clothR'] as const;
 export type BoneName = (typeof BONES)[number];
 const PARENT: Record<BoneName, BoneName | null> = { hips: null, spine: 'hips', chest: 'spine', neck: 'chest', head: 'neck', shoulderL: 'chest', upperArmL: 'shoulderL', foreArmL: 'upperArmL', handL: 'foreArmL', shoulderR: 'chest', upperArmR: 'shoulderR', foreArmR: 'upperArmR', handR: 'foreArmR', upLegL: 'hips', legL: 'upLegL', footL: 'legL', upLegR: 'hips', legR: 'upLegR', footR: 'legR', clothB: 'chest', clothL: 'chest', clothR: 'chest' };
 const REST: Record<BoneName, [number, number, number]> = {
-  hips: [0, 0.97, 0], spine: [0, 1.08, 0], chest: [0, 1.25, 0], neck: [0, 1.49, 0], head: [0, 1.565, 0.008],
+  hips: [0, 0.97, 0], spine: [0, 1.08, 0], chest: [0, 1.25, 0], neck: [0, 1.49, 0], head: [0, 1.555, 0.008],
   shoulderL: [0.07, 1.44, 0], upperArmL: [0.19, 1.435, 0], foreArmL: [0.203, 1.15, 0], handL: [0.212, 0.895, 0.01],
   shoulderR: [-0.07, 1.44, 0], upperArmR: [-0.19, 1.435, 0], foreArmR: [-0.203, 1.15, 0], handR: [-0.212, 0.895, 0.01],
   upLegL: [0.09, 0.93, 0], legL: [0.09, 0.51, 0], footL: [0.09, 0.085, 0], upLegR: [-0.09, 0.93, 0], legR: [-0.09, 0.51, 0], footR: [-0.09, 0.085, 0],
@@ -51,22 +51,25 @@ class SkinGeo {
 /** direction on the head sphere -> equirect pixel (front = +z) */
 function faceP(nx: number, ny: number, W: number, H: number): [number, number] { const s = Math.sqrt(Math.max(1e-6, 1 - ny * ny)); return [(0.25 + Math.asin(Math.max(-1, Math.min(1, nx / s))) / (2 * Math.PI)) * W, (Math.acos(ny) / Math.PI) * H]; }
 
-function faceTexture(o: Required<Pick<HumanOpts, 'skin' | 'hair' | 'moustache' | 'female' | 'seed'>> & { beard: number | null }) {
+function faceTexture(o: Required<Pick<HumanOpts, 'skin' | 'hair' | 'moustache' | 'female' | 'seed'>> & { beard: number | null; photo?: HTMLImageElement | null }) {
   const W = 1024, H = 512; const skin = new THREE.Color(o.skin); const css = (c: THREE.Color, m = 1) => `rgb(${Math.round(Math.min(1, c.r * m) * 255)},${Math.round(Math.min(1, c.g * m) * 255)},${Math.round(Math.min(1, c.b * m) * 255)})`;
   const sk = new THREE.Color().copy(skin).convertLinearToSRGB();
   return canvasTex(W, H, (c) => {
     c.fillStyle = css(sk); c.fillRect(0, 0, W, H);
     const r = mulberry(o.seed + 5);
+    const photo = o.photo && o.photo.complete && o.photo.naturalWidth > 0 ? o.photo : null;
+    if (photo) c.drawImage(photo, 0, 0, W, H);   // the real face, projected onto this UV layout by tools/make_face.py
+    if (!photo) {
     // soft modelling: warm highlight on forehead/cheeks/nose, cooler shadow under jaw and at the sides
     const glow = (nx: number, ny: number, rad: number, col: string) => { const [x, y] = faceP(nx, ny, W, H); const g = c.createRadialGradient(x, y, 0, x, y, rad); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(x - rad, y - rad, rad * 2, rad * 2); };
-    glow(0, 0.36, 70, 'rgba(255,200,150,0.16)'); glow(0.3, -0.12, 44, 'rgba(255,170,130,0.14)'); glow(-0.3, -0.12, 44, 'rgba(255,170,130,0.14)'); glow(0, -0.08, 22, 'rgba(255,210,170,0.2)');
-    glow(0.62, -0.3, 60, 'rgba(40,15,5,0.2)'); glow(-0.62, -0.3, 60, 'rgba(40,15,5,0.2)'); glow(0, -0.9, 90, 'rgba(30,10,5,0.35)');
+    glow(0, 0.3, 70, 'rgba(255,200,150,0.16)'); glow(0.34, -0.22, 44, 'rgba(255,170,130,0.14)'); glow(-0.34, -0.22, 44, 'rgba(255,170,130,0.14)'); glow(0, -0.2, 22, 'rgba(255,210,170,0.2)');
+    glow(0.66, -0.4, 60, 'rgba(40,15,5,0.2)'); glow(-0.66, -0.4, 60, 'rgba(40,15,5,0.2)'); glow(0, -0.97, 70, 'rgba(30,10,5,0.35)');
     for (let i = 0; i < 2500; i++) { c.fillStyle = `rgba(${r() < 0.5 ? '60,25,10' : '255,200,160'},${0.02 + r() * 0.03})`; c.fillRect(r() * W, r() * H, 2, 2); }
     const ink = '#150c08';
     // eyes
     for (const s of [-1, 1]) {
-      const [ex, ey] = faceP(s * 0.39, 0.1, W, H); const ew = 27, eh = 10;
-      glow(s * 0.39, 0.12, 36, 'rgba(40,15,8,0.22)');
+      const [ex, ey] = faceP(s * 0.41, 0.0, W, H); const ew = 27, eh = 10;
+      glow(s * 0.41, 0.02, 36, 'rgba(40,15,8,0.22)');
       c.save(); c.translate(ex, ey); c.scale(s, 1);
       c.fillStyle = '#efe6dc'; c.beginPath(); c.moveTo(-ew, 1.5); c.quadraticCurveTo(-2, -eh * 1.5, ew, -1); c.quadraticCurveTo(0, eh * 1.25, -ew, 1.5); c.fill();
       c.save(); c.clip(); c.fillStyle = '#2a160c'; c.beginPath(); c.arc(1, 0, 9.8, 0, 7); c.fill(); c.fillStyle = '#080404'; c.beginPath(); c.arc(1, 0, 4.6, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,0.85)'; c.beginPath(); c.arc(4.2, -3.2, 2.0, 0, 7); c.fill(); c.restore();
@@ -75,20 +78,21 @@ function faceTexture(o: Required<Pick<HumanOpts, 'skin' | 'hair' | 'moustache' |
       c.strokeStyle = 'rgba(30,12,6,0.35)'; c.lineWidth = 2; c.beginPath(); c.moveTo(-ew + 2, -8); c.quadraticCurveTo(0, -15, ew, -8); c.stroke();
       c.restore();
       // brows: thick and fairly straight
-      const [bx, by] = faceP(s * 0.4, 0.245, W, H); c.save(); c.translate(bx, by); c.scale(s * 1.3, 1.3); c.fillStyle = ink; c.beginPath(); c.moveTo(-25, 3); c.quadraticCurveTo(-4, -6.5, 28, -1.5); c.lineTo(29, 2.5); c.quadraticCurveTo(-2, 1.5, -24, 8.5); c.closePath(); c.fill(); c.restore();
+      const [bx, by] = faceP(s * 0.42, 0.165, W, H); c.save(); c.translate(bx, by); c.scale(s * 1.3, 1.3); c.fillStyle = ink; c.beginPath(); c.moveTo(-25, 3); c.quadraticCurveTo(-4, -6.5, 28, -1.5); c.lineTo(29, 2.5); c.quadraticCurveTo(-2, 1.5, -24, 8.5); c.closePath(); c.fill(); c.restore();
     }
     // nose: bridge highlight, nostrils
-    const [nx0, ny0] = faceP(0, -0.19, W, H);
+    const [nx0, ny0] = faceP(0, -0.33, W, H);
     c.fillStyle = 'rgba(25,8,4,0.55)'; for (const s of [-1, 1]) { c.beginPath(); c.ellipse(nx0 + s * 12, ny0 + 2, 7, 3.8, s * 0.3, 0, 7); c.fill(); }
     c.strokeStyle = 'rgba(40,15,8,0.3)'; c.lineWidth = 2; for (const s of [-1, 1]) { c.beginPath(); c.moveTo(nx0 + s * 20, ny0 - 10); c.quadraticCurveTo(nx0 + s * 27, ny0 + 2, nx0 + s * 17, ny0 + 9); c.stroke(); }
     // lips: full, lower lip lighter rose
-    const [lx, ly] = faceP(0, -0.44, W, H); const lw = o.female ? 36 : 39;
+    const [lx, ly] = faceP(0, -0.62, W, H); const lw = o.female ? 36 : 39;
     c.fillStyle = 'rgb(112,58,52)'; c.beginPath(); c.moveTo(lx - lw, ly); c.quadraticCurveTo(lx - 12, ly - 16, lx, ly - 9); c.quadraticCurveTo(lx + 12, ly - 16, lx + lw, ly); c.quadraticCurveTo(lx, ly + 3, lx - lw, ly); c.fill();
     c.fillStyle = 'rgb(168,96,92)'; c.beginPath(); c.moveTo(lx - lw, ly); c.quadraticCurveTo(lx, ly + 30, lx + lw, ly); c.quadraticCurveTo(lx, ly + 3, lx - lw, ly); c.fill();
     c.fillStyle = 'rgba(255,190,180,0.25)'; c.beginPath(); c.ellipse(lx, ly + 11, 16, 5, 0, 0, 7); c.fill();
     c.strokeStyle = 'rgba(40,12,10,0.8)'; c.lineWidth = 1.8; c.beginPath(); c.moveTo(lx - lw, ly); c.quadraticCurveTo(lx, ly + 3, lx + lw, ly); c.stroke();
     if (o.moustache) { for (let i = 0; i < 420; i++) { const t = r() * 2 - 1; const x = lx + t * 44, y = ly - 19 - (1 - t * t) * 5 + (r() - 0.5) * 7 + Math.abs(t) * 7; c.fillStyle = `rgba(15,8,5,${0.25 + r() * 0.3})`; c.fillRect(x, y, 2, 2.4); } }
-    if (o.beard !== null) { const bc = new THREE.Color(o.beard); for (let i = 0; i < 9000; i++) { const a = r() * 2 - 1, d = r(); const nxx = a * 0.72, nyy = -0.5 - d * 0.5 + Math.abs(a) * 0.42; if (nyy > -0.28 || Math.abs(nxx) < 0.3 && nyy > -0.56) continue; const [x, y] = faceP(nxx, Math.max(-0.99, nyy), W, H); c.fillStyle = `rgba(${Math.round(bc.r * 255)},${Math.round(bc.g * 255)},${Math.round(bc.b * 255)},${0.5 + r() * 0.4})`; c.fillRect(x, y, 3, 3); } }
+    }
+    if (o.beard !== null && !photo) { const bc = new THREE.Color(o.beard); for (let i = 0; i < 9000; i++) { const a = r() * 2 - 1, d = r(); const nxx = a * 0.72, nyy = -0.62 - d * 0.38 + Math.abs(a) * 0.4; if (nyy > -0.4 || Math.abs(nxx) < 0.3 && nyy > -0.72) continue; const [x, y] = faceP(nxx, Math.max(-0.99, nyy), W, H); c.fillStyle = `rgba(${Math.round(bc.r * 255)},${Math.round(bc.g * 255)},${Math.round(bc.b * 255)},${0.5 + r() * 0.4})`; c.fillRect(x, y, 3, 3); } }
     // hair: painted scalp (fade) — the volume on top is separate geometry
     if (o.hair !== 'bald' && o.hair !== 'covered') {
       const hc = o.hair === 'grey' ? [150, 150, 150] : [14, 11, 10];
@@ -108,44 +112,46 @@ function faceTexture(o: Required<Pick<HumanOpts, 'skin' | 'hair' | 'moustache' |
 }
 /** hairline height (ny) as a function of direction */
 function hairline(dx: number, ny: number, dz: number, style: HairStyle) {
-  if (dz > 0.25) return 0.6 - smooth(0.42, 0.62, Math.abs(dx)) * 0.2 + (style === 'grey' ? 0.1 : 0);   // forehead: straight line-up
-  if (dz > -0.2) return 0.36 - (0.25 - dz) * 0.6;                                    // temples, over the ear
-  return -0.15;                                                                     // back, to the nape
+  const front = 0.54 - smooth(0.35, 0.7, Math.abs(dx)) * 0.2 + (style === 'grey' ? 0.1 : 0);   // forehead line-up, rounding down at the temples
+  const side = 0.26 + dz * 0.3;                                                              // over the ear
+  const back = -0.15;                                                                        // down to the nape
+  const fs = smooth(0.05, 0.45, dz), sb = smooth(-0.55, -0.15, dz);
+  return (back + (side - back) * sb) * (1 - fs) + front * fs;
 }
 
 function headGeometry(female: boolean) {
   const g = new THREE.SphereGeometry(1, 44, 32); const p = g.attributes.position; const v = new THREE.Vector3();
   const bump = (d: THREE.Vector3, cx: number, cy: number, cz: number, s: number) => Math.exp(-((d.x - cx) ** 2 + (d.y - cy) ** 2 + (d.z - cz) ** 2) / (2 * s * s));
   for (let i = 0; i < p.count; i++) {
-    v.fromBufferAttribute(p, i).normalize(); const d = v.clone(); let rx = 0.076, ry = 0.118, rz = 0.097;
+    v.fromBufferAttribute(p, i).normalize(); const d = v.clone(); let rx = 0.068, ry = 0.118, rz = 0.094;
     // slim oval face: jaw tapers to a defined chin
-    const jaw = smooth(-0.05, -0.95, d.y); rx *= 1 - 0.17 * smooth(-0.25, -0.95, d.y) * (d.z > -0.2 ? 1 : 0.5); ry *= 1 - 0.06 * smooth(-0.6, -1, d.y); rz *= 1 - 0.1 * jaw;
+    const jaw = smooth(-0.05, -0.95, d.y); rx *= 1 + 0.07 * Math.exp(-((d.y + 0.72) ** 2) / 0.05) * (d.z > -0.2 ? 1 : 0.3); rx *= 1 + 0.1 * smooth(0.1, 0.6, d.y) * smooth(0.3, -0.5, d.z); rz *= 1 - 0.1 * jaw;
     if (d.z < 0) { rz *= 1 + 0.07 * smooth(0, -1, d.z) * smooth(-0.6, 0.5, d.y); }
     let x = d.x * rx, y = d.y * ry, z = d.z * rz;
     const front = smooth(0.2, 0.8, d.z);
     z *= 1 - 0.035 * front;                                                    // flatter facial plane
-    z += 0.0045 * (bump(d, 0.52, -0.06, 0.78, 0.2) + bump(d, -0.52, -0.06, 0.78, 0.2)); // high cheekbones
-    x += 0.004 * (bump(d, 0.62, -0.08, 0.7, 0.2) - bump(d, -0.62, -0.08, 0.7, 0.2));
-    z += 0.0045 * bump(d, 0, 0.24, 0.95, 0.28) * (female ? 0.4 : 1);            // brow
-    z -= 0.0065 * (bump(d, 0.36, 0.11, 0.92, 0.13) + bump(d, -0.36, 0.11, 0.92, 0.13)); // eye sockets
+    z += 0.0045 * (bump(d, 0.55, -0.2, 0.78, 0.2) + bump(d, -0.55, -0.2, 0.78, 0.2)); // high cheekbones
+    x += 0.004 * (bump(d, 0.64, -0.2, 0.7, 0.2) - bump(d, -0.64, -0.2, 0.7, 0.2));
+    z += 0.0045 * bump(d, 0, 0.17, 0.95, 0.26) * (female ? 0.4 : 1);            // brow
+    z -= 0.0065 * (bump(d, 0.41, 0.0, 0.9, 0.13) + bump(d, -0.41, 0.0, 0.9, 0.13)); // eye sockets
     // straight nose: ridge growing to the tip, flared base
-    const ridge = Math.exp(-(d.x * d.x) / (2 * 0.07 * 0.07)) * smooth(0.22, -0.16, d.y) * smooth(-0.3, -0.19, d.y) * front;
-    z += 0.024 * ridge; z += 0.007 * Math.exp(-(d.x * d.x) / (2 * 0.17 * 0.17)) * bump(d, 0, -0.2, 0.97, 0.09);
+    const ridge = Math.exp(-(d.x * d.x) / (2 * 0.07 * 0.07)) * smooth(0.14, -0.27, d.y) * smooth(-0.42, -0.3, d.y) * front;
+    z += 0.023 * ridge; z += 0.008 * Math.exp(-(d.x * d.x) / (2 * 0.2 * 0.2)) * bump(d, 0, -0.31, 0.95, 0.09);
     // full lips
-    z += 0.0085 * Math.exp(-(d.x * d.x) / (2 * 0.2 * 0.2)) * (Math.exp(-((d.y + 0.385) ** 2) / (2 * 0.035 ** 2)) + 1.15 * Math.exp(-((d.y + 0.49) ** 2) / (2 * 0.045 ** 2))) * front;
-    z -= 0.003 * Math.exp(-(d.x * d.x) / (2 * 0.2 * 0.2)) * Math.exp(-((d.y + 0.435) ** 2) / (2 * 0.012 ** 2)) * front;
-    z += 0.006 * bump(d, 0, -0.8, 0.6, 0.2); y -= 0.004 * bump(d, 0, -0.9, 0.4, 0.25);       // chin
+    z += 0.0085 * Math.exp(-(d.x * d.x) / (2 * 0.2 * 0.2)) * (Math.exp(-((d.y + 0.57) ** 2) / (2 * 0.035 ** 2)) + 1.15 * Math.exp(-((d.y + 0.68) ** 2) / (2 * 0.045 ** 2))) * front;
+    z -= 0.003 * Math.exp(-(d.x * d.x) / (2 * 0.2 * 0.2)) * Math.exp(-((d.y + 0.62) ** 2) / (2 * 0.012 ** 2)) * front;
+    z += 0.005 * bump(d, 0, -0.88, 0.5, 0.18);       // chin
     p.setXYZ(i, x, y + 0.118, z + 0.012);
   }
   g.computeVertexNormals(); return g;
 }
 function hairGeometry(style: HairStyle, seed: number) {
   const src = new THREE.SphereGeometry(1, 40, 28); const p = src.attributes.position; const v = new THREE.Vector3(); const r = mulberry(seed);
-  const keep: boolean[] = []; const thick = style === 'afro' ? 0.045 : style === 'fade' ? 0.011 : 0.007;
+  const keep: boolean[] = []; const thick = style === 'afro' ? 0.045 : style === 'fade' ? 0.02 : 0.008;
   for (let i = 0; i < p.count; i++) {
     v.fromBufferAttribute(p, i).normalize(); const line = hairline(v.x, v.y, v.z, style) + (style === 'fade' ? (v.z > 0.25 ? 0 : 0.2) : 0.04); keep.push(v.y > line - 0.02);
     const edge = smooth(line - 0.02, line + 0.2, v.y); const t = thick * (style === 'fade' ? edge : 1) * (0.8 + r() * 0.5);
-    let rx = 0.0765, rz = 0.0975; if (v.z < 0) rz *= 1 + 0.07 * smooth(0, -1, v.z) * smooth(-0.6, 0.5, v.y);
+    let rx = 0.0685 * (1 + 0.1 * smooth(0.1, 0.6, v.y) * smooth(0.3, -0.5, v.z)), rz = 0.0945; if (v.z < 0) rz *= 1 + 0.07 * smooth(0, -1, v.z) * smooth(-0.6, 0.5, v.y);
     p.setXYZ(i, v.x * (rx + t), v.y * (0.118 + t) + 0.118, v.z * (rz + t) + 0.012);
   }
   const idx: number[] = []; const si = src.index!; for (let i = 0; i < si.count; i += 3) { const a = si.getX(i), b = si.getX(i + 1), c = si.getX(i + 2); if (keep[a] && keep[b] && keep[c]) idx.push(a, b, c); }
@@ -173,7 +179,7 @@ export class Human {
   bones = {} as Record<BoneName, THREE.Bone>;
   skeleton!: THREE.Skeleton;
   body!: THREE.SkinnedMesh; cloth: THREE.SkinnedMesh | null = null; head!: THREE.Mesh;
-  opts: Required<Omit<HumanOpts, 'beard' | 'cap' | 'toque' | 'robeColor'>> & { beard: number | null; cap: number | null; toque: number | null; robeColor: number | null };
+  opts: Required<Omit<HumanOpts, 'beard' | 'cap' | 'toque' | 'robeColor' | 'photo'>> & { photo: HTMLImageElement | null; beard: number | null; cap: number | null; toque: number | null; robeColor: number | null };
   // animation state
   phase = 0; speed = 0; action = ''; actionT = 0; actionDur = 1; actionHold = false; private actW = 0; private prevAction = '';
   private clothVel = new THREE.Vector3(); private clothAng = new THREE.Vector2(); private clothAngV = new THREE.Vector2(); private lastPos = new THREE.Vector3(); private lastYaw = 0;
@@ -187,7 +193,7 @@ export class Human {
     this.opts = {
       seed, height: o.height ?? 1.8, build: o.build ?? 1, skin: o.skin ?? 0x5a3420, outfit, hair: o.hair ?? 'short', moustache: o.moustache ?? false, beard: o.beard ?? null,
       female: o.female ?? false, robeColor: o.robeColor ?? null, shirt: o.shirt ?? [0x2a2f38, 0x5a6a78, 0x7a3a34, 0x3a5a48, 0xd8d4c8, 0x444a66][Math.floor(r() * 6)], pants: o.pants ?? [0x23262c, 0x2a3348, 0x3a3a3c, 0x4a4234][Math.floor(r() * 4)],
-      headScale: o.headScale ?? 1, turban: o.turban ?? false, cap: o.cap ?? null, toque: o.toque ?? null, lod: o.lod ?? false,
+      photo: o.photo ?? null, headScale: o.headScale ?? 1, turban: o.turban ?? false, cap: o.cap ?? null, toque: o.toque ?? null, lod: o.lod ?? false,
     };
     this.height = this.opts.height;
     this.build();
@@ -215,7 +221,7 @@ export class Human {
     const T: [number, number, number, W][] = [[0.9, 0.132, 0.1, [['hips', 1]]], [0.97, 0.158, 0.112, [['hips', 1]]], [1.03, 0.148, 0.104, [['hips', 0.6], ['spine', 0.4]]], [1.09, 0.138, 0.098, [['spine', 1]]], [1.17, 0.146, 0.102, [['spine', 0.5], ['chest', 0.5]]], [1.26, 0.163, 0.11, [['chest', 1]]], [1.34, 0.178, 0.114, [['chest', 1]]], [1.41, 0.182, 0.108, [['chest', 1]]], [1.455, 0.14, 0.092, [['chest', 1]]], [1.485, 0.07, 0.066, [['chest', 0.6], ['neck', 0.4]]]];
     g.tube(T.map(([y, rx, rz, w]) => { const isTop = y > 1.0; const c = (isTop ? top : longRobe ? robeCol : pants).clone().multiplyScalar(band(y)); const k = isTop ? pf : 1; return { c: [0, y, 0.005] as [number, number, number], rx: rx * B * k, rz: rz * (0.5 + 0.5 * B) * k, col: y > 1.47 && !puffer && !longRobe ? skin : c, w }; }), 14, false, true);
     // neck
-    g.tube([[1.47, 0.05], [1.52, 0.044], [1.59, 0.046]].map(([y, rr], i) => ({ c: [0, y, 0.004 + i * 0.004] as [number, number, number], rx: rr, rz: rr * 1.05, col: skin, w: (i === 0 ? [['chest', 0.5], ['neck', 0.5]] : i === 1 ? [['neck', 1]] : [['neck', 0.4], ['head', 0.6]]) as W })), 10);
+    g.tube([[1.47, 0.058], [1.53, 0.052], [1.6, 0.054]].map(([y, rr], i) => ({ c: [0, y, 0.004 + i * 0.004] as [number, number, number], rx: rr, rz: rr * 1.05, col: skin, w: (i === 0 ? [['chest', 0.5], ['neck', 0.5]] : i === 1 ? [['neck', 1]] : [['neck', 0.4], ['head', 0.6]]) as W })), 10);
     // ---- arms ----
     for (const s of [1, -1]) {
       const S = s > 0 ? 'L' : 'R'; const ua = `upperArm${S}` as BoneName, fa = `foreArm${S}` as BoneName;
@@ -246,10 +252,10 @@ export class Human {
 
     // ---- head ----
     const hs = o.headScale;
-    this.head = new THREE.Mesh(headGeometry(o.female), new THREE.MeshStandardMaterial({ map: faceTexture({ skin: o.skin, hair: o.hair, moustache: o.moustache, female: o.female, seed: o.seed, beard: o.beard }), roughness: 0.62 }));
+    this.head = new THREE.Mesh(headGeometry(o.female), new THREE.MeshStandardMaterial({ map: faceTexture({ skin: o.skin, hair: o.hair, moustache: o.moustache, female: o.female, seed: o.seed, beard: o.beard, photo: o.photo }), roughness: 0.58 }));
     this.head.castShadow = true; this.head.scale.setScalar(hs); this.bones.head.add(this.head);
     const earM = new THREE.MeshStandardMaterial({ color: skin, roughness: 0.65 });
-    for (const s of [1, -1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), earM); e.scale.set(0.45, 1.25, 0.8); e.position.set(s * 0.077 * hs, 0.11 * hs, 0.0); e.rotation.y = s * 0.35; this.bones.head.add(e); }
+    for (const s of [1, -1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), earM); e.scale.set(0.45, 1.25, 0.8); e.position.set(s * 0.07 * hs, 0.105 * hs, 0.0); e.rotation.y = s * 0.35; this.bones.head.add(e); }
     if (o.hair !== 'bald' && o.hair !== 'covered' && !o.turban) { const hm = new THREE.Mesh(hairGeometry(o.hair, o.seed), new THREE.MeshStandardMaterial({ color: o.hair === 'grey' ? 0x9a9a9a : 0x0c0a09, roughness: 1 })); hm.scale.setScalar(hs); hm.castShadow = true; this.bones.head.add(hm); }
     if (o.turban) { // white wrapped turban (temtem) worn by priests
       const tm = new THREE.MeshStandardMaterial({ color: 0xf6f4ee, roughness: 0.9 });
@@ -376,6 +382,6 @@ export class Human {
 }
 
 /** Isaac — the player. Proportions and palette from reference/isaac/*. */
-export function makeIsaac(outfit: Outfit = 'netela', moustache = true): Human {
-  return new Human({ seed: 11, height: 1.84, build: 0.9, skin: 0x7a4a30, outfit, hair: 'fade', moustache, shirt: 0x1d1e22, pants: 0x1f232b, toque: outfit === 'winter' ? 0x1c1c20 : null });
+export function makeIsaac(outfit: Outfit = 'netela', moustache = true, photo: HTMLImageElement | null = null): Human {
+  return new Human({ seed: 11, height: 1.84, build: 0.9, skin: photo ? 0xa2604a : 0x7a4a30, outfit, hair: 'fade', moustache, photo, shirt: 0x1d1e22, pants: 0x1f232b, toque: outfit === 'winter' ? 0x1c1c20 : null });
 }

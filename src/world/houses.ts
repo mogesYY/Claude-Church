@@ -7,9 +7,9 @@ import type { Materials, Season } from './materials';
 export interface BuildingData { id: number; pts: number[][]; levels: number; kind: string; name: string; num: string; gen?: boolean }
 export interface Obb { cx: number; cz: number; hw: number; hd: number; yaw: number; h: number }
 
-const WALL_COLORS = [0xe9e4d6, 0xf1ead0, 0xd9d2bd, 0xc9d3c2, 0xb9c7cf, 0xcfcfcf, 0xe8dcc0, 0xbfae94, 0xd8c7b8, 0xa9b7a2, 0xf4f2ec, 0x9fb0bd, 0xd7b9a8, 0x8f9a86, 0xe6d9a8];
-const ROOF_COLORS = [0x3c3c40, 0x4a3f38, 0x55585a, 0x3f4a44, 0x6a4038, 0x2f3338, 0x5a5048];
-const TRIM_COLORS = [0xf5f5f0, 0xf5f5f0, 0xf5f5f0, 0x3b4a3f, 0x5a3a2e, 0x2e3d4f, 0xe8e0c8];
+const WALL_COLORS = [0xf2ead2, 0xf6e7b0, 0xd9c79a, 0xa9c8a2, 0x8fb8d0, 0xd8d8d2, 0xf0d890, 0xc49a6a, 0xe0b8a0, 0x7fa888, 0xfaf6ec, 0x6f9ac0, 0xd88a70, 0x6a8a66, 0xe8c860, 0xb85a48, 0x4f7a9a, 0x8a6a9a];
+const ROOF_COLORS = [0x3a3a40, 0x5a3a2c, 0x4a5258, 0x34503e, 0x7a3428, 0x2a2e36, 0x6a5440];
+const TRIM_COLORS = [0xfbfbf6, 0xfbfbf6, 0xfbfbf6, 0x2f4f3a, 0x6a3222, 0x24364f, 0xf0e4c0];
 const DOOR_COLORS = [0x6b2f2a, 0x2f4a3a, 0x283a55, 0xf0ece0, 0x4a3524, 0x1e1e1e, 0x8a6a2a];
 const BRICK_COLORS = [0x9a5a48, 0xb89a78, 0x8a8a88, 0xcfc4ae, 0x7a4a3c, 0xa8a49c, 0xb07a5a];
 
@@ -90,7 +90,7 @@ const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _p = new THREE.Vect
  * Build one building into the chunk geometry. `toRoad` is the unit vector from the footprint centre to the nearest street.
  * Returns the collision box.
  */
-export function buildBuilding(cg: ChunkGeo, b: BuildingData, y0: number, toRoad: [number, number], season: Season, era = 0): Obb {
+export function buildBuilding(cg: ChunkGeo, b: BuildingData, y0: number, toRoad: [number, number], season: Season, era = 0, blocked?: (x: number, z: number) => boolean): Obb {
   const rnd = mulberry(Math.abs(b.id) * 2654435761 + (b.id < 0 ? 17 : 0));
   const o = obbOf(b.pts);
   const snow = season === 'winter';
@@ -102,8 +102,15 @@ export function buildBuilding(cg: ChunkGeo, b: BuildingData, y0: number, toRoad:
       const a = o.yaw + (k * Math.PI) / 2; const fx = -Math.sin(a), fz = -Math.cos(a); const d = fx * toRoad[0] + fz * toRoad[1];
       if (d > bestDot) { bestDot = d; yaw = a; hw = k % 2 ? o.hd : o.hw; hd = k % 2 ? o.hw : o.hd; }
     }
-    _q.setFromAxisAngle(_up, yaw); _m.compose(_p.set(o.cx, y0, o.cz), _q, _s); cg.setMatrix(_m);
     hw = Math.max(1.2, Math.min(hw, 9)); hd = Math.max(1.5, Math.min(hd, 10));
+    // never let a generated house (or its porch) reach onto a road or lane: pull it back, and shrink if it still does not fit
+    if (blocked) {
+      const fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+      const hits = (cx: number, cz: number, w: number, d: number) => { for (const [lx, lz] of [[-w, -d - 2.4], [w, -d - 2.4], [0, -d - 2.4], [-w, d], [w, d], [-w, 0], [w, 0]]) if (blocked(cx + rx * lx - fx * lz, cz + rz * lx - fz * lz)) return true; return false; };
+      for (let k = 0; k < 6 && hits(o.cx, o.cz, hw + 0.4, hd + 0.4); k++) { if (k < 3) { o.cx -= fx * 0.9; o.cz -= fz * 0.9; } else { hw = Math.max(1.2, hw * 0.82); hd = Math.max(1.5, hd * 0.82); } }
+      (b as any)._noPorch = hits(o.cx, o.cz, hw + 0.4, hd + 0.4);
+    }
+    _q.setFromAxisAngle(_up, yaw); _m.compose(_p.set(o.cx, y0, o.cz), _q, _s); cg.setMatrix(_m);
     if (b.kind === 'garage') {
       const wallCol = C(WALL_COLORS[Math.floor(rnd() * WALL_COLORS.length)], 0.92); const h = 2.5;
       cg.siding.box(0, h / 2, 0, hw * 2, h, hd * 2, wallCol, 1, 0b001111);
@@ -153,7 +160,7 @@ export function buildBuilding(cg: ChunkGeo, b: BuildingData, y0: number, toRoad:
     const doorCol = C(DOOR_COLORS[Math.floor(rnd() * DOOR_COLORS.length)]);
     cg.trim.box(doorX, fh + 1.05, -hd - 0.03, 1.02, 2.14, 0.06, trim);
     cg.trim.box(doorX, fh + 1.02, -hd - 0.06, 0.88, 2.02, 0.04, doorCol);
-    const porch = rnd();
+    const porch = (b as any)._noPorch ? 1 : rnd();
     if (porch < 0.62) {
       const full = porch < 0.3; const pw = full ? hw * 2 - 0.3 : 2.6, px = full ? 0 : doorX, pd = 1.9;
       cg.wood.box(px, fh / 2, -hd - pd / 2, pw, fh, pd, C(0x9a9288));
@@ -167,7 +174,7 @@ export function buildBuilding(cg: ChunkGeo, b: BuildingData, y0: number, toRoad:
       for (let i = 0; i < 3; i++) cg.concrete.box(doorX, fh - (i + 0.5) * (fh / 3), -hd - pd - 0.15 - i * 0.28, 1.3, fh / 3, 0.3, C(0xb4b1a9));
     } else for (let i = 0; i < 3; i++) cg.concrete.box(doorX, fh - (i + 0.5) * (fh / 3) + 0.0, -hd - 0.2 - i * 0.28, 1.4, fh / 3, 0.32 + (i === 0 ? 0.5 : 0), C(0xb4b1a9));
     // front walk
-    cg.concrete.box(doorX, 0.03, -hd - 5.5, 1.0, 0.06, 6.5, C(snow ? 0xe9edf2 : 0xb9b6ae), 1, 0b010000);
+    cg.concrete.box(doorX, 0.03, -hd - 2.6, 1.0, 0.06, 2.6, C(snow ? 0xe9edf2 : 0xb9b6ae), 1, 0b010000);
     // backyard fence (deterministic subset)
     const f = rnd();
     if (b.gen && f < 0.5) {

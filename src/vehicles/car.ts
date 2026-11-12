@@ -35,7 +35,7 @@ function mats() {
 export function buildCarMesh(kind: CarKind, color: number, snow = false) {
   const s = SPECS[kind]; const m = mats(); const root = new THREE.Group(); const hw = s.W / 2;
   const shape = new THREE.Shape(); s.profile.forEach((p, i) => (i ? shape.lineTo(p[0], p[1]) : shape.moveTo(p[0], p[1]))); shape.closePath();
-  const ext = new THREE.ExtrudeGeometry(shape, { depth: s.W - 0.16, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.07, bevelSegments: 3, curveSegments: 4 });
+  const ext = new THREE.ExtrudeGeometry(shape, { depth: s.W - 0.16, bevelEnabled: true, bevelThickness: 0.12, bevelSize: 0.1, bevelSegments: 6, curveSegments: 8 });
   // shape is in (z,y); extrude along x: rotate so shape-x -> world z
   ext.translate(0, 0, -(s.W - 0.16) / 2); ext.rotateY(-Math.PI / 2);
   const paint = new THREE.MeshStandardMaterial({ color, roughness: s.old ? 0.5 : 0.3, metalness: 0.55, envMapIntensity: 1.2 });
@@ -109,26 +109,36 @@ export class Car {
   get yaw() { const f = this.forward(); return Math.atan2(f.x, f.z); }
   forward(out = new THREE.Vector3()) { return out.set(0, 0, 1).applyQuaternion(this.quat); }
 
-  /** fixed-step control. throttle -1..1, steer -1..1 (right positive) */
+  /** fixed-step control. throttle -1..1, steer -1..1 (right positive). Arcade-assisted so it is easy to drive. */
   step(dt: number, throttle: number, steer: number, brake: boolean) {
     const vc = this.vc; if (!vc) return;
     const s = this.spec; const v = this.speed; this.throttle = throttle;
-    const maxSteer = 0.56 / (1 + Math.abs(v) * 0.17); const target = -steer * maxSteer;
-    this.steer += (target - this.steer) * Math.min(1, dt * 7);
-    let engine = 0, br = brake ? s.mass * 0.03 : 0;
-    if (throttle > 0.02) { if (v < -0.6) br = s.mass * 0.03 * throttle; else engine = s.power * 1.5 * throttle * (1 - Math.min(1, Math.max(0, v) / 40)); }
-    else if (throttle < -0.02) { if (v > 0.6) br = s.mass * 0.03 * -throttle; else engine = s.power * 0.6 * throttle * (1 - Math.min(1, Math.max(0, -v) / 9)); }
-    else br = Math.max(br, s.mass * 0.0025);
+    // speed-sensitive steering with smooth ramp (no twitch at speed, tight at parking speed)
+    const maxSteer = 0.6 / (1 + Math.abs(v) * 0.11); const target = -steer * maxSteer;
+    this.steer += (target - this.steer) * Math.min(1, dt * (Math.abs(steer) > 0.05 ? 6 : 9));
+    let engine = 0, br = brake ? s.mass * 0.045 : 0;
+    const power = s.power * 2.2 * Math.min(1, 0.55 + this.grip * 0.5);
+    if (throttle > 0.02) { if (v < -0.8) br = s.mass * 0.045 * throttle; else engine = power * throttle * (1 - Math.min(1, Math.max(0, v) / 34)); }
+    else if (throttle < -0.02) { if (v > 0.8) br = s.mass * 0.045 * -throttle; else engine = power * 0.7 * throttle * (1 - Math.min(1, Math.max(0, -v) / 9)); }
+    else br = Math.max(br, s.mass * 0.004);           // gentle engine braking when coasting
     this.braking = br > s.mass * 0.01;
-    const fr = 2.2 * this.grip;
-    for (let i = 0; i < 4; i++) { vc.setWheelEngineForce(i, engine / 4); vc.setWheelBrake(i, i < 2 ? br : br * 0.7); vc.setWheelFrictionSlip(i, fr * (i >= 2 && brake ? 0.75 : 1)); vc.setWheelSideFrictionStiffness(i, 0.9 * Math.min(1, this.grip + 0.25)); }
+    const fr = 3.4 * (0.45 + 0.55 * this.grip);
+    for (let i = 0; i < 4; i++) { vc.setWheelEngineForce(i, engine / 4); vc.setWheelBrake(i, i < 2 ? br : br * 0.8); vc.setWheelFrictionSlip(i, fr); vc.setWheelSideFrictionStiffness(i, 1); }
     vc.setWheelSteering(0, this.steer); vc.setWheelSteering(1, this.steer);
     if (Math.abs(throttle) > 0.02 || brake || Math.abs(v) > 0.3) this.body.wakeUp();
     vc.updateVehicle(dt, undefined, groups(0xffff, GROUP_WORLD));
     this.speed = vc.currentVehicleSpeed();
-    // gentle anti-roll: damp roll/pitch rates so SUVs do not tip on curbs
-    const av = this.body.angvel(); this.body.setAngvel({ x: av.x * 0.97, y: av.y, z: av.z * 0.97 }, true);
-    const lv = this.body.linvel(); const f = this.forward(); const side = lv.x * f.z - lv.z * f.x; this.slip = Math.abs(side);
+    // --- driving assists ---
+    const f = this.forward(); const lv = this.body.linvel(); const av = this.body.angvel();
+    const fwd = lv.x * f.x + lv.z * f.z; const sx = lv.x - f.x * fwd, sz = lv.z - f.z * fwd; this.slip = Math.hypot(sx, sz);
+    let contacts = 0; for (let i = 0; i < 4; i++) if (vc.wheelIsInContact(i)) contacts++;
+    if (contacts >= 2) {
+      // 1) traction control: bleed off sideways slide (less on ice, so winter still feels like winter)
+      const k = Math.min(1, dt * (2.5 + 9 * this.grip)); this.body.setLinvel({ x: lv.x - sx * k, y: lv.y, z: lv.z - sz * k }, true);
+      // 2) steering assist: nudge the yaw rate toward what the wheels are asking for
+      const want = (fwd * Math.tan(this.steer)) / s.wheelbase; const a = Math.min(1, dt * (3 + 7 * this.grip));
+      this.body.setAngvel({ x: av.x * 0.9, y: av.y + (want - av.y) * a, z: av.z * 0.9 }, true);
+    } else this.body.setAngvel({ x: av.x * 0.97, y: av.y, z: av.z * 0.97 }, true);
   }
 
   sync() {

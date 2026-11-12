@@ -1,7 +1,7 @@
 # Chant / mezmur placeholders
 
 The game never ships synthesized imitations of liturgical chant. Drop your own recordings here as MP3 with these exact names
-and they are picked up automatically (until then a soft neutral drone plays in their place):
+and they are picked up automatically (until then a generated begena-style instrumental plays in their place — never an imitation of chant):
 
 | File | Used in | What to record |
 |---|---|---|
@@ -10,6 +10,7 @@ and they are picked up automatically (until then a soft neutral drone plays in t
 | `meskel_demera.mp3` | Chapter 3, Demera night | Meskel hymns sung around the Demera |
 | `timket_procession.mp3` | Chapter 4, procession | Timket procession mezmur with kebero |
 | `timket_blessing.mp3` | Chapter 4, blessing of water | The prayer over the water (or a quiet mezmur) |
+| `siqlet.mp3` | Chapter 5, Good Friday | Siqlet chant with "Kiryalayson" |
 | `fasika_vigil.mp3` | Chapter 5, vigil | Vigil chant leading to "Kristos tensa'e ke'mutan" |
 | `fasika_tensae.mp3` | Chapter 5, dawn + credits | Joyful Fasika mezmur |
 | `mezmur_01.mp3` … `mezmur_05.mp3` | Car radio slots | Any mezmur from the @EOTCBrandon channel you have the rights to use |

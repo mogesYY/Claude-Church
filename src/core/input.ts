@@ -17,10 +17,11 @@ export class Input {
   /** touch layer writes here */
   touch = { moveX: 0, moveY: 0, lookDX: 0, lookDY: 0, sprint: false, brake: false, throttle: 0, active: false };
   private padPrev: boolean[] = [];
-  wheel = 0;
+  wheel = 0; sens = 1;
   lastDevice: 'kbm' | 'pad' | 'touch' = 'kbm';
 
   constructor(private canvas: HTMLCanvasElement) {
+    try { const v = localStorage.getItem('ma.sens'); if (v) this.sens = +v; } catch { /* ignore */ }
     addEventListener('keydown', (e) => {
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
       if (!this.keys.has(e.code)) this.onKeyPress(e.code);
@@ -54,7 +55,7 @@ export class Input {
     let my = (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0);
     let sprint = k.has('ShiftLeft') || k.has('ShiftRight');
     let brake = k.has('Space');
-    let lx = this.mouseDX * 0.0024, ly = this.mouseDY * 0.0024;
+    let lx = this.mouseDX * 0.0024 * this.sens, ly = this.mouseDY * 0.0024 * this.sens;
     this.mouseDX = this.mouseDY = 0;
     let throttle = my, steer = mx;
 

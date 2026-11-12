@@ -145,30 +145,48 @@ export class World {
     return dir;
   }
   nearestNavNode(x: number, z: number) { let b = -1, bd = 1e18; const n = this.data.nav.nodes; for (let i = 0; i < n.length; i++) { if (!this.adj[i].length) continue; const d = (n[i][0] - x) ** 2 + (n[i][1] - z) ** 2; if (d < bd) { bd = d; b = i; } } return b; }
-  /** A* over the road graph; returns list of [x,z] */
+  /** A* over the road graph (binary heap); returns list of [x,z] from the start to the destination */
   route(fx: number, fz: number, tx: number, tz: number): number[][] {
     const n = this.data.nav.nodes, s = this.nearestNavNode(fx, fz), t = this.nearestNavNode(tx, tz); if (s < 0 || t < 0) return [];
-    const g = new Float32Array(n.length).fill(1e18), from = new Int32Array(n.length).fill(-1); const open = new Set<number>([s]); g[s] = 0;
+    const g = new Float32Array(n.length).fill(1e18), from = new Int32Array(n.length).fill(-1), done = new Uint8Array(n.length);
+    const heap: number[] = [], key: number[] = [];
+    const push = (i: number, k: number) => { let c = heap.length; heap.push(i); key.push(k); while (c > 0) { const p = (c - 1) >> 1; if (key[p] <= key[c]) break; [heap[p], heap[c]] = [heap[c], heap[p]]; [key[p], key[c]] = [key[c], key[p]]; c = p; } };
+    const pop = () => { const top = heap[0]; const li = heap.pop()!, lk = key.pop()!; if (heap.length) { heap[0] = li; key[0] = lk; let c = 0; for (;;) { const l = c * 2 + 1, r = l + 1; let m = c; if (l < heap.length && key[l] < key[m]) m = l; if (r < heap.length && key[r] < key[m]) m = r; if (m === c) break; [heap[m], heap[c]] = [heap[c], heap[m]]; [key[m], key[c]] = [key[c], key[m]]; c = m; } } return top; };
     const hfn = (i: number) => Math.hypot(n[i][0] - n[t][0], n[i][1] - n[t][1]);
-    let guard = 0;
-    while (open.size && guard++ < 40000) {
-      let cur = -1, cf = 1e18; for (const o of open) { const f = g[o] + hfn(o); if (f < cf) { cf = f; cur = o; } }
-      if (cur === t) break; open.delete(cur);
-      for (const [nb, ri] of this.adj[cur]) { const cost = Math.hypot(n[nb][0] - n[cur][0], n[nb][1] - n[cur][1]) * (this.data.roads[ri].kind === 'service' ? 2.5 : 1); if (g[cur] + cost < g[nb]) { g[nb] = g[cur] + cost; from[nb] = cur; open.add(nb); } }
+    g[s] = 0; push(s, hfn(s));
+    while (heap.length) {
+      const cur = pop(); if (done[cur]) continue; done[cur] = 1; if (cur === t) break;
+      for (const [nb, ri] of this.adj[cur]) { if (done[nb]) continue; const kind = this.data.roads[ri].kind; const cost = Math.hypot(n[nb][0] - n[cur][0], n[nb][1] - n[cur][1]) * (kind === 'service' ? 3 : kind === 'residential' ? 1.1 : 1); if (g[cur] + cost < g[nb]) { g[nb] = g[cur] + cost; from[nb] = cur; push(nb, g[nb] + hfn(nb)); } }
     }
-    const path: number[][] = [[tx, tz]]; let c = t; while (c >= 0 && c !== s) { path.push([n[c][0], n[c][1]]); c = from[c]; } path.push([n[s][0], n[s][1]]);
-    return path.reverse();
+    if (from[t] < 0 && s !== t) return [[fx, fz], [tx, tz]];
+    const path: number[][] = []; let c = t; while (c >= 0 && c !== s) { path.push([n[c][0], n[c][1]]); c = from[c]; } path.push([n[s][0], n[s][1]]); path.reverse();
+    // start from where the player actually is: drop leading nodes that lie behind
+    while (path.length > 1) { const a = path[0], b = path[1]; const ab = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; const tproj = ((fx - a[0]) * (b[0] - a[0]) + (fz - a[1]) * (b[1] - a[1])) / (ab * ab); if (tproj > 0) { path.shift(); } else break; }
+    path.unshift([fx, fz]);
+    const last = path[path.length - 1]; if (Math.hypot(last[0] - tx, last[1] - tz) > 3) path.push([tx, tz]);
+    return path;
   }
+  private routeMesh: THREE.Mesh | null = null;
+  /** gold guidance ribbon laid on the road along the GPS route */
+  showRoute(path: number[][]) {
+    if (this.routeMesh) { this.group.remove(this.routeMesh); this.routeMesh.geometry.dispose(); this.routeMesh = null; }
+    if (path.length < 2) return;
+    const g = new Geo(); const col = new THREE.Color(0xffc93a); const rs = this.resample(path, 4); let dist = 0;
+    for (let i = 0; i < rs.length - 1 && dist < 420; i++) { const a = rs[i], b = rs[i + 1]; const sl = Math.hypot(b.x - a.x, b.z - a.z); const P = (e: typeof a, o: number) => [e.x - e.tz * o, this.height(e.x - e.tz * o, e.z + e.tx * o) + 0.11, e.z + e.tx * o]; if (Math.floor(dist / 2.2) % 2 === 0 || true) g.quad(P(a, -0.55), P(a, 0.55), P(b, 0.55), P(b, -0.55), col, [0, dist / 3, 1, (dist + sl) / 3]); dist += sl; }
+    if (!this.routeMat) { const tex = canvasTex(64, 64, (c) => { c.clearRect(0, 0, 64, 64); c.fillStyle = 'rgba(255,201,58,0.9)'; c.beginPath(); c.moveTo(6, 56); c.lineTo(32, 20); c.lineTo(58, 56); c.lineTo(46, 56); c.lineTo(32, 38); c.lineTo(18, 56); c.closePath(); c.fill(); }); this.routeMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6, fog: false }); }
+    this.routeMesh = new THREE.Mesh(g.build(), this.routeMat); this.routeMesh.renderOrder = 3; this.group.add(this.routeMesh);
+  }
+  private routeMat: THREE.MeshBasicMaterial | null = null;
 
   // ------------------------------------------------------------ terrain
   private drawSplat() {
     const c = this.splatCanvas, ctx = c.getContext('2d')!; const W = c.width, H = c.height;
     const x0 = this.gx0, z0 = this.gz0, sx = W / ((this.gridW - 1) * CELL), sz = H / ((this.gridH - 1) * CELL);
     const pal = {
-      summer: { ground: '#6f8452', park: '#5f8f48', pitch: '#5aa04a', lot: '#77787a', bank: '#8a8466', wood: '#56793f' },
-      autumn: { ground: '#8a8450', park: '#8f8a48', pitch: '#8a9048', lot: '#77787a', bank: '#8a8062', wood: '#8a7a3a' },
+      summer: { ground: '#5c9a3e', park: '#4fa63a', pitch: '#48b040', lot: '#77787a', bank: '#9a8f62', wood: '#3f8232' },
+      autumn: { ground: '#9a8e40', park: '#a8963a', pitch: '#8f9a3c', lot: '#77787a', bank: '#8a7c5a', wood: '#a88030' },
       winter: { ground: '#eef2f7', park: '#f3f6fa', pitch: '#f3f6fa', lot: '#d9dee5', bank: '#e6ebf2', wood: '#e9edf2' },
-      spring: { ground: '#7a7a52', park: '#74884c', pitch: '#6f904a', lot: '#6f7072', bank: '#766e58', wood: '#6a7a44' },
+      spring: { ground: '#7a8a48', park: '#6f9a44', pitch: '#62a444', lot: '#6f7072', bank: '#766e58', wood: '#5f8a3c' },
     }[this.season];
     ctx.fillStyle = pal.ground; ctx.fillRect(0, 0, W, H);
     const poly = (pts: number[][], fill: string) => { ctx.fillStyle = fill; ctx.beginPath(); pts.forEach((p, i) => { const X = (p[0] - x0) * sx, Z = (p[1] - z0) * sz; if (i) ctx.lineTo(X, Z); else ctx.moveTo(X, Z); }); ctx.closePath(); ctx.fill(); };
@@ -350,7 +368,7 @@ export class World {
       const r = mulberry(100 + type); const trunk = new Geo(), crown = new Geo(); const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(1, 1, 1), up = new THREE.Vector3(0, 1, 0);
       if (type === 2) { // spruce
         const t = new THREE.CylinderGeometry(0.08, 0.22, 2.2, lowQ ? 4 : 6); t.translate(0, 1.1, 0); trunk.merge(t, null, 0xffffff);
-        for (let i = 0; i < 5; i++) { const c = new THREE.ConeGeometry(2.3 - i * 0.4, 2.6, lowQ ? 5 : 7); c.translate(0, 2.2 + i * 1.5, 0); crown.merge(c, null, new THREE.Color().setHSL(0.38, 0.3, 0.7 + r() * 0.3)); }
+        for (let i = 0; i < 5; i++) { const c = new THREE.ConeGeometry(2.3 - i * 0.4, 2.6, lowQ ? 7 : 12); c.translate(0, 2.2 + i * 1.5, 0); crown.merge(c, null, new THREE.Color().setHSL(0.38, 0.3, 0.7 + r() * 0.3)); }
         return { trunk: trunk.build(), crown: crown.build() };
       }
       const H = type === 0 ? 6.2 : 4.6; // elm: tall vase; ash: rounder
@@ -363,9 +381,9 @@ export class World {
         const end = dir.clone().multiplyScalar(len).add(new THREE.Vector3(0, H - 0.6, 0));
         // twigs
         for (let k = 0; k < (lowQ ? 0 : 2); k++) { const d2 = dir.clone().add(new THREE.Vector3(r() - 0.5, r() * 0.3, r() - 0.5).multiplyScalar(0.9)).normalize(); const tw = new THREE.CylinderGeometry(0.015, 0.05, 2.6, 3, 1, true); tw.translate(0, 1.3, 0); q.setFromUnitVectors(up, d2); m.compose(end.clone().multiplyScalar(0.72 + k * 0.2).setY(end.y * (0.8 + k * 0.15)), q, s); trunk.merge(tw, m, 0xffffff); }
-        const blob = new THREE.IcosahedronGeometry((type === 0 ? 2.5 : 2.3) * (0.8 + r() * 0.4), lowQ ? 0 : 1); m.makeScale(1, 0.72, 1).setPosition(end.x, end.y + 0.4, end.z); crown.merge(blob, m, new THREE.Color().setHSL(0.3, 0.2, 0.72 + r() * 0.28));
+        const blob = new THREE.SphereGeometry((type === 0 ? 2.5 : 2.3) * (0.8 + r() * 0.4), lowQ ? 7 : 12, lowQ ? 5 : 8); { const bp = blob.attributes.position; for (let q = 0; q < bp.count; q++) { const k = 1 + 0.12 * Math.sin(bp.getX(q) * 2.3 + i) * Math.cos(bp.getZ(q) * 2.1 + i * 2) + 0.06 * Math.sin(bp.getY(q) * 4.7); bp.setXYZ(q, bp.getX(q) * k, bp.getY(q) * k, bp.getZ(q) * k); } blob.computeVertexNormals(); } m.makeScale(1, 0.72, 1).setPosition(end.x, end.y + 0.4, end.z); crown.merge(blob, m, new THREE.Color().setHSL(0.3, 0.2, 0.72 + r() * 0.28));
       }
-      const topBlob = new THREE.IcosahedronGeometry(type === 0 ? 3.0 : 2.8, lowQ ? 0 : 1); m.makeScale(1.15, 0.7, 1.15).setPosition(0, H + (type === 0 ? 5.2 : 3.4), 0); crown.merge(topBlob, m, 0xffffff);
+      const topBlob = new THREE.SphereGeometry(type === 0 ? 3.0 : 2.8, lowQ ? 8 : 14, lowQ ? 6 : 10); m.makeScale(1.15, 0.7, 1.15).setPosition(0, H + (type === 0 ? 5.2 : 3.4), 0); crown.merge(topBlob, m, 0xffffff);
       return { trunk: trunk.build(), crown: crown.build() };
     };
     this.treeGeos = [mk(0), mk(1), mk(2)];
@@ -409,7 +427,7 @@ export class World {
       const nr = this.nearestRoad(cx, cz, true, 2); let dir: [number, number] = [0, -1];
       if (nr.seg) { const l = Math.hypot(nr.px - cx, nr.pz - cz) || 1; dir = [(nr.px - cx) / l, (nr.pz - cz) / l]; }
       const y = this.height(cx, cz);
-      const o = buildBuilding(cg, b, y, dir, this.season);
+      const o = buildBuilding(cg, b, y, dir, this.season, 0, (x, z) => { const n = this.nearestRoad(x, z, false, 1); return !!n.seg && this.data.roads[n.seg.ri].lanes > 0 && n.d < n.seg.hw + 0.3; });
       c.bodies.push(this.phys.staticBox(o.cx, y + o.h / 2, o.cz, o.hw, o.h / 2 + 0.5, o.hd, o.yaw).body);
     }
     // poles

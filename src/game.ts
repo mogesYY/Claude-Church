@@ -34,7 +34,7 @@ export class Game {
   debugCam: { pos: THREE.Vector3; look: THREE.Vector3 } | null = null;
   updaters: ((dt: number) => void)[] = [];
   focusPos = new THREE.Vector3();
-  private jump = false; private last = performance.now(); private waiters: (() => void)[] = []; private shaftT = 0; private wasInside = false; private lowFpsT = 0;
+  facePhoto: HTMLImageElement | null = null; wantPause = false; private jump = false; private last = performance.now(); private waiters: (() => void)[] = []; private shaftT = 0; private wasInside = false; private lowFpsT = 0;
 
   async boot() {
     const canvas = document.getElementById('game') as HTMLCanvasElement; if (this.auto) document.body.classList.add('auto');
@@ -54,11 +54,16 @@ export class Game {
     this.peds = new Pedestrians(this.world, this.engine.scene);
     this.player = new Player(this.phys); this.engine.scene.add(this.player.group);
     this.rig = new CameraRig(this.engine.camera, this.phys);
+    // Isaac's face: his own front photo projected onto the head (public/char/isaac_face.png, built by tools/make_face.py)
+    this.facePhoto = await new Promise<HTMLImageElement | null>((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = `${import.meta.env.BASE_URL}char/isaac_face.png`; setTimeout(() => res(null), 8000); });
     this.setOutfit('netela');
     this.shoePair = new THREE.Group(); for (const dx of [-0.07, 0.07]) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.27), new THREE.MeshStandardMaterial({ color: 0x18181a, roughness: 0.7 })); s.position.set(dx, 0.04, 0); this.shoePair.add(s); }
     this.shoePair.position.copy(this.church.toWorld(0.95, CH.F, -7.9)); this.shoePair.rotation.y = this.church.group.rotation.y; this.shoePair.visible = false; this.engine.scene.add(this.shoePair);
     this.hud = new Hud(this); this.story = new Story(this); await this.story.load(); this.photo = new PhotoMode(this);
     this.applyQuality();
+    // Esc while the mouse is captured only releases the capture (the browser keeps the key): treat that as "pause"
+    document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement && this.ready && !this.hud.phoneOpen && !this.hud.titleOpen && this.mode !== 'photo' && !document.querySelector('.minigame')) this.wantPause = true; });
+    addEventListener('blur', () => { if (this.ready && !this.hud.titleOpen && this.mode !== 'photo' && !this.auto) this.wantPause = true; });
     this.phys.onStep.push((dt) => {
       if (this.mode === 'foot') { this.player.step(dt, this.input.state, this.rig.yaw, this.jump); this.jump = false; }
       if (this.mode === 'car' && this.activeCar) this.activeCar.step(dt, this.input.state.throttle, this.input.state.steer, this.input.state.brake);
@@ -78,7 +83,7 @@ export class Game {
   // ------------------------------------------------------------------ helpers
   nextFrame() { return new Promise<void>((r) => this.waiters.push(r)); }
   async wait(s: number) { let t = 0; while (t < s) { await this.nextFrame(); t += this.dt; } }
-  setOutfit(o: Outfit) { this.outfit = o; const held = this.isaac?.held ?? {}; const parent = this.isaac?.root.parent ?? this.player.group; const pos = this.isaac?.root.position.clone(), rot = this.isaac?.root.rotation.y ?? 0; if (this.isaac) { parent.remove(this.isaac.root); this.isaac.dispose(); } this.isaac = makeIsaac(o, this.save.data.moustache); parent.add(this.isaac.root); if (pos) { this.isaac.root.position.copy(pos); this.isaac.root.rotation.y = rot; } if (held.R) this.isaac.hold('R', held.R, held.R.position.toArray() as any, [held.R.rotation.x, held.R.rotation.y, held.R.rotation.z]); if (this.mode === 'car') this.isaac.play('drive', 1, true); }
+  setOutfit(o: Outfit) { this.outfit = o; const held = this.isaac?.held ?? {}; const parent = this.isaac?.root.parent ?? this.player.group; const pos = this.isaac?.root.position.clone(), rot = this.isaac?.root.rotation.y ?? 0; if (this.isaac) { parent.remove(this.isaac.root); this.isaac.dispose(); } this.isaac = makeIsaac(o, this.save.data.moustache, this.facePhoto); parent.add(this.isaac.root); if (pos) { this.isaac.root.position.copy(pos); this.isaac.root.rotation.y = rot; } if (held.R) this.isaac.hold('R', held.R, held.R.position.toArray() as any, [held.R.rotation.x, held.R.rotation.y, held.R.rotation.z]); if (this.mode === 'car') this.isaac.play('drive', 1, true); }
   setSeason(s: Season) { this.world.setSeason(s); this.engine.applyTime(true); }
   setShoes(off: boolean) { this.shoesOff = off; this.shoePair.visible = off; }
   tp(x: number, z: number, yaw?: number) { this.player.teleport(x, this.world.height(x, z) + 0.05, z, yaw); if (yaw !== undefined) this.rig.yaw = yaw; this.rig.snap(); }
@@ -112,11 +117,15 @@ export class Game {
   frame(force?: number) {
     const now = performance.now(); const dt = force ?? Math.min(0.1, (now - this.last) / 1000); this.last = now; this.dt = dt; this.time += dt;
     this.fps += (1 / Math.max(dt, 0.001) - this.fps) * 0.05;
-    const w = this.waiters; this.waiters = []; for (const r of w) r();
     const inp = this.input; inp.update();
-    const menu = this.hud.phoneOpen || this.hud.titleOpen;
-    if (inp.take('phone') && !this.hud.titleOpen && this.mode !== 'cutscene' && this.mode !== 'photo') this.hud.togglePhone();
-    if (menu) { inp.take('jump'); inp.take('enter'); inp.take('interact'); inp.state.moveX = inp.state.moveY = inp.state.throttle = inp.state.steer = 0; if (inp.take('back')) this.hud.togglePhone(false); }
+    // pause menu: Esc / Tab / P (or losing mouse capture) pauses everything; the story and the world stand still
+    const canPause = !this.hud.titleOpen && this.mode !== 'photo' && this.ready;
+    if (canPause && (inp.take('phone') || inp.take('back') || this.wantPause)) this.hud.togglePhone(this.wantPause ? true : undefined);
+    this.wantPause = false;
+    if (this.hud.phoneOpen && this.mode !== 'photo') { inp.clearPresses(); this.hud.update(0); this.engine.render(this.debugCam ? this.debugCam.look : this.mode === 'cutscene' && this.cutCam ? this.cutCam.look : this.focusPos); return; }
+    const w = this.waiters; this.waiters = []; for (const r of w) r();
+    const menu = this.hud.titleOpen;
+    if (menu) { inp.take('jump'); inp.take('enter'); inp.take('interact'); inp.state.moveX = inp.state.moveY = inp.state.throttle = inp.state.steer = 0; }
     if (this.mode === 'photo') { this.photo.update(dt); }
     else if (!menu) {
       if (inp.take('jump')) this.jump = true;
@@ -136,7 +145,7 @@ export class Game {
     }
     // physics
     const winter = this.world.season === 'winter';
-    if (this.activeCar) { const main = this.world.nearestRoad(this.activeCar.pos.x, this.activeCar.pos.z, true, 1); const arterial = main.seg && this.world.data.roads[main.seg.ri].w > 10; this.activeCar.grip = winter ? (arterial ? 0.62 : 0.48) - this.weather.blizzard * 0.1 : this.world.season === 'spring' ? 0.85 : 1; (this.isaac as any).steer = inp.state.steer; }
+    if (this.activeCar) { const main = this.world.nearestRoad(this.activeCar.pos.x, this.activeCar.pos.z, true, 1); const arterial = main.seg && this.world.data.roads[main.seg.ri].w > 10; this.activeCar.grip = winter ? (arterial ? 0.8 : 0.68) - this.weather.blizzard * 0.12 : this.world.season === 'spring' ? 0.9 : 1; (this.isaac as any).steer = inp.state.steer; }
     this.player.iceSlip = winter && !this.engine.interior ? 0.3 : 0;
     if (this.mode !== 'photo' || !this.photo.tracing) this.phys.update(dt);
     this.player.syncVisual(1);

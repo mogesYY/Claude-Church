@@ -2,6 +2,29 @@
 
 **Live link:** https://mogesyy.github.io/Claude-Church/ — _goes live once GitHub Pages is switched on: repo Settings → Pages → Source: **GitHub Actions**, then re-run the "Deploy to GitHub Pages" workflow (Actions tab). The code is pushed and the CI build passes; only that setting is missing._
 
+## Update — second pass (your feedback)
+
+**Changed**
+- **GPS**: rewritten. Faster routing, starts from where you actually are, a gold guidance line on the road, a distance read-out, and it refreshes as you drive. No GPS line inside the church.
+- **Houses on roads**: the map no longer invents houses or garages (real footprints only), driveways and parking aisles are not drawn as roads, and any building that would touch a road is pulled back or shrunk.
+- **Map size**: cut to about 600 m around the church — only what the story uses.
+- **Missions**: no more long drives. Chapter 2 happens entirely at the church (memories, Mahlet practice, asking the people in the room for their photos, the video). The Meskel permit is a phone call and the branches are in the yard. Only two short drives remain (the elder around the corner; one family home in the blizzard).
+- **Rites**: the Qes censes, not the deacon. The deacon prepares the censer, holds the tuaf for the Gospel, calls "Tselyu", and rings the qachil. You bow and cross yourself on entering and kiss the priest's cross. Mahlet has two facing rows with maqomiya, tsenatsel and kebero. The Demera is circled three times before it is lit with a chibo. At Timket a processional cross leads, the Tabot goes out covered under the umbrella, and the Qes lowers the cross into the water. Siqlet has "Kiryalayson" prostrations. Fasika has the full call and response.
+- **Church interior**: rebuilt from your two photos — open floor before the stage, oak benches, the exact icon/TV/clock layout on the front wall, side door near the front, two doors on the back wall, sound desk, lectern and microphone, lace table, flower table, kettle table with lilies, ceiling fan, floor vents, stream camera above the entrance.
+- **Your face**: your front photo is now projected onto the 3D head (`tools/make_face.py` → `public/char/isaac_face.png`), and the head was reshaped to the photo's proportions.
+- **Driving**: arcade assists (traction and steering help), stronger engine and brakes, much less sliding in winter.
+- **Pause**: Esc (or Tab/P) pauses everything and opens a menu: resume, map, missions, settings, photo mode, restart chapter, quit to main menu. Losing window focus also pauses.
+- **New settings**: music volume, dialogue voice on/off, FPS counter (on by default), mouse sensitivity, renderer.
+- **Look**: interface restyled (green, gold and red band, Ethiopian cross, parchment dialogue box); smoother trees; richer colours and colour grading; surface relief (normal maps) on siding, stucco, shingles, asphalt, carpet and wood.
+- **Sound**: reworked kebero, tsenatsel, qachil bell, maqomiya strike and ililta; a begena-and-krar style instrumental for the menu and scenes; every dialogue line is spoken.
+
+**What is still not real, and why**
+- **Mezmur, Kidase and Mahlet audio are not recordings.** I cannot download from YouTube or record anything here. Put your own MP3s in `public/audio/chant/` and `public/audio/music/` (file names are in the README in each folder) and they replace the generated instrumental automatically.
+- **Voices are the browser's built-in speech**, not actors. English always works; Amharic is spoken only if your device has an Amharic voice installed. Real voice-over would need recordings.
+- **Instrument sounds are synthesized**, not sampled from real instruments. Recordings of your own kebero and tsenatsel would be better; tell me and I will wire them in.
+- I could not look at your YouTube thumbnails (no access to YouTube from here). The rites above are from what I know of the services; please correct anything that is not how it is done at Medhane Alem.
+- The world is still stylised geometry. It is smoother and more colourful now, but it is not photoreal.
+
 ## What I need from you (Isaac)
 
 1. **Switch on GitHub Pages** for `mogesYY/Claude-Church`: Settings → Pages → Source: *GitHub Actions*, then re-run the failed deploy in the Actions tab. (I can push code but am not permitted to change that setting.)
