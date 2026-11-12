@@ -1,6 +1,6 @@
 # Medhane Alem: A Deacon's Year
 
-**Live link:** _not deployed yet — this repository has no GitHub remote connected. Once pushed to GitHub with Pages enabled (Settings → Pages → Source: GitHub Actions), the workflow in `.github/workflows/deploy.yml` publishes it at `https://<user>.github.io/<repo>/`._
+**Live link:** https://mogesyy.github.io/Claude-Church/ — _goes live once GitHub Pages is switched on: repo Settings → Pages → Source: **GitHub Actions**, then re-run the "Deploy to GitHub Pages" workflow (Actions tab). The code is pushed and the CI build passes; only that setting is missing._
 
 A respectful, story-driven, third-person open-world tribute to the Ethiopian Orthodox Tewahedo Medhane Alem Church, 1260 5th Street, Brandon, Manitoba, and its community. Five chapters across one church year: **Kidan**, **Hamer**, **Meskel**, **Timket**, **Fasika**. No violence, no crime — service, travel, festivals, family and community.
 

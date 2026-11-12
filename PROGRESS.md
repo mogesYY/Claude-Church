@@ -1,10 +1,10 @@
 # PROGRESS — Medhane Alem: A Deacon's Year
 
-**Live link:** _none yet._ No GitHub repository is connected to the build session, so nothing has been pushed or deployed. Everything is committed locally; the Pages workflow (`.github/workflows/deploy.yml`) is ready and will deploy on the first push to `main`.
+**Live link:** https://mogesyy.github.io/Claude-Church/ — _goes live once GitHub Pages is switched on: repo Settings → Pages → Source: **GitHub Actions**, then re-run the "Deploy to GitHub Pages" workflow (Actions tab). The code is pushed and the CI build passes; only that setting is missing._
 
 ## What I need from you (Isaac)
 
-1. **A GitHub repo to push to.** Connect GitHub and tell me the repo (or create an empty one). Then enable Pages → Source: *GitHub Actions*.
+1. **Switch on GitHub Pages** for `mogesYY/Claude-Church`: Settings → Pages → Source: *GitHub Actions*, then re-run the failed deploy in the Actions tab. (I can push code but am not permitted to change that setting.)
 2. **The map.** OpenStreetMap's Overpass API was allowed in the network settings but every request from the build machine was reset (100+ attempts over ~1.5 h). Please export `brandon.osm` from openstreetmap.org (Export → an area from the Assiniboine River down past Richmond Ave, 1st St to 18th St) and commit it to `reference/map/`. `npm run world` then replaces the stand-in map automatically.
    **Until then the street map is an approximation of Brandon's grid** written from memory: numbered streets, avenue names and spacing are guesses, and all houses are generated.
 3. **Missing photos** named in the brief: `church_03` (brown tower), `church_04` (festival day), `isaac_03`, `isaac_05`. See `reference/INVENTORY.md`.
@@ -35,7 +35,7 @@
 
 | # | Phase | State |
 |---|---|---|
-| 1 | Vite + three.js WebGPU project, Pages workflow, third-person controller | Done. WebGPU with automatic WebGL2 fallback (both exercised in software). Not pushed or deployed: no GitHub repo connected. |
+| 1 | Vite + three.js WebGPU project, Pages workflow, third-person controller | Done. WebGPU with automatic WebGL2 fallback (both exercised in software). Pushed to `mogesYY/Claude-Church`; CI build passes; deploy waits on Pages being enabled. |
 | 2 | OSM import → neighbourhood, roads, minimap | Importer done (`tools/osm_to_world.ts`, reads Overpass JSON or `.osm` XML). **Running on stand-in map data** (see above). Roads with widths, centre/lane lines, stop bars, sidewalks, curbs, boulevards, signals, stop signs, lamps, rail line, river, parks, nav graph + A* routing, minimap and full map with waypoints. |
 | 3 | Church exterior and interior | Done from the photos: three variants (`current`, `blueFlag`, `brownTower`), festival flags, enterable interior with the three-arch curtained screen, icons (original artwork), pews, chandelier, candles, censer, kebero, maqomiya, tsenatsel, umbrellas, shoe rack, livestream camera. The Meqdes cannot be entered and the camera cannot pass the curtain. |
 | 4 | Vehicles and traffic | Done: 5 modern vehicles (pickup, minivan, sedan, SUV, hatchback) + 2 older ones for flashbacks; raycast suspension, headlights, wipers, horn, snow/ice grip, enter/exit any parked car, radio with 5 mezmur slots; AI traffic keeps right and obeys stop signs/signals; pedestrians on sidewalks. |
