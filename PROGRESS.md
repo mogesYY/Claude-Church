@@ -35,7 +35,7 @@
 
 | # | Phase | State |
 |---|---|---|
-| 1 | Vite + three.js WebGPU project, Pages workflow, third-person controller | Done. WebGPU with automatic WebGL2 fallback; only the WebGL2 path could be tested here (no GPU). |
+| 1 | Vite + three.js WebGPU project, Pages workflow, third-person controller | Done. WebGPU with automatic WebGL2 fallback (both exercised in software). Not pushed or deployed: no GitHub repo connected. |
 | 2 | OSM import → neighbourhood, roads, minimap | Importer done (`tools/osm_to_world.ts`, reads Overpass JSON or `.osm` XML). **Running on stand-in map data** (see above). Roads with widths, centre/lane lines, stop bars, sidewalks, curbs, boulevards, signals, stop signs, lamps, rail line, river, parks, nav graph + A* routing, minimap and full map with waypoints. |
 | 3 | Church exterior and interior | Done from the photos: three variants (`current`, `blueFlag`, `brownTower`), festival flags, enterable interior with the three-arch curtained screen, icons (original artwork), pews, chandelier, candles, censer, kebero, maqomiya, tsenatsel, umbrellas, shoe rack, livestream camera. The Meqdes cannot be entered and the camera cannot pass the curtain. |
 | 4 | Vehicles and traffic | Done: 5 modern vehicles (pickup, minivan, sedan, SUV, hatchback) + 2 older ones for flashbacks; raycast suspension, headlights, wipers, horn, snow/ice grip, enter/exit any parked car, radio with 5 mezmur slots; AI traffic keeps right and obeys stop signs/signals; pedestrians on sidewalks. |
@@ -46,18 +46,22 @@
 
 ## How it was verified
 
-No GPU here, so everything was checked in headless Chromium with software rendering (WebGL2 path):
-- `npm test` auto-plays all five chapters (objectives are completed by teleporting) and fails on any runtime error.
-- Screenshots in `captures/` (church exterior/interior, Isaac, street, each chapter).
+There is no GPU on the build machine, so everything was checked in headless Chromium with software rendering:
+- **All five chapters auto-play start to finish with zero runtime errors** (`npm test`: objectives are completed by teleporting; takes ~8–10 min per chapter in software).
+- **Driving physics test** (`node tools/cartest.mjs`): accelerate, steer (correct direction), brake, reverse, suspension settles on the road.
+- **Both render backends run**: WebGL2 fallback (Low/High/Ultra) and the **WebGPU backend on a software adapter** (High and Ultra, outdoors and inside the church). This caught and fixed a WebGPU-only validation error in the Ultra pipeline.
+- Screenshots in `captures/` (church exterior/interior, Isaac, street, chapter 1 scenes, WebGPU Ultra frames).
+- If WebGPU still fails on your machine, the game retries itself on WebGL2 automatically, and Phone → Settings → Renderer switches by hand.
 
-**Not verified, because it needs real hardware:** the WebGPU backend itself, Ultra preset effects (SSR, TRAA, 4-cascade shadows), 60 fps at 1440p on the RTX 5070 Ti, path-traced photo mode speed/quality, gamepad and touch on real devices, audio balance. Please try these first and tell me what you see.
+**Not verified, because it needs real hardware:** frame rate (60 fps at 1440p Ultra on the RTX 5070 Ti is a target, not a measurement), the look of SSR/TRAA/cascaded shadows at full resolution, the path-traced photo mode (never run here), gamepad and touch on real devices, audio balance, and playing the chapters by hand at normal speed (only the automated run was done). Please try these first and tell me what you see.
 
 ## Known gaps (honest list)
 
 **Graphics**
 - "Volumetric" incense and light shafts are billboard particles and additive planes, not true volumetrics. No screen-space wet-road puddles; SSR is only enabled on Ultra and is untested on real WebGPU.
 - No texture downloads: Poly Haven / ambientCG were blocked by the network, so all materials are small procedural canvas textures (no normal maps). Assets are generated at load time in code rather than shipped as Draco/KTX2 GLB files.
-- Night sky before sunrise is plain (stars only, no twilight gradient or moon disc).
+- Night sky is plain (stars and a simple dawn/dusk glow; no moon disc). Interior lighting runs a little bright and there is a faint ceiling shading artifact near the chandelier.
+- First time each new kind of object appears there can be a short shader-compile hitch.
 - Elevation is approximated (gentle rise away from the river, ~15 m valley drop); no Canadian DEM was reachable.
 
 **Character**

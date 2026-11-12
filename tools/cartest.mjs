@@ -1,13 +1,13 @@
 import { serve, launch } from './browser.mjs';
-const port = +(process.env.PORT ?? 4173); const srv = await serve(); const { browser, page, errors } = await launch({ width: 960, height: 540 });
-await page.goto(`http://localhost:${port}/?q=low&roam`);
+const port = +(process.env.PORT ?? 4173); const srv = await serve(); const { browser, page, errors } = await launch({ width: 480, height: 270 });
+await page.goto(`http://localhost:${port}/?q=low&roam&auto`);
 await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
 const run = (n, keys) => page.evaluate(async ([n, keys]) => { const g = window.__game; g.input.keys.clear(); for (const k of keys) g.input.keys.add(k); for (let i = 0; i < n; i++) { g.frame(1 / 30); await new Promise((r) => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); }); } const c = g.activeCar ?? g.traffic.parked[0]; return c ? { mode: g.mode, speed: +c.speed.toFixed(2), x: +c.pos.x.toFixed(1), y: +c.pos.y.toFixed(2), z: +c.pos.z.toFixed(1), yaw: +c.yaw.toFixed(2), ground: +g.world.height(c.pos.x, c.pos.z).toFixed(2) } : 'nocar'; }, [n, keys]);
 console.log('settle', await run(90, []));
 await page.evaluate(() => { const g = window.__game; const c = g.traffic.parked[0]; g.player.teleport(c.pos.x + 2, c.pos.y, c.pos.z); g.enterCar(c); });
 console.log('idle  ', await run(30, []));
 console.log('fwd   ', await run(120, ['KeyW']));
-await page.screenshot({ path: 'captures/car_drive.png' });
+
 console.log('right ', await run(60, ['KeyW', 'KeyD']));
 console.log('brake ', await run(90, ['Space']));
 console.log('rev   ', await run(60, ['KeyS']));

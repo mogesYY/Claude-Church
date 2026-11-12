@@ -43,7 +43,7 @@ export class Engine {
   stars!: THREE.Points; twilight!: THREE.Mesh;
   quality: Quality = 'high';
   isWebGPU = false;
-  post: THREE.PostProcessing | null = null;
+  post: THREE.RenderPipeline | null = null;
   csm: CSMShadowNode | null = null;
   sunDir = new THREE.Vector3(0.3, 0.8, 0.4);
   sunElevation = 0.6;
@@ -64,14 +64,16 @@ export class Engine {
   constructor(public canvas: HTMLCanvasElement) {}
 
   async init(q?: Quality) {
-    const forceWebGL = !('gpu' in navigator) || new URLSearchParams(location.search).has('webgl');
+    let pref = ''; try { pref = localStorage.getItem('ma.renderer') ?? ''; } catch { /* ignore */ }
+    const qs = new URLSearchParams(location.search);
+    const forceWebGL = !('gpu' in navigator) || qs.has('webgl') || (pref === 'webgl' && !qs.has('webgpu'));
     this.renderer = new THREE.WebGPURenderer({ canvas: this.canvas, antialias: true, forceWebGL, powerPreference: 'high-performance' });
     await this.renderer.init();
     this.isWebGPU = (this.renderer.backend as any).isWebGPUBackend === true;
     this.renderer.toneMapping = new URLSearchParams(location.search).has('agx') ? THREE.AgXToneMapping : THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
     this.scene.fog = new THREE.FogExp2(this.fogColor.getHex(), this.fogDensity);
     this.scene.add(this.hemi);
@@ -168,9 +170,10 @@ export class Engine {
     const q = this.quality;
     if (q === 'low') return;
     try {
-      const post = new THREE.PostProcessing(this.renderer);
-      const scenePass = pass(this.scene, this.camera);
+      const post = new THREE.RenderPipeline(this.renderer);
       const ultra = q === 'ultra';
+      // TRAA copies the depth buffer, which WebGPU forbids for multisampled targets: Ultra renders the scene pass without MSAA (TRAA does the anti-aliasing)
+      const scenePass = ultra ? (pass as any)(this.scene, this.camera, { samples: 0 }) : pass(this.scene, this.camera);
       scenePass.setMRT(mrt(ultra
         ? { output, normal: normalView, velocity, metalrough: vec4(metalness, roughness, 0, 1) }
         : { output, normal: normalView }));
@@ -203,7 +206,7 @@ export class Engine {
       this.post = null;
     }
   }
-  ssrNode: any = null;
+  ssrNode: any = null; postFailed = false;
 
   setWetness(w: number) { this.wetness.value = w; }
 
@@ -254,7 +257,7 @@ export class Engine {
     const fc = night.clone().lerp(dayFog, day).lerp(dusk, golden * day * 0.35);
     (this.scene.fog as THREE.FogExp2).color.copy(fc);
     (this.scene.fog as THREE.FogExp2).density = this.interior ? 0.0 : this.fogDensity;
-    this.renderer.toneMappingExposure = (this.interior ? 0.85 : 0.5 + (1 - day) * 0.8) * this.exposureBoost;
+    this.renderer.toneMappingExposure = (this.interior ? 0.7 : 0.5 + (1 - day) * 0.8) * this.exposureBoost;
     const t = this.date.getTime();
     if (force || Math.abs(t - this.envDirtyAt) > 20 * 60000) { this.envDirtyAt = t; this.envDirty = true; }
   }
@@ -298,6 +301,7 @@ export class Engine {
     this.sky.position.copy(this.camera.position);
     this.stars.position.copy(this.camera.position); this.twilight.position.copy(this.camera.position);
     if (this.envDirty) { this.envDirty = false; this.updateEnvironment(); }
-    if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera);
+    if (this.post) { try { this.post.render(); } catch (e) { console.warn('post-processing failed; rendering without it', e); this.post = null; this.postFailed = true; } }
+    else this.renderer.render(this.scene, this.camera);
   }
 }

@@ -113,10 +113,10 @@ export class Car {
   step(dt: number, throttle: number, steer: number, brake: boolean) {
     const vc = this.vc; if (!vc) return;
     const s = this.spec; const v = this.speed; this.throttle = throttle;
-    const maxSteer = 0.58 / (1 + Math.abs(v) * 0.075); const target = -steer * maxSteer;
+    const maxSteer = 0.56 / (1 + Math.abs(v) * 0.17); const target = -steer * maxSteer;
     this.steer += (target - this.steer) * Math.min(1, dt * 7);
     let engine = 0, br = brake ? s.mass * 0.03 : 0;
-    if (throttle > 0.02) { if (v < -0.6) br = s.mass * 0.03 * throttle; else engine = s.power * throttle * (1 - Math.min(1, Math.max(0, v) / 42)); }
+    if (throttle > 0.02) { if (v < -0.6) br = s.mass * 0.03 * throttle; else engine = s.power * 1.5 * throttle * (1 - Math.min(1, Math.max(0, v) / 40)); }
     else if (throttle < -0.02) { if (v > 0.6) br = s.mass * 0.03 * -throttle; else engine = s.power * 0.6 * throttle * (1 - Math.min(1, Math.max(0, -v) / 9)); }
     else br = Math.max(br, s.mass * 0.0025);
     this.braking = br > s.mass * 0.01;

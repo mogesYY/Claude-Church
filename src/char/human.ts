@@ -262,7 +262,7 @@ export class Human {
     // ---- cloth layer: netela / gabi / vestment cape / woman's head covering ----
     const wantsNetela = o.outfit === 'netela' || o.outfit === 'netelaPuffer' || o.outfit === 'elder' || o.outfit === 'woman' || o.outfit === 'deacon' || o.outfit === 'priest';
     if (wantsNetela) {
-      const cg = new SkinGeo(); const thick = o.outfit === 'elder'; const k = (puffer ? 1.22 : 1) * (thick ? 1.08 : 1);
+      const cg = new SkinGeo(); const thick = o.outfit === 'elder'; const k = (puffer ? 1.34 : 1) * (thick ? 1.08 : 1);
       const cape = o.outfit === 'deacon' || o.outfit === 'priest';
       const white = new THREE.Color(0xffffff);
       const hemY = cape ? 1.12 : thick ? 0.8 : 0.9;

@@ -1,5 +1,5 @@
 import { serve, launch } from './browser.mjs';
-const srv = await serve(); const { browser, page, errors } = await launch({ width: 960, height: 540 });
+const srv = await serve(); const { browser, page, errors } = await launch({ width: 480, height: 270 });
 await page.goto('http://localhost:4173/' + (process.argv[2] ?? '?q=low&auto&chapter=1'));
 await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 }).catch((e) => console.log('notready', e.message));
 const r = await page.evaluate(async () => {
