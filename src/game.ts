@@ -8,9 +8,10 @@ import { CameraRig } from './core/camera';
 import { World } from './world/world';
 import type { Season } from './world/materials';
 import { Church } from './church/church';
+import { Human, makeIsaac } from './char/human';
 
 export class Game {
-  church!: Church;
+  church!: Church; isaac!: Human;
   engine!: Engine; phys!: Physics; input!: Input; player!: Player; rig!: CameraRig; world!: World;
   ready = false;
   mode: 'foot' | 'car' | 'cutscene' | 'photo' | 'menu' = 'foot';
@@ -41,11 +42,11 @@ export class Game {
   }
   /** overridden / extended as systems come online */
   async setup() {
-    const cap = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 1.1, 6, 12), new THREE.MeshStandardMaterial({ color: 0xffffff }));
-    cap.position.y = 0.85; cap.castShadow = true; this.player.group.add(cap);
+    this.setOutfit('netela');
     const sp = this.church.toWorld(1.5, 0, -16); this.tp(sp.x, sp.z, this.church.faceYaw(0, 1));
     this.setSeason('summer'); this.engine.setDateTime(7, 12, 15); this.engine.clockPaused = true;
   }
+  setOutfit(o: import('./char/human').Outfit) { if (this.isaac) { this.player.group.remove(this.isaac.root); this.isaac.dispose(); } this.isaac = makeIsaac(o); this.player.group.add(this.isaac.root); }
   setSeason(s: Season) { this.world.setSeason(s); this.engine.applyTime(true); }
   tp(x: number, z: number, yaw?: number) { this.player.teleport(x, this.world.height(x, z) + 0.05, z, yaw); this.rig.snap(); }
   /** debug/capture camera: fixed position + look target (null to release) */
@@ -59,6 +60,7 @@ export class Game {
     this.fps += (1 / Math.max(dt, 0.001) - this.fps) * 0.05;
     this.input.update(); if (this.input.take('jump')) this.jump = true;
     this.phys.update(dt); this.player.syncVisual(1);
+    this.isaac.update(dt, this.mode === 'foot' ? this.player.speed : 0, this.player.grounded);
     for (const u of this.updaters) u(dt);
     const inside = this.church.isInside(this.debugCam ? this.debugCam.pos : this.player.group.position);
     if (inside !== this.engine.interior) { this.engine.interior = inside; this.engine.applyTime(); }

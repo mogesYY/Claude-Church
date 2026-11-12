@@ -184,7 +184,7 @@ export class Engine {
           lit = vec4(lit.rgb.add(ssrPass.rgb.mul(ssrPass.a).mul(this.wetness.mul(0.8).add(0.2))), lit.a);
         } catch (e) { console.warn('SSR unavailable', e); }
       }
-      const bloomPass = bloom(lit, ultra ? 0.22 : 0.18, 0.45, 1.05);
+      const bloomPass = bloom(lit, ultra ? 0.2 : 0.16, 0.4, 4.0);
       let final: any = lit.add(bloomPass);
       if (ultra) final = traa(final, depth, scenePass.getTextureNode('velocity'), this.camera);
       else final = fxaa(final);
