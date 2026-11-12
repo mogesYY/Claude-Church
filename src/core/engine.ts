@@ -55,7 +55,7 @@ export class Engine {
   private pmrem: THREE.PMREMGenerator | null = null;
   private envRT: THREE.RenderTarget | null = null;
   fogColor = new THREE.Color(0xa8b8cc);
-  fogDensity = 0.0012;
+  fogDensity = 0.0007;
   exposureBoost = 1;
   interior = false;
   pixelRatioCap = 1;
@@ -68,7 +68,7 @@ export class Engine {
     this.renderer = new THREE.WebGPURenderer({ canvas: this.canvas, antialias: true, forceWebGL, powerPreference: 'high-performance' });
     await this.renderer.init();
     this.isWebGPU = (this.renderer.backend as any).isWebGPUBackend === true;
-    this.renderer.toneMapping = THREE.AgXToneMapping;
+    this.renderer.toneMapping = new URLSearchParams(location.search).has('agx') ? THREE.AgXToneMapping : THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -184,7 +184,7 @@ export class Engine {
           lit = vec4(lit.rgb.add(ssrPass.rgb.mul(ssrPass.a).mul(this.wetness.mul(0.8).add(0.2))), lit.a);
         } catch (e) { console.warn('SSR unavailable', e); }
       }
-      const bloomPass = bloom(lit, ultra ? 0.32 : 0.25, 0.5, 0.92);
+      const bloomPass = bloom(lit, ultra ? 0.22 : 0.18, 0.45, 1.05);
       let final: any = lit.add(bloomPass);
       if (ultra) final = traa(final, depth, scenePass.getTextureNode('velocity'), this.camera);
       else final = fxaa(final);
@@ -226,7 +226,7 @@ export class Engine {
     const golden = 1 - THREE.MathUtils.smoothstep(sp.elevation, 0.0, 0.45);
     this.sky.sunPosition.value.copy(this.sunDir);
     const lightDir = this.sunDir.clone();
-    let intensity = 3.2 * THREE.MathUtils.smoothstep(sp.elevation, -0.02, 0.25);
+    let intensity = 4.2 * THREE.MathUtils.smoothstep(sp.elevation, -0.02, 0.25);
     const col = new THREE.Color().setRGB(1, 0.96 - golden * 0.32, 0.9 - golden * 0.55);
     if (sp.elevation < -0.02) { // moonlight from opposite side
       lightDir.set(-this.sunDir.x, Math.max(0.35, -this.sunDir.y), -this.sunDir.z).normalize();
@@ -235,7 +235,7 @@ export class Engine {
     this.sun.color.copy(col);
     this.sun.intensity = intensity * (this.interior ? 0.35 : 1);
     this.lightDir.copy(lightDir);
-    this.hemi.intensity = (0.12 + 0.95 * day) * (this.interior ? 0.3 : 1);
+    this.hemi.intensity = (0.1 + 0.36 * day) * (this.interior ? 0.55 : 1);
     this.hemi.color.setRGB(0.55 + 0.2 * day, 0.66 + 0.16 * day, 1);
     this.hemi.groundColor.setRGB(0.25 + 0.1 * day, 0.24 + 0.1 * day, 0.22 + 0.08 * day);
     (this.stars.material as THREE.PointsMaterial).opacity = (1 - day) * 0.9;
@@ -243,7 +243,7 @@ export class Engine {
     const fc = night.clone().lerp(dayFog, day).lerp(dusk, golden * day * 0.35);
     (this.scene.fog as THREE.FogExp2).color.copy(fc);
     (this.scene.fog as THREE.FogExp2).density = this.interior ? 0.0 : this.fogDensity;
-    this.renderer.toneMappingExposure = (0.55 + 0.25 * day + (1 - day) * 0.5) * this.exposureBoost;
+    this.renderer.toneMappingExposure = (this.interior ? 0.85 : 0.5 + (1 - day) * 0.8) * this.exposureBoost;
     const t = this.date.getTime();
     if (force || Math.abs(t - this.envDirtyAt) > 20 * 60000) { this.envDirtyAt = t; this.updateEnvironment(); }
   }
@@ -265,7 +265,7 @@ export class Engine {
       if (this.envRT) this.envRT.dispose();
       this.envRT = rt;
       this.scene.environment = rt.texture;
-      this.scene.environmentIntensity = 0.55;
+      this.scene.environmentIntensity = 0.4;
       sky.geometry.dispose();
     } catch (e) { console.warn('env update failed', e); }
   }
