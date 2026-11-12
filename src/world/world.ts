@@ -37,7 +37,7 @@ export class World {
   /** adjacency: node -> [neighbourNode, roadIdx][] (respects one-way) */
   adj: number[][][] = [];
   private terrain!: THREE.Mesh; private splat!: THREE.CanvasTexture; private splatCanvas!: HTMLCanvasElement;
-  private snowbanks: THREE.Mesh | null = null;
+  private snowbankMeshes: THREE.Mesh[] = []; private roadTiles: { grp: THREE.Group; x: number; z: number }[] = [];
   private treeGeos: { trunk: THREE.BufferGeometry; crown: THREE.BufferGeometry }[] = [];
   private lampPositions: THREE.Vector3[] = [];
   private lampLights: THREE.PointLight[] = [];
@@ -205,17 +205,21 @@ export class World {
     return out;
   }
   private buildRoads() {
-    const asphalt = new Geo(), gravel = new Geo(), walk = new Geo(), mark = new Geo(), bank = new Geo(), signs = new Geo();
+    // road geometry is binned into spatial tiles so distant streets are culled
+    type Tile = { asphalt: Geo; gravel: Geo; walk: Geo; mark: Geo; bank: Geo; signs: Geo; lampGeo: Geo; headGeo: Geo };
+    const TS = 192; const tiles = new Map<string, Tile>();
+    const tileAt = (x: number, z: number): Tile => { const k = `${Math.floor(x / TS)}_${Math.floor(z / TS)}`; let t = tiles.get(k); if (!t) { t = { asphalt: new Geo(), gravel: new Geo(), walk: new Geo(), mark: new Geo(), bank: new Geo(), signs: new Geo(), lampGeo: new Geo(), headGeo: new Geo() }; tiles.set(k, t); } return t; };
     const white = new THREE.Color(0xe8e8e8), yellow = new THREE.Color(0xd9b13a), conc = new THREE.Color(0xffffff), snowC = new THREE.Color(0xffffff);
     const nodes = this.data.nav.nodes;
     const junctions: number[][] = nodes.filter((n) => n[2] & 1);
     const jGrid = new Map<string, number[][]>(); for (const j of junctions) { const k = this.key(j[0], j[1]); (jGrid.get(k) ?? jGrid.set(k, []).get(k)!).push(j); }
     const nearJunction = (x: number, z: number, r: number) => { const cx = Math.floor(x / 40), cz = Math.floor(z / 40); for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const n of jGrid.get(`${cx + i},${cz + j}`) ?? []) if (Math.hypot(n[0] - x, n[1] - z) < r) return true; return false; };
     this.data.roads.forEach((r, ri) => {
-      const rs = this.resample(r.pts); const hw = r.w / 2; const g = r.surface === 'gravel' || r.surface === 'unpaved' || r.surface === 'dirt' ? gravel : r.lanes === 0 ? walk : asphalt;
+      const rs = this.resample(r.pts); const hw = r.w / 2; const gk: 'gravel' | 'walk' | 'asphalt' = r.surface === 'gravel' || r.surface === 'unpaved' || r.surface === 'dirt' ? 'gravel' : r.lanes === 0 ? 'walk' : 'asphalt';
       const yoff = r.lanes === 0 ? 0.07 : 0.05; let dist = 0;
       for (let i = 0; i < rs.length - 1; i++) {
         const a = rs[i], b = rs[i + 1]; const sl = Math.hypot(b.x - a.x, b.z - a.z);
+        const T = tileAt((a.x + b.x) / 2, (a.z + b.z) / 2); const g = T[gk], mark = T.mark, walk = T.walk, bank = T.bank;
         const al = [a.x - a.tz * -hw, a.z + a.tx * -hw], ar = [a.x - a.tz * hw, a.z + a.tx * hw], bl = [b.x - b.tz * -hw, b.z + b.tx * -hw], br = [b.x - b.tz * hw, b.z + b.tx * hw];
         const y = (p: number[]) => this.height(p[0], p[1]) + yoff;
         g.quad([al[0], y(al), al[1]], [ar[0], y(ar), ar[1]], [br[0], y(br), br[1]], [bl[0], y(bl), bl[1]], conc, [0, dist / 4, r.w / 4, (dist + sl) / 4]);
@@ -262,6 +266,7 @@ export class World {
     nodes.forEach((n, ni) => {
       const ctl = this.control.get(ni); if (!(n[2] & 1)) return;
       let maxW = 0; const seen = new Set<number>(); for (const [, ri] of this.adj[ni]) { if (!seen.has(ri)) { seen.add(ri); maxW = Math.max(maxW, this.data.roads[ri].w); } }
+      const { asphalt, signs, mark } = tileAt(n[0], n[1]);
       if (maxW >= 7) { m4.makeScale(maxW * 0.56, 1, maxW * 0.56).setPosition(n[0], this.height(n[0], n[1]) + 0.055, n[1]); asphalt.merge(disc, m4, 0xffffff); }
       if (!ctl) return;
       // one post per approach that must stop / per approach at signals
@@ -295,23 +300,26 @@ export class World {
       }
     });
     // street lamps
-    const lampGeo = new Geo(); const headGeo = new Geo();
     this.data.roads.forEach((r, ri) => {
       const rank = RANK[r.kind] ?? 0; if (rank < 1) return; const rs = this.resample(r.pts, 6); let dist = 0, next = rank >= 2 ? 20 : 45, side = 1;
       for (let i = 0; i < rs.length - 1; i++) {
         dist += Math.hypot(rs[i + 1].x - rs[i].x, rs[i + 1].z - rs[i].z);
         if (dist < next) continue; next += rank >= 2 ? 46 : 90; side = -side; const a = rs[i];
         const o = side * (r.w / 2 + 0.9), x = a.x - a.tz * o, z = a.z + a.tx * o; if (this.nearOtherRoad(x, z, ri, 0.5)) continue;
-        const y = this.height(x, z); m4.makeRotationY(Math.atan2(side * a.tz, -side * a.tx)).setPosition(x, y, z);
+        const y = this.height(x, z); m4.makeRotationY(Math.atan2(side * a.tz, -side * a.tx)).setPosition(x, y, z); const { lampGeo, headGeo } = tileAt(x, z);
         lampGeo.setMatrix(m4); lampGeo.box(0, 3.6, 0, 0.14, 7.2, 0.14, 0x4a4f55); lampGeo.box(0, 7.15, 0.8, 0.09, 0.09, 1.7, 0x4a4f55);
         headGeo.setMatrix(m4); headGeo.box(0, 7.08, 1.55, 0.3, 0.12, 0.6, 0xffffff);
         this.lampPositions.push(new THREE.Vector3(x - a.tz * -side * 1.5, y + 6.9, z + a.tx * -side * 1.5));
       }
     });
-    const add = (g: Geo, mat: THREE.Material, cast = false) => { if (!g.count) return null; const m = g.mesh(mat, cast); this.group.add(m); return m; };
-    add(asphalt, this.mats.asphalt); add(gravel, this.mats.gravel); add(walk, this.mats.concrete); add(mark, this.mats.marking);
-    add(signs, this.mats.metal, true); add(lampGeo, this.mats.metal, true); add(headGeo, this.mats.lamp);
-    this.snowbanks = add(bank, this.mats.snow); if (this.snowbanks) this.snowbanks.visible = false;
+    for (const [k, t] of tiles) {
+      const grp = new THREE.Group(); const [ti, tj] = k.split('_').map(Number);
+      const add = (g: Geo, mat: THREE.Material, cast = false) => { if (!g.count) return null; const m = g.mesh(mat, cast); grp.add(m); return m; };
+      add(t.asphalt, this.mats.asphalt); add(t.gravel, this.mats.gravel); add(t.walk, this.mats.concrete); add(t.mark, this.mats.marking);
+      add(t.signs, this.mats.metal, true); add(t.lampGeo, this.mats.metal, true); add(t.headGeo, this.mats.lamp);
+      const bank = add(t.bank, this.mats.snow); if (bank) { bank.visible = false; this.snowbankMeshes.push(bank); }
+      this.group.add(grp); this.roadTiles.push({ grp, x: (ti + 0.5) * TS, z: (tj + 0.5) * TS });
+    }
     // signal lamps (emissive colour updated per frame)
     if (this.signalHeads.length) {
       const sg = new THREE.SphereGeometry(0.13, 8, 6);
@@ -337,26 +345,27 @@ export class World {
 
   // ------------------------------------------------------------ trees
   private buildTreeGeos() {
+    const lowQ = this.engine.quality === 'low';
     const mk = (type: number) => {
       const r = mulberry(100 + type); const trunk = new Geo(), crown = new Geo(); const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(1, 1, 1), up = new THREE.Vector3(0, 1, 0);
       if (type === 2) { // spruce
-        const t = new THREE.CylinderGeometry(0.08, 0.22, 2.2, 6); t.translate(0, 1.1, 0); trunk.merge(t, null, 0xffffff);
-        for (let i = 0; i < 5; i++) { const c = new THREE.ConeGeometry(2.3 - i * 0.4, 2.6, 7); c.translate(0, 2.2 + i * 1.5, 0); crown.merge(c, null, new THREE.Color().setHSL(0.38, 0.3, 0.7 + r() * 0.3)); }
+        const t = new THREE.CylinderGeometry(0.08, 0.22, 2.2, lowQ ? 4 : 6); t.translate(0, 1.1, 0); trunk.merge(t, null, 0xffffff);
+        for (let i = 0; i < 5; i++) { const c = new THREE.ConeGeometry(2.3 - i * 0.4, 2.6, lowQ ? 5 : 7); c.translate(0, 2.2 + i * 1.5, 0); crown.merge(c, null, new THREE.Color().setHSL(0.38, 0.3, 0.7 + r() * 0.3)); }
         return { trunk: trunk.build(), crown: crown.build() };
       }
       const H = type === 0 ? 6.2 : 4.6; // elm: tall vase; ash: rounder
-      const t = new THREE.CylinderGeometry(0.2, 0.34, H, 7); t.translate(0, H / 2, 0); trunk.merge(t, null, 0xffffff);
+      const t = new THREE.CylinderGeometry(0.2, 0.34, H, lowQ ? 5 : 7, 1, lowQ); t.translate(0, H / 2, 0); trunk.merge(t, null, 0xffffff);
       const nb = type === 0 ? 7 : 6;
       for (let i = 0; i < nb; i++) {
         const an = (i / nb) * 6.283 + r(), tilt = type === 0 ? 0.42 + r() * 0.2 : 0.7 + r() * 0.3, len = (type === 0 ? 6.5 : 4.8) * (0.8 + r() * 0.4);
         const dir = new THREE.Vector3(Math.sin(tilt) * Math.cos(an), Math.cos(tilt), Math.sin(tilt) * Math.sin(an));
-        const b = new THREE.CylinderGeometry(0.05, 0.14, len, 5); b.translate(0, len / 2, 0); q.setFromUnitVectors(up, dir); m.compose(new THREE.Vector3(0, H - 0.4 - r() * 1.2, 0), q, s); trunk.merge(b, m, 0xffffff);
+        const b = new THREE.CylinderGeometry(0.05, 0.14, len, lowQ ? 3 : 5, 1, true); b.translate(0, len / 2, 0); q.setFromUnitVectors(up, dir); m.compose(new THREE.Vector3(0, H - 0.4 - r() * 1.2, 0), q, s); trunk.merge(b, m, 0xffffff);
         const end = dir.clone().multiplyScalar(len).add(new THREE.Vector3(0, H - 0.6, 0));
         // twigs
-        for (let k = 0; k < 2; k++) { const d2 = dir.clone().add(new THREE.Vector3(r() - 0.5, r() * 0.3, r() - 0.5).multiplyScalar(0.9)).normalize(); const tw = new THREE.CylinderGeometry(0.015, 0.05, 2.6, 4); tw.translate(0, 1.3, 0); q.setFromUnitVectors(up, d2); m.compose(end.clone().multiplyScalar(0.72 + k * 0.2).setY(end.y * (0.8 + k * 0.15)), q, s); trunk.merge(tw, m, 0xffffff); }
-        const blob = new THREE.IcosahedronGeometry((type === 0 ? 2.5 : 2.3) * (0.8 + r() * 0.4), 1); m.makeScale(1, 0.72, 1).setPosition(end.x, end.y + 0.4, end.z); crown.merge(blob, m, new THREE.Color().setHSL(0.3, 0.2, 0.72 + r() * 0.28));
+        for (let k = 0; k < (lowQ ? 0 : 2); k++) { const d2 = dir.clone().add(new THREE.Vector3(r() - 0.5, r() * 0.3, r() - 0.5).multiplyScalar(0.9)).normalize(); const tw = new THREE.CylinderGeometry(0.015, 0.05, 2.6, 3, 1, true); tw.translate(0, 1.3, 0); q.setFromUnitVectors(up, d2); m.compose(end.clone().multiplyScalar(0.72 + k * 0.2).setY(end.y * (0.8 + k * 0.15)), q, s); trunk.merge(tw, m, 0xffffff); }
+        const blob = new THREE.IcosahedronGeometry((type === 0 ? 2.5 : 2.3) * (0.8 + r() * 0.4), lowQ ? 0 : 1); m.makeScale(1, 0.72, 1).setPosition(end.x, end.y + 0.4, end.z); crown.merge(blob, m, new THREE.Color().setHSL(0.3, 0.2, 0.72 + r() * 0.28));
       }
-      const topBlob = new THREE.IcosahedronGeometry(type === 0 ? 3.0 : 2.8, 1); m.makeScale(1.15, 0.7, 1.15).setPosition(0, H + (type === 0 ? 5.2 : 3.4), 0); crown.merge(topBlob, m, 0xffffff);
+      const topBlob = new THREE.IcosahedronGeometry(type === 0 ? 3.0 : 2.8, lowQ ? 0 : 1); m.makeScale(1.15, 0.7, 1.15).setPosition(0, H + (type === 0 ? 5.2 : 3.4), 0); crown.merge(topBlob, m, 0xffffff);
       return { trunk: trunk.build(), crown: crown.build() };
     };
     this.treeGeos = [mk(0), mk(1), mk(2)];
@@ -377,6 +386,7 @@ export class World {
       const k = this.queue.shift()!; const c = this.chunks.get(k); if (c && c.data) this.buildChunk(c);
     }
     this.pendingChunks = [...this.chunks.values()].filter((c) => c.state === 'loading').length;
+    const rr = this.loadRadius + 260; for (const t of this.roadTiles) t.grp.visible = Math.hypot(t.x - px, t.z - pz) < rr;
     // signals + lamps
     this.signalT += dt;
     if (this.signalMesh) { const st = this.signalState(); const col = new THREE.Color(); this.signalHeads.forEach((s, i) => { const green = s.ns === st.nsGreen; col.set(green ? (st.amber ? 0xffb020 : 0x20e060) : 0xff2a20); this.signalMesh!.setColorAt(i, col); }); this.signalMesh.instanceColor!.needsUpdate = true; }
@@ -406,7 +416,7 @@ export class World {
     for (const p of d.p) { if (this.inReserved(p[0], p[1])) continue; const y = this.height(p[0], p[1]); const m = new THREE.Matrix4().makeRotationY(p[2]).setPosition(p[0], y, p[1]); cg.wood.setMatrix(m); cg.wood.box(0, 4.2, 0, 0.24, 8.4, 0.24, 0x6a5848); cg.wood.box(0, 7.8, 0, 2.2, 0.12, 0.12, 0x6a5848); cg.wood.setMatrix(null); }
     group.add(cg.toGroup(this.mats));
     // trees (instanced per species)
-    const dummy = new THREE.Object3D(); const col = new THREE.Color();
+    const dummy = new THREE.Object3D(); const col = new THREE.Color(); const lowQ2 = this.engine.quality === 'low';
     for (let type = 0; type < 3; type++) {
       const list = d.t.filter((t) => t[3] === type && !this.inReserved(t[0], t[1])); if (!list.length) continue;
       const trunk = new THREE.InstancedMesh(this.treeGeos[type].trunk, this.mats.bark, list.length);
@@ -416,7 +426,7 @@ export class World {
         trunk.setMatrixAt(i, dummy.matrix); crown.setMatrixAt(i, dummy.matrix); col.setHSL(0, 0, 0.75 + rr() * 0.25); crown.setColorAt(i, col);
         c.bodies.push(this.phys.staticCylinder(t[0], dummy.position.y + 2, t[1], 2, 0.3 * t[2]));
       });
-      trunk.castShadow = crown.castShadow = true; crown.receiveShadow = true; trunk.computeBoundingSphere(); crown.computeBoundingSphere();
+      trunk.castShadow = !lowQ2; crown.castShadow = true; crown.receiveShadow = true; trunk.computeBoundingSphere(); crown.computeBoundingSphere();
       group.add(trunk, crown);
     }
     c.group = group; c.state = 'ready'; c.data = undefined; this.group.add(group);
@@ -432,7 +442,7 @@ export class World {
   setSeason(s: Season) {
     if (s === this.season && this.chunks.size) { this.mats.setSeason(s); return; }
     this.season = s; this.mats.setSeason(s); this.drawSplat();
-    if (this.snowbanks) this.snowbanks.visible = s === 'winter';
+    for (const b of this.snowbankMeshes) b.visible = s === 'winter';
     this.engine.groundEnvColor.set(s === 'winter' ? 0xe8edf2 : s === 'autumn' ? 0x8a8450 : 0x6f8452);
     this.engine.fogColor.set(s === 'winter' ? 0xcfd8e4 : 0xa8b8cc);
     for (const c of [...this.chunks.values()]) if (c.state === 'ready') this.unload(c); // rebuilt with snow roofs

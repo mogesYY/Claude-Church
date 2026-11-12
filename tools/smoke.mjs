@@ -4,7 +4,7 @@ import { serve, launch } from './browser.mjs';
 const a = +(process.argv[2] ?? 1), b = +(process.argv[3] ?? 5);
 const srv = await serve(); let failed = false;
 for (let ch = a; ch <= b; ch++) {
-  const { browser, page, errors } = await launch({ width: 960, height: 540 });
+  const { browser, page, errors } = await launch({ width: 320, height: 180 });
   await page.goto(`http://localhost:4173/?q=low&auto&chapter=${ch}`);
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
   const t0 = Date.now(); let last = '', shots = 0;

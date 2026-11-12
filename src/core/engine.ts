@@ -256,9 +256,9 @@ export class Engine {
     (this.scene.fog as THREE.FogExp2).density = this.interior ? 0.0 : this.fogDensity;
     this.renderer.toneMappingExposure = (this.interior ? 0.85 : 0.5 + (1 - day) * 0.8) * this.exposureBoost;
     const t = this.date.getTime();
-    if (force || Math.abs(t - this.envDirtyAt) > 20 * 60000) { this.envDirtyAt = t; this.updateEnvironment(); }
+    if (force || Math.abs(t - this.envDirtyAt) > 20 * 60000) { this.envDirtyAt = t; this.envDirty = true; }
   }
-  lightDir = new THREE.Vector3(0.3, 0.8, 0.4);
+  lightDir = new THREE.Vector3(0.3, 0.8, 0.4); private envDirty = true;
 
   private updateEnvironment() {
     try {
@@ -297,6 +297,7 @@ export class Engine {
     this.sun.target.updateMatrixWorld();
     this.sky.position.copy(this.camera.position);
     this.stars.position.copy(this.camera.position); this.twilight.position.copy(this.camera.position);
+    if (this.envDirty) { this.envDirty = false; this.updateEnvironment(); }
     if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera);
   }
 }

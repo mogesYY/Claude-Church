@@ -197,7 +197,7 @@ async function meskel(c: Ctx) {
   c.obj('Bring everything back to the church yard', 'ሁሉንም ወደ ቤተ ክርስቲያኑ ግቢ አምጣ'); await c.reach(c.spot('stairsBottom'), 16, true); if (g.mode === 'car') { c.obj('Get out of the truck (F)', 'ከመኪናው ውረድ (F)'); await c.onFoot(); }
   // build + decorate
   c.obj('Stack the Demera in the yard', 'ደመራውን በግቢው ውስጥ ደርድር'); await c.interact(site, 'Build the Demera', 'ደመራውን ሥራ', 2.2, 'reach', 1.4);
-  const demera = c.prop(demeraMesh()) as THREE.Group; demera.position.copy(site); demera.scale.setScalar(0.01); for (let t = 0; t < 1; t += g.dt / 1.5) { demera.scale.setScalar(Math.min(1, t)); await c.wait(0); } demera.scale.setScalar(1);
+  const demera = c.prop(demeraMesh()) as THREE.Group; demera.position.copy(site); demera.scale.setScalar(0.01); for (let t = 0; t < 1; t += g.dt / 1.5) { demera.scale.setScalar(Math.min(1, t)); await g.nextFrame(); c.check(); } demera.scale.setScalar(1);
   ch.setVariant('current', true, false);
   for (const [i, p] of [c.L(6.9, 0.02, -9.5), c.L(10.1, 0.02, -9.5), c.L(8.5, 0.02, -11.1), c.L(8.5, 0.02, -7.9)].entries()) { c.obj(`Set out flags and adey abeba around it (${i}/4)`, `ሰንደቅ ዓላማና አደይ አበባ አስቀምጥ (${i}/4)`); await c.interact(p, 'Place flowers', 'አበባ አስቀምጥ', 1.4, 'shoes', 1.4); const fl = new Geo(); const r = mulberry(i + 1); for (let k = 0; k < 14; k++) fl.box((r() - 0.5) * 0.7, 0.12 + r() * 0.12, (r() - 0.5) * 0.7, 0.08, 0.08, 0.08, 0xf2c81a); const m = c.prop(fl.mesh(new THREE.MeshStandardMaterial({ vertexColors: true }))); m.position.copy(p); }
   await c.say('c3.qes.2');
@@ -216,7 +216,7 @@ async function meskel(c: Ctx) {
     // the Demera falls — everyone watches which way
     const dirs: [string, number, number][] = [['c3.fall.east', 0, 1], ['c3.fall.south', 1, 0], ['c3.fall.west', 0, -1]]; const pick = dirs[Math.floor(Math.random() * dirs.length)];
     const axis = ch.toWorld(pick[1], 0, pick[2]).sub(ch.toWorld(0, 0, 0)).normalize(); const rotAxis = new THREE.Vector3(axis.z, 0, -axis.x);
-    for (let t = 0; t < 1; t += g.dt / 3) { demera.quaternion.setFromAxisAngle(rotAxis, (t * t) * 1.35); await c.wait(0); }
+    for (let t = 0; t < 1; t += g.dt / 3) { demera.quaternion.setFromAxisAngle(rotAxis, (t * t) * 1.35); await g.nextFrame(); c.check(); }
     g.audio.kebero(true, 1); for (const nn of crowd) nn.act('clap'); await c.say(pick[0]); await c.say('c3.end'); await c.wait(1.5);
     await c.fadeOut(1.5); g.audio.keberoOn = false; g.audio.setFire(0); g.audio.setCrowd(0); g.audio.chant(null);
   });
@@ -314,7 +314,8 @@ async function fasika(c: Ctx) {
   await c.fadeIn(1.5); g.hud.card(c.text('The Vigil', 'የትንሣኤ ሌሊት'), c.text('Holy Saturday, near midnight', 'ቅዳሜ ሌሊት'), 4);
   c.obj('Receive the light from the Qes', 'ብርሃኑን ከቄሱ ተቀበል'); await c.interact(c.L(0, F, 4.4), 'Light your candle', 'ሻማህን አብራ', 1.8, 'reach'); c.giveCandle(null);
   c.obj('Pass the light to the congregation (4)', 'ብርሃኑን ለምእመናን አስተላልፍ (4)');
-  for (let i = 0; i < 4; i++) { const n = people[(i * 3) % people.length]; await c.interact(n.pos.clone(), 'Share the light', 'ብርሃኑን አካፍል', 1.6, null); const upto = Math.floor(((i + 1) / 4) * people.length); for (let k = 0; k < upto; k++) if (!people[k].human.held.R) c.giveCandle(people[k]); g.audio.tsenatsel(0.5); }
+  const nearAisle = people.filter((q) => Math.abs((q as any)._s.x) < 1.6);
+  for (let i = 0; i < 4; i++) { const n = nearAisle[(i * 3) % nearAisle.length]; await c.interact(n.pos.clone(), 'Share the light', 'ብርሃኑን አካፍል', 2.0, null); const upto = Math.floor(((i + 1) / 4) * people.length); for (let k = 0; k < upto; k++) if (!people[k].human.held.R) c.giveCandle(people[k]); g.audio.tsenatsel(0.5); }
   for (const n of [...people, ...chanters]) if (!n.human.held.R) c.giveCandle(n);
   c.obj('Return to the front to serve', 'ለማገልገል ወደ ፊት ተመለስ'); await c.reach(c.spot('deacon'), 1.1);
   await c.cut(async () => {
