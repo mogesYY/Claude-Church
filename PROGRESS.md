@@ -5,8 +5,8 @@
 ## What I need from you (Isaac)
 
 1. **Switch on GitHub Pages** for `mogesYY/Claude-Church`: Settings → Pages → Source: *GitHub Actions*, then re-run the failed deploy in the Actions tab. (I can push code but am not permitted to change that setting.)
-2. **The map.** OpenStreetMap's Overpass API was allowed in the network settings but every request from the build machine was reset (100+ attempts over ~1.5 h). Please export `brandon.osm` from openstreetmap.org (Export → an area from the Assiniboine River down past Richmond Ave, 1st St to 18th St) and commit it to `reference/map/`. `npm run world` then replaces the stand-in map automatically.
-   **Until then the street map is an approximation of Brandon's grid** written from memory: numbered streets, avenue names and spacing are guesses, and all houses are generated.
+2. **The map — received, thank you.** `reference/map/brandon.osm` is now the source of the world: real streets and ~3,700 real building footprints from roughly Southern Ave down to Maryland Ave, 1st to 18th St. It does **not** reach downtown (Rosser/Princess/Victoria), Brandon University or the Assiniboine River, so those are not in the game yet. If you want them, export a second, taller area (same width, north edge at the river) and replace the file. About 900 houses are still generated where the map has no footprint.
+   The map shows the church on the **west side of 5th Street at the corner of Queens Avenue**, long axis east–west. I assumed the **front door faces east, toward 5th Street** — please confirm (that puts the Meqdes at the west end).
 3. **Missing photos** named in the brief: `church_03` (brown tower), `church_04` (festival day), `isaac_03`, `isaac_05`. See `reference/INVENTORY.md`.
 4. **Chant recordings** — see `public/audio/chant/README.md` for the exact file names. Until they exist, a soft neutral drone plays instead (I did not synthesize imitation chant).
 5. **Answers to the custom/accuracy questions below.**
@@ -14,7 +14,7 @@
 ## Questions (I did not want to guess)
 
 **The church**
-- Which side of 5th Street is the church on, and which way does the front door face? (Assumed: east side, door facing west, so the Meqdes is at the east end.)
+- Does the front door face east toward 5th Street (as assumed from the map), which would put the Meqdes at the west end? Or is the entrance on another side?
 - The brief says the Qene Mahlet is by the entrance, but your photos show the chanters and kebero at the front before the curtain, and the church has pews. I followed the photos. Is that right for our church?
 - Men's and women's sides: I put men on the left (north) and women on the right when facing the curtain. Correct?
 - What exactly is written on the arched sign over the door? (I wrote: "የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተ ክርስቲያን / መድኃኔ ዓለም / Ethiopian Orthodox Tewahedo Medhane Alem Church · Brandon".)
@@ -36,7 +36,7 @@
 | # | Phase | State |
 |---|---|---|
 | 1 | Vite + three.js WebGPU project, Pages workflow, third-person controller | Done. WebGPU with automatic WebGL2 fallback (both exercised in software). Pushed to `mogesYY/Claude-Church`; CI build passes; deploy waits on Pages being enabled. |
-| 2 | OSM import → neighbourhood, roads, minimap | Importer done (`tools/osm_to_world.ts`, reads Overpass JSON or `.osm` XML). **Running on stand-in map data** (see above). Roads with widths, centre/lane lines, stop bars, sidewalks, curbs, boulevards, signals, stop signs, lamps, rail line, river, parks, nav graph + A* routing, minimap and full map with waypoints. |
+| 2 | OSM import → neighbourhood, roads, minimap | Importer done (`tools/osm_to_world.ts`, reads Overpass JSON or `.osm` XML). Running on your real OSM export (south-central Brandon). Roads with widths, centre/lane lines, stop bars, sidewalks, curbs, boulevards, signals, stop signs, lamps, rail line, river, parks, nav graph + A* routing, minimap and full map with waypoints. |
 | 3 | Church exterior and interior | Done from the photos: three variants (`current`, `blueFlag`, `brownTower`), festival flags, enterable interior with the three-arch curtained screen, icons (original artwork), pews, chandelier, candles, censer, kebero, maqomiya, tsenatsel, umbrellas, shoe rack, livestream camera. The Meqdes cannot be entered and the camera cannot pass the curtain. |
 | 4 | Vehicles and traffic | Done: 5 modern vehicles (pickup, minivan, sedan, SUV, hatchback) + 2 older ones for flashbacks; raycast suspension, headlights, wipers, horn, snow/ice grip, enter/exit any parked car, radio with 5 mezmur slots; AI traffic keeps right and obeys stop signs/signals; pedestrians on sidewalks. |
 | 5 | Houses, trees, materials, weather, seasons | Done: seeded procedural houses (bungalow, 1½-storey, 2-storey; stucco or lap siding; porches, dormers, chimneys, garages, wood and chain-link fences), elms/ash/spruce, power poles; four seasons (snow roofs, snowbanks, bare trees, autumn colour, spring melt patches), snowfall, blizzard, breath vapour, real sun position for Brandon by date and time. |
@@ -70,7 +70,7 @@ There is no GPU on the build machine, so everything was checked in headless Chro
 - Animations are procedural (no mocap): enter/exit car is a fade-free snap into the seat, not an animated door sequence.
 
 **World**
-- Stand-in map (see top). Landmarks (Brandon University, Assiniboine College, Keystone Centre, grocery store, City Hall, downtown blocks) are simple extruded blocks at **guessed positions**; they will come from real footprints once the OSM file is in.
+- The map export covers south-central Brandon only. Brandon University, Assiniboine College, City Hall, downtown and the river are outside it, so missions that mention them (university in Chapters 2 and 5, City Hall in Chapter 3) currently send you to a nearby residential street instead. The Co-op grocery is real. Large buildings are simple extruded blocks.
 - Houses do not yet match individual real houses; back-lane garages and fences are generated per lot.
 - No interior for any building except the church.
 

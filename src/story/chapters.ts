@@ -187,7 +187,7 @@ async function meskel(c: Ctx) {
   const car = c.car('pickup', 0xe8e8e4, g.churchParking(8)); c.place(c.L(-1, 0.02, -14.5), ch.faceYaw(0, -1));
   const qes = c.npc('priest', 1, c.L(1.5, 0.02, -14), ch.faceYaw(-1, -0.4), 'Qes'); qes.act('holdCross');
   await c.settle(); await c.fadeIn(); await c.title(2); await c.talk('c3.qes.1', 'c3.isaac.1');
-  const site = c.L(8.5, 0.02, -9.5);
+  const YS = g.yardSide; const site = c.L(8.5 * YS, 0.02, -9.5);
   // gather branches: piles in the neighbourhood (park / boulevards)
   const spots = [c.streetSpot(160, 0), c.streetSpot(240, 1), c.streetSpot(200, 2), c.streetSpot(300, 3)];
   let n = 0; for (const s of spots) { const pile = c.prop(branchPile()); pile.position.copy(s.walk).add(V(0, -0.1, 0)); c.obj(`Gather fallen branches for the Demera (${n}/4)`, `ለደመራ የወደቁ ቅርንጫፎችን ሰብስብ (${n}/4)`); await c.reach(s.road, 18, true); await c.interact(s.walk, 'Load the branches', 'ቅርንጫፎቹን ጫን', 2.2, 'shoes', 1.6); c.removeProp(pile); n++; }
@@ -199,7 +199,7 @@ async function meskel(c: Ctx) {
   c.obj('Stack the Demera in the yard', 'ደመራውን በግቢው ውስጥ ደርድር'); await c.interact(site, 'Build the Demera', 'ደመራውን ሥራ', 2.2, 'reach', 1.4);
   const demera = c.prop(demeraMesh()) as THREE.Group; demera.position.copy(site); demera.scale.setScalar(0.01); for (let t = 0; t < 1; t += g.dt / 1.5) { demera.scale.setScalar(Math.min(1, t)); await g.nextFrame(); c.check(); } demera.scale.setScalar(1);
   ch.setVariant('current', true, false);
-  for (const [i, p] of [c.L(6.9, 0.02, -9.5), c.L(10.1, 0.02, -9.5), c.L(8.5, 0.02, -11.1), c.L(8.5, 0.02, -7.9)].entries()) { c.obj(`Set out flags and adey abeba around it (${i}/4)`, `ሰንደቅ ዓላማና አደይ አበባ አስቀምጥ (${i}/4)`); await c.interact(p, 'Place flowers', 'አበባ አስቀምጥ', 1.4, 'shoes', 1.4); const fl = new Geo(); const r = mulberry(i + 1); for (let k = 0; k < 14; k++) fl.box((r() - 0.5) * 0.7, 0.12 + r() * 0.12, (r() - 0.5) * 0.7, 0.08, 0.08, 0.08, 0xf2c81a); const m = c.prop(fl.mesh(new THREE.MeshStandardMaterial({ vertexColors: true }))); m.position.copy(p); }
+  for (const [i, p] of [c.L(6.9 * YS, 0.02, -9.5), c.L(10.1 * YS, 0.02, -9.5), c.L(8.5 * YS, 0.02, -11.1), c.L(8.5 * YS, 0.02, -7.9)].entries()) { c.obj(`Set out flags and adey abeba around it (${i}/4)`, `ሰንደቅ ዓላማና አደይ አበባ አስቀምጥ (${i}/4)`); await c.interact(p, 'Place flowers', 'አበባ አስቀምጥ', 1.4, 'shoes', 1.4); const fl = new Geo(); const r = mulberry(i + 1); for (let k = 0; k < 14; k++) fl.box((r() - 0.5) * 0.7, 0.12 + r() * 0.12, (r() - 0.5) * 0.7, 0.08, 0.08, 0.08, 0xf2c81a); const m = c.prop(fl.mesh(new THREE.MeshStandardMaterial({ vertexColors: true }))); m.position.copy(p); }
   await c.say('c3.qes.2');
   // ---- night: the celebration ----
   await c.fadeOut(1.2); g.engine.setDateTime(9, 27, 20.2); g.engine.clockPaused = true; g.traffic.enabled = false; g.peds.enabled = false; g.setOutfit('netela');
@@ -231,7 +231,7 @@ async function timket(c: Ctx) {
   const qes = c.npc('priest', 1, c.L(1.2, 0.02, -14.2), ch.faceYaw(-1, -0.3), 'Qes'); qes.act('holdCross');
   await c.settle(); await c.fadeIn(); await c.title(3); await c.talk('c4.qes.1', 'c4.isaac.1');
   // plan the route (walk the corners)
-  const A = c.L(0, 0.05, -22), B = c.L(-34, 0.05, -22), basinP = c.L(8.5, 0.02, -9.5);
+  const A = c.L(0, 0.05, -22), B = c.L(-34, 0.05, -22), basinP = c.L(8.5 * g.yardSide, 0.02, -9.5);
   c.obj('Walk the procession route: mark the corner', 'የዑደቱን መንገድ ተመልከት፦ ማዕዘኑን ምልክት አድርግ'); await c.interact(B, 'Mark the turning point', 'መመለሻውን ምልክት አድርግ', 2.5, null); g.audio.chime();
   // arrange cars
   const drivers: Npc[] = []; for (const [i, off] of [-10, 15, 23].entries()) { const p = g.churchParking(off); const dc = c.car(i === 1 ? 'minivan' : 'pickup', [0x8a1a1a, 0x6a7078, 0x2f4a6a][i], p); const n = c.npc('man', 70 + i, V(p.x, 0, p.z).add(ch.toWorld(0, 0, 2.2).sub(ch.toWorld(0, 0, 0))), 0); n.pos.y = g.world.height(n.pos.x, n.pos.z) + 0.14; drivers.push(n); void dc; }

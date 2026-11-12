@@ -29,7 +29,7 @@ export class Game {
   time = 0; dt = 0.016; fps = 60;
   outfit: Outfit = 'netela';
   shoesOff = false; private shoePair!: THREE.Group; private meqdesT = 0; private shoeWarnT = 0;
-  scriptSpeed = 0; lightOverride = -1;
+  scriptSpeed = 0; lightOverride = -1; yardSide = 1;
   cutCam: { pos: THREE.Vector3; look: THREE.Vector3 } | null = null;
   debugCam: { pos: THREE.Vector3; look: THREE.Vector3 } | null = null;
   updaters: ((dt: number) => void)[] = [];
@@ -47,6 +47,8 @@ export class Game {
     this.church = new Church(this.engine, this.phys);
     this.church.place(cd.x, this.world.height(cd.x, cd.z) + 0.02, cd.z, cd.yaw);
     this.world.reserved.push(this.church.lot());
+    { // which side of the church has the open yard? (not the side with a street right beside it)
+      const side = (sx: number) => { const p = this.church.toWorld(sx * 12, 0, 0); const n = this.world.nearestRoad(p.x, p.z, true, 1); return n.seg ? n.d : 99; }; this.yardSide = side(1) < 10 && side(-1) > side(1) ? -1 : 1; }
     this.weather = new Weather(this.engine);
     this.traffic = new Traffic(this.world, this.phys, this.engine.scene);
     this.peds = new Pedestrians(this.world, this.engine.scene);
@@ -86,7 +88,7 @@ export class Game {
   applyWeather() { const w = this.weather; this.engine.fogDensity = 0.0007 + w.snowfall * 0.0022 + w.blizzard * 0.014; this.engine.fogColor.set(this.world.season === 'winter' ? 0xcfd8e4 : 0xa8b8cc); this.engine.setWetness(this.world.season === 'spring' ? 1 : this.world.season === 'winter' ? 0.3 : 0); this.engine.applyTime(true); }
   /** curb-side parking spot on the street in front of the church; `along` metres along the street */
   churchParking(along: number) {
-    const cd = this.world.data.church; const nr = this.world.nearestRoad(cd.x, cd.z, true, 3);
+    const cd = this.world.data.church; const fp = this.church.toWorld(0, 0, -22); const nr = this.world.nearestRoad(fp.x, fp.z, true, 2);
     if (!nr.seg) { const p = this.church.toWorld(along, 0, -20); return { x: p.x, z: p.z, yaw: this.church.group.rotation.y + Math.PI / 2 }; }
     const s = nr.seg; const l = Math.hypot(s.bx - s.ax, s.bz - s.az) || 1; const dx = (s.bx - s.ax) / l, dz = (s.bz - s.az) / l; let tx = cd.x - nr.px, tz = cd.z - nr.pz; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
     const x = nr.px + dx * along + tx * (s.hw - 1.25), z = nr.pz + dz * along + tz * (s.hw - 1.25);

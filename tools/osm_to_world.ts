@@ -73,7 +73,7 @@ if (source === 'osm') {
   const nodeMap = new Map<number, OsmEl>(); for (const e of elements) if (e.type === 'node') nodeMap.set(e.id, e);
   const cands = elements.filter((e) => e.tags && (
     (e.tags['addr:housenumber'] === '1260' && /5th/i.test(e.tags['addr:street'] ?? '')) ||
-    /medhane|medhanie|ethiopian orthodox/i.test(e.tags.name ?? '')));
+    /medhane|medhanie|ethiopian orthodox/i.test(e.tags.name ?? '') || e.tags.denomination === 'ethiopian_orthodox'));
   const c = cands[0];
   if (c) {
     if (c.type === 'node') origin = { lat: c.lat!, lon: c.lon! };
@@ -217,12 +217,14 @@ let churchInfo = { x: 0, z: 0, yaw: 0, street: '5th Street' };
 {
   // facing: toward the nearest named drivable road
   let best = 1e9, bx = -1, bz = 0;
-  for (const r of roads) { if (r.lanes === 0 || r.kind === 'service') continue; for (let i = 0; i < r.pts.length - 1; i++) { const a = r.pts[i], b = r.pts[i + 1]; const d = segDist([0, 0], a, b); if (d < best) { best = d; const dx = b[0] - a[0], dz = b[1] - a[1], l2 = dx * dx + dz * dz || 1; const t = Math.max(0, Math.min(1, (-a[0] * dx - a[1] * dz) / l2)); bx = a[0] + t * dx; bz = a[1] + t * dz; churchInfo.street = r.name || churchInfo.street; } } }
+  // the address is on 5th Street: face that street when it is close by, otherwise the nearest street
+  const addrRoad = roads.some((r) => /^5th Street/i.test(r.name) && r.pts.some((p, i) => i < r.pts.length - 1 && segDist([0, 0], p, r.pts[i + 1]) < 60));
+  for (const r of roads) { if (r.lanes === 0 || r.kind === 'service' || (addrRoad && !/^5th Street/i.test(r.name))) continue; for (let i = 0; i < r.pts.length - 1; i++) { const a = r.pts[i], b = r.pts[i + 1]; const d = segDist([0, 0], a, b); if (d < best) { best = d; const dx = b[0] - a[0], dz = b[1] - a[1], l2 = dx * dx + dz * dz || 1; const t = Math.max(0, Math.min(1, (-a[0] * dx - a[1] * dz) / l2)); bx = a[0] + t * dx; bz = a[1] + t * dz; churchInfo.street = r.name || churchInfo.street; } } }
   // model's front faces local -z; yaw rotates it toward the street
   const snap = Math.round(Math.atan2(-bx, -bz) / (Math.PI / 2)) * (Math.PI / 2);
   churchInfo.yaw = snap;
   if (church) { const c = centroid(church.pts); churchInfo.x = r1(c[0]); churchInfo.z = r1(c[1]); }
-  if (source === 'fallback') guessed.push('Church orientation: assumed on the EAST side of 5th Street with the front door facing WEST.');
+  guessed.push(source === 'fallback' ? 'Church orientation: assumed on the EAST side of 5th Street with the front door facing WEST.' : `Church orientation: front door assumed to face ${churchInfo.street} (from the address); please confirm.`);
 }
 
 // ---------- nav graph (drivable roads) ----------
@@ -310,7 +312,7 @@ for (const a of areas) { if (a.kind !== 'park' && a.kind !== 'wood') continue; c
 
 // ---------- POIs / landmarks ----------
 const pois: { name: string; kind: string; x: number; z: number }[] = [{ name: 'Medhane Alem Church', kind: 'church', x: churchInfo.x, z: churchInfo.z }];
-const want: [RegExp, string][] = [[/brandon university|clark hall/i, 'university'], [/assiniboine (community )?college/i, 'college'], [/keystone/i, 'keystone'], [/sobeys|safeway|superstore|co-?op|grocery|giant tiger|supermarket/i, 'grocery'], [/city hall/i, 'cityhall']];
+const want: [RegExp, string][] = [[/brandon university|clark hall/i, 'university'], [/assiniboine (community )?college/i, 'college'], [/keystone centre|keystone center/i, 'keystone'], [/sobeys|safeway|superstore|co-?op|grocery|giant tiger|supermarket/i, 'grocery'], [/city hall/i, 'cityhall']];
 for (const b of buildings) { if (!b.name) continue; for (const [re, kind] of want) if (re.test(b.name) && !pois.some((p) => p.kind === kind)) { const c = centroid(b.pts); pois.push({ name: b.name, kind, x: r1(c[0]), z: r1(c[1]) }); } }
 for (const e of elements) { if (!e.tags?.name || e.type === 'node' && !nodes.has(e.id)) continue; if (e.type !== 'node') continue; const p = nodes.get(e.id)!; if (!inRange(p)) continue; for (const [re, kind] of want) if (re.test(e.tags.name) && !pois.some((q) => q.kind === kind)) pois.push({ name: e.tags.name, kind, x: r1(p[0]), z: r1(p[1]) }); }
 for (const [, kind] of want) if (!pois.some((p) => p.kind === kind)) guessed.push(`Landmark "${kind}" was not found in the map data.`);
