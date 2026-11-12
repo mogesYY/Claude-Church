@@ -40,7 +40,7 @@ export class Engine {
   sun = new THREE.DirectionalLight(0xffffff, 3);
   hemi = new THREE.HemisphereLight(0xbfd4ff, 0x4a4438, 1);
   sky!: SkyMesh;
-  stars!: THREE.Points;
+  stars!: THREE.Points; twilight!: THREE.Mesh;
   quality: Quality = 'high';
   isWebGPU = false;
   post: THREE.PostProcessing | null = null;
@@ -101,6 +101,14 @@ export class Engine {
     this.stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 2.2, sizeAttenuation: false, transparent: true, opacity: 0, fog: false, depthWrite: false }));
     this.stars.frustumCulled = false;
     this.scene.add(this.stars);
+
+    // twilight glow: additive dome, brightest toward the sun's azimuth, visible only around dawn/dusk
+    const tg = new THREE.SphereGeometry(1900, 24, 14); const tc: number[] = []; const tp = tg.attributes.position; const c = new THREE.Color();
+    for (let i = 0; i < tp.count; i++) { const x = tp.getX(i) / 1900, y = tp.getY(i) / 1900; const toward = Math.max(0, x) ** 2; const hz = Math.exp(-Math.max(0, y) * 5.5); const up = Math.max(0, y);
+      c.setRGB(hz * (0.55 + 0.9 * toward) + 0.02, hz * (0.26 + 0.34 * toward) + 0.05 * (1 - up), hz * 0.2 + 0.16 * (1 - up * 0.6)); if (y < -0.02) c.multiplyScalar(0.2); tc.push(c.r, c.g, c.b); }
+    tg.setAttribute('color', new THREE.Float32BufferAttribute(tc, 3));
+    this.twilight = new THREE.Mesh(tg, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    this.twilight.frustumCulled = false; this.twilight.renderOrder = -1; this.scene.add(this.twilight);
 
     this.setQuality(q ?? (await this.detectQuality()));
     this.resize();
@@ -239,6 +247,9 @@ export class Engine {
     this.hemi.color.setRGB(0.55 + 0.2 * day, 0.66 + 0.16 * day, 1);
     this.hemi.groundColor.setRGB(0.25 + 0.1 * day, 0.24 + 0.1 * day, 0.22 + 0.08 * day);
     (this.stars.material as THREE.PointsMaterial).opacity = (1 - day) * 0.9;
+    const tw = THREE.MathUtils.smoothstep(sp.elevation, -0.3, -0.05) * (1 - THREE.MathUtils.smoothstep(sp.elevation, 0.0, 0.16));
+    (this.twilight.material as THREE.MeshBasicMaterial).opacity = tw * 0.9; this.twilight.rotation.y = Math.atan2(-this.sunDir.z, this.sunDir.x);
+    this.hemi.intensity += tw * 0.16 * (this.interior ? 0.5 : 1);
     const night = new THREE.Color(0x070b16), dayFog = this.fogColor, dusk = new THREE.Color(0xd9a27a);
     const fc = night.clone().lerp(dayFog, day).lerp(dusk, golden * day * 0.35);
     (this.scene.fog as THREE.FogExp2).color.copy(fc);
@@ -285,7 +296,7 @@ export class Engine {
     this.sun.position.copy(focus).addScaledVector(this.lightDir, 180);
     this.sun.target.updateMatrixWorld();
     this.sky.position.copy(this.camera.position);
-    this.stars.position.copy(this.camera.position);
+    this.stars.position.copy(this.camera.position); this.twilight.position.copy(this.camera.position);
     if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera);
   }
 }

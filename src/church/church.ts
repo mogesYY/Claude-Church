@@ -125,7 +125,7 @@ export class Church {
   faceYaw(dx: number, dz: number) { return Math.atan2(-dx, -dz) + this.yaw; }
   isInside(p: THREE.Vector3) { const l = this.toLocal(p); return l.y > CH.F - 0.4 && l.y < CH.F + 4 && ((Math.abs(l.x) < CH.HW && l.z > CH.NZ0 && l.z < CH.NZ1) || (Math.abs(l.x) < CH.TW && l.z > CH.TZ0 + 0.1 && l.z <= CH.NZ0)); }
   /** lot outline in world space (for reserving ground) */
-  lot(): number[][] { return [[-13, -17], [13, -17], [13, 13], [-13, 13]].map(([x, z]) => { const v = this.toWorld(x, 0, z); return [v.x, v.z]; }); }
+  lot(): number[][] { return [[-13, -17], [-7, -17], [-7, -33], [7, -33], [7, -17], [13, -17], [13, 13], [-13, 13]].map(([x, z]) => { const v = this.toWorld(x, 0, z); return [v.x, v.z]; }); }
 
   setVariant(v: ChurchVariant, festival = this.festival, snow = this.snow) {
     if (v === this.variant && festival === this.festival && snow === this.snow) return;
