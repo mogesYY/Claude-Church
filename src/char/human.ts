@@ -158,7 +158,7 @@ function hairGeometry(style: HairStyle, seed: number) {
   src.setIndex(idx); src.computeVertexNormals(); return src;
 }
 
-function netelaTexture(border: number[], thick = false) {
+function netelaTexture(border: number[], thick = false, variant = 0) {
   return canvasTex(512, 512, (c, w, h) => {
     c.fillStyle = thick ? '#f1ede2' : '#fbfaf6'; c.fillRect(0, 0, w, h);
     c.globalAlpha = 0.09; c.strokeStyle = '#8a8a80'; c.lineWidth = 1; for (let i = 0; i < w; i += 3) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i, h); c.stroke(); c.beginPath(); c.moveTo(0, i); c.lineTo(w, i); c.stroke(); } c.globalAlpha = 1;
@@ -168,6 +168,8 @@ function netelaTexture(border: number[], thick = false) {
     const stripe = (draw: () => void) => { c.save(); draw(); c.restore(); };
     const cols = border.map((b) => '#' + new THREE.Color(b).getHexString());
     const bandH = thick ? 16 : 12;
+    if (variant === 2) { c.fillStyle = cols[0] ?? '#b3261e'; for (const [x, y] of [[w * 0.62, h * 0.55], [w * 0.12, h * 0.6]]) { c.fillRect(x - 5, y - 34, 10, 68); c.fillRect(x - 24, y - 14, 48, 10); for (const [dx, dy] of [[0, -34], [0, 34], [-24, -9], [24, -9]]) { c.beginPath(); c.arc(x + dx, y + dy, 7, 0, 7); c.fill(); } } }
+    if (variant === 1) return;
     stripe(() => { cols.forEach((col, i) => { c.fillStyle = col; c.fillRect(0, h - 26 + i * (bandH / cols.length), w, bandH / cols.length); }); c.fillStyle = cols[0]; for (let x = 0; x < w; x += 14) { c.beginPath(); c.moveTo(x, h - 30); c.lineTo(x + 5, h - 36); c.lineTo(x + 10, h - 30); c.fill(); } });
     stripe(() => { c.translate(w * 0.20, 0); c.transform(1, 0, 0.42, 1, 0, 0); cols.forEach((col, i) => { c.fillStyle = col; c.fillRect(i * (bandH / cols.length), 0, bandH / cols.length, h); }); });
   }, { repeat: false });
@@ -283,7 +285,7 @@ export class Human {
       const border = cape ? [0xc8a23a, 0x8a1f2a, 0xc8a23a] : o.outfit === 'woman' ? [[0x1f6b3a, 0xe2b33c, 0xb3261e], [0x2a3f8a, 0xe2b33c], [0x8a1f5a, 0xe2b33c, 0x1f6b3a]][o.seed % 3] : [0x1f6b3a, 0xe2b33c, 0xb3261e];
       let tex: THREE.Texture;
       if (cape) tex = canvasTex(256, 256, (c, w, h) => { c.fillStyle = o.outfit === 'priest' ? '#e9dfc0' : '#8a1f2a'; c.fillRect(0, 0, w, h); c.fillStyle = '#d9b03a'; for (let y = 20; y < h; y += 44) for (let x = 16 + ((y / 44) % 2) * 22; x < w; x += 44) { c.fillRect(x - 2, y - 11, 4, 22); c.fillRect(x - 8, y - 5, 16, 4); } c.fillRect(0, h - 16, w, 16); c.fillStyle = '#8a1f2a'; for (let x = 0; x < w; x += 12) c.fillRect(x, h - 12, 6, 8); }, { repeat: false });
-      else tex = netelaTexture(border, thick);
+      else tex = netelaTexture(border, thick, o.seed === 11 ? 0 : o.seed % 3);
       const cm = new THREE.MeshStandardMaterial({ map: tex, roughness: cape ? 0.55 : 0.9, metalness: cape ? 0.25 : 0, side: THREE.DoubleSide, });
       this.cloth = new THREE.SkinnedMesh(cg.build(), cm); this.cloth.bind(this.skeleton); this.cloth.castShadow = true; this.cloth.frustumCulled = false; this.model.add(this.cloth);
     }
@@ -365,8 +367,17 @@ export class Human {
       case 'bless': { const d = Math.sin(t * 2.2); set('upperArmR', -1.15 + 0.12 * d, 0, 0.1 + 0.25 * Math.cos(t * 2.2)); set('foreArmR', -1.2); break; }
       case 'candle': set('upperArmR', -0.5, 0, 0.05); set('foreArmR', -1.55); break;
       case 'staff': set('upperArmR', -0.62, 0, 0.42); set('foreArmR', -1.85); set('upperArmL', -0.5, 0, -0.45); set('foreArmL', -1.9); set('head', 0.05 + 0.03 * Math.sin(t * 1.3)); set('spine', 0.02 * Math.sin(t * 1.1)); break;
-      case 'chant': { const s = Math.sin(t * 2.1); set('upperArmR', -0.62, 0, 0.42); set('foreArmR', -1.85); set('spine', 0.05 * s); set('hips', 0, 0.06 * s); b.hips.position.y -= 0.015 * Math.abs(s); break; }
-      case 'drum': { const s = Math.sin(t * 6.2), c = Math.sin(t * 3.1 + 1); set('upperArmL', -0.75 + 0.25 * Math.max(0, s), 0, 0.35); set('foreArmL', -1.1 - 0.5 * Math.max(0, s)); set('upperArmR', -0.7 + 0.3 * Math.max(0, c), 0, -0.35); set('foreArmR', -1.0 - 0.55 * Math.max(0, c)); set('spine', 0.06 + 0.03 * s); b.hips.position.y -= 0.02 * Math.abs(Math.sin(t * 3.1)); break; }
+      case 'chant': { // Mahlet with the maqomiya: the staff is lifted and set down on the beat while the body sways forward, back and to the side
+        const beat = t * 1.9 + this.opts.seed * 0.0; const s = Math.sin(beat), c2 = Math.sin(beat * 0.5), lift = Math.max(0, Math.sin(beat * 2));
+        set('upperArmR', -0.62 - 0.22 * lift, 0, 0.42); set('foreArmR', -1.85 + 0.25 * lift); set('upperArmL', -0.35, 0, -0.35); set('foreArmL', -1.6);
+        set('spine', 0.07 * s, 0, 0.05 * c2); set('chest', 0.03 * s); set('head', 0.05 * s, 0, -0.03 * c2); set('hips', 0, 0.05 * c2, 0.03 * c2); b.hips.position.y -= 0.02 * Math.abs(s); break; }
+      case 'wereb': { // wereb: stepping and swaying in the row, clapping on the beat
+        const beat = t * 3.2; const s = Math.sin(beat), cl = Math.max(0, Math.sin(beat * 2)), st = Math.sin(beat * 0.5);
+        b.hips.position.x = 0.07 * st; b.hips.position.y -= 0.035 * Math.abs(s); set('hips', 0, 0.1 * st, 0.05 * st); set('spine', 0.06 + 0.04 * s, 0, -0.05 * st); set('chest', 0, -0.08 * st); set('head', 0.04 * s);
+        set('upLegL', -0.12 * Math.max(0, st), 0, 0.04); set('legL', 0.28 * Math.max(0, st)); set('upLegR', -0.12 * Math.max(0, -st), 0, -0.04); set('legR', 0.28 * Math.max(0, -st));
+        set('upperArmL', -0.9, 0, -0.22 - 0.2 * cl); set('upperArmR', -0.9, 0, 0.22 + 0.2 * cl); set('foreArmL', -1.2 - 0.1 * cl); set('foreArmR', -1.2 - 0.1 * cl); set('shoulderL', 0, 0, 0.08 * s); set('shoulderR', 0, 0, -0.08 * s); break; }
+      case 'sistrum': { const s = Math.sin(t * 7.6); set('upperArmR', -0.9, 0, 0.1); set('foreArmR', -1.5 + 0.28 * s); set('upperArmL', -0.4, 0, -0.38); set('foreArmL', -1.7); set('spine', 0.04 * Math.sin(t * 1.9)); break; }
+      case 'drum': { b.hips.position.x = 0.05 * Math.sin(t * 1.55); set('hips', 0, 0.12 * Math.sin(t * 1.55)); const s = Math.sin(t * 6.2), c = Math.sin(t * 3.1 + 1); set('upperArmL', -0.75 + 0.25 * Math.max(0, s), 0, 0.35); set('foreArmL', -1.1 - 0.5 * Math.max(0, s)); set('upperArmR', -0.7 + 0.3 * Math.max(0, c), 0, -0.35); set('foreArmR', -1.0 - 0.55 * Math.max(0, c)); set('spine', 0.06 + 0.03 * s); b.hips.position.y -= 0.02 * Math.abs(Math.sin(t * 3.1)); break; }
       case 'censer': { const s = Math.sin(t * 2.6); set('upperArmR', -0.55 - 0.35 * s, 0, -0.08); set('foreArmR', -0.55 - 0.2 * s); set('chest', 0, 0.08 * s); break; }
       case 'clap': { const s = Math.max(0, Math.sin(t * 6.5)); set('upperArmL', -0.95, 0, -0.25 - 0.18 * s); set('upperArmR', -0.95, 0, 0.25 + 0.18 * s); set('foreArmL', -1.25); set('foreArmR', -1.25); b.hips.position.y -= 0.012 * s; break; }
       case 'pray': set('upperArmL', -0.75, 0, 0.3); set('upperArmR', -0.75, 0, -0.3); set('foreArmL', -1.35, 0, 0); set('foreArmR', -1.35); set('head', 0.18); break;

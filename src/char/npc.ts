@@ -9,7 +9,7 @@ export type NpcKind = 'priest' | 'elder' | 'woman' | 'kid' | 'neighbour' | 'deac
 const SKINS = [0x7a4a30, 0x6a3f28, 0x8a5a3a, 0x5a3420, 0x946442, 0x70452c];
 const NEIGHBOUR_SKINS = [0xd9b08f, 0xc99a78, 0x8a5a3a, 0xe2bfa2, 0xb9865e, 0x6a3f28];
 
-export function makeNpc(kind: NpcKind, seed: number, winter = false): Human {
+export function makeNpc(kind: NpcKind, seed: number, winter = false, female?: boolean): Human {
   const r = mulberry(seed * 131 + 7); const skin = SKINS[Math.floor(r() * SKINS.length)];
   let o: HumanOpts;
   switch (kind) {
@@ -18,7 +18,7 @@ export function makeNpc(kind: NpcKind, seed: number, winter = false): Human {
     case 'elder': o = { outfit: 'elder', hair: r() < 0.5 ? 'grey' : 'bald', beard: r() < 0.5 ? 0xa0a0a0 : null, height: 1.66 + r() * 0.1, build: 1.1, skin, pants: 0x2a2a2e }; break;
     case 'elderWoman': o = { outfit: 'woman', female: true, hair: 'covered', height: 1.52 + r() * 0.08, build: 1.1, skin }; break;
     case 'woman': o = { outfit: 'woman', female: true, hair: 'covered', height: 1.56 + r() * 0.12, build: 0.9 + r() * 0.2, skin }; break;
-    case 'kid': o = { outfit: r() < 0.5 ? 'netela' : 'woman', female: r() < 0.5, hair: 'short', height: 1.05 + r() * 0.3, build: 0.85, headScale: 1.18, skin }; if (o.outfit === 'woman') o.hair = 'covered'; break;
+    case 'kid': { const girl = female ?? r() < 0.5; o = { outfit: girl ? 'woman' : 'netela', female: girl, hair: 'short', height: 1.05 + r() * 0.3, build: 0.85, headScale: 1.18, skin }; if (o.outfit === 'woman') o.hair = 'covered'; break; }
     case 'man': o = { outfit: winter ? 'netelaPuffer' : 'netela', hair: r() < 0.3 ? 'afro' : 'short', beard: r() < 0.3 ? 0x1a1410 : null, moustache: r() < 0.4, height: 1.68 + r() * 0.16, build: 0.9 + r() * 0.25, skin }; break;
     default: o = { outfit: winter ? 'neighbour' : 'casual', hair: r() < 0.25 ? 'grey' : 'short', female: r() < 0.5, height: 1.6 + r() * 0.25, build: 0.9 + r() * 0.3, skin: NEIGHBOUR_SKINS[Math.floor(r() * NEIGHBOUR_SKINS.length)], toque: winter ? [0x8a1f24, 0x1f3a5a, 0x2a2a2c, 0x3a6a4a][seed % 4] : null, shirt: [0x3a5a7a, 0x7a3a34, 0x2a2f38, 0x5a6a3a, 0x8a6a2a][seed % 5] };
   }
@@ -30,7 +30,7 @@ export function makeNpc(kind: NpcKind, seed: number, winter = false): Human {
 export class Npc {
   human: Human; pos = new THREE.Vector3(); yaw = 0; target: THREE.Vector3 | null = null; speed = 1.3; path: THREE.Vector3[] = []; idle = ''; visible = true;
   onArrive: (() => void) | null = null; fixedY: number | null = null; name = '';
-  constructor(public kind: NpcKind, seed: number, winter = false) { this.human = makeNpc(kind, seed, winter); }
+  constructor(public kind: NpcKind, seed: number, winter = false, female?: boolean) { this.human = makeNpc(kind, seed, winter, female); }
   place(p: THREE.Vector3, yaw = 0) { this.pos.copy(p); this.yaw = yaw; this.target = null; this.path = []; this.sync(); return this; }
   walkTo(...pts: THREE.Vector3[]) { this.path = pts.map((p) => p.clone()); this.target = this.path.shift() ?? null; return new Promise<void>((res) => { this.onArrive = res; }); }
   act(name: string, hold = true, dur = 1.6) { if (hold) this.idle = name; this.human.play(name, dur, hold); }

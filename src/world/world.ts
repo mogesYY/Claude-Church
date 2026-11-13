@@ -114,8 +114,11 @@ export class World {
       this.heights[j * this.gridW + i] = h + 0.45 * Math.sin(x / 170) * Math.cos(z / 230);
     }
   }
+  /** separate flat locations outside the street map (e.g. Dinsdale Park) */
+  sets: { x: number; z: number; hw: number; hd: number; y: number }[] = [];
   /** terrain height; matches the rendered triangles exactly */
   height(x: number, z: number): number {
+    for (const st of this.sets) if (Math.abs(x - st.x) < st.hw && Math.abs(z - st.z) < st.hd) return st.y;
     const fx = (x - this.gx0) / CELL, fz = (z - this.gz0) / CELL;
     const i = Math.max(0, Math.min(this.gridW - 2, Math.floor(fx))), j = Math.max(0, Math.min(this.gridH - 2, Math.floor(fz)));
     const u = Math.max(0, Math.min(1, fx - i)), v = Math.max(0, Math.min(1, fz - j)); const H = this.heights, w = this.gridW;

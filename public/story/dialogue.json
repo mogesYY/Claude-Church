@@ -160,8 +160,8 @@
   "c3.qes.1": {
     "sp": "Qesis Andualem",
     "spAm": "ቀሲስ አንዷለም",
-    "en": "Meskel eve is tonight. We need the city's fire permit, branches for the Demera, and adey abeba to dress it.",
-    "am": "የመስቀል ዋዜማ ዛሬ ማታ ነው። የከተማው የእሳት ፈቃድ፣ ለደመራ ቅርንጫፍ፣ ለማስጌጫም አደይ አበባ ያስፈልገናል።"
+    "en": "Meskel eve is tonight, at Dinsdale Park by the river. We need the city's fire permit, branches for the Demera, and adey abeba to dress it.",
+    "am": "የመስቀል ዋዜማ ዛሬ ማታ በዲንስዴል ፓርክ በወንዙ ዳር ነው። የከተማው የእሳት ፈቃድ፣ ለደመራ ቅርንጫፍ፣ ለማስጌጫም አደይ አበባ ያስፈልገናል።"
   },
   "c3.isaac.1": {
     "sp": "Isaac",
@@ -178,8 +178,8 @@
   "c3.isaac.2": {
     "sp": "Isaac",
     "spAm": "ይስሐቅ",
-    "en": "Meskel — we remember the finding of the True Cross. A small bonfire in the church yard, with water and extinguishers ready.",
-    "am": "መስቀል — የቅዱስ መስቀሉን መገኘት እናስባለን። በግቢው ውስጥ ትንሽ ደመራ፤ ውኃና ማጥፊያ ተዘጋጅቷል።"
+    "en": "Meskel. We remember the finding of the True Cross. A small bonfire at Dinsdale Park, on the gravel by the river, with water and extinguishers ready.",
+    "am": "መስቀል። የቅዱስ መስቀሉን መገኘት እናስባለን። በዲንስዴል ፓርክ በወንዙ ዳር ትንሽ ደመራ፤ ውኃና ማጥፊያ ተዘጋጅቷል።"
   },
   "c3.clerk.2": {
     "sp": "Clerk",
@@ -234,8 +234,8 @@
   "c4.qes.1": {
     "sp": "Qesis Andualem",
     "spAm": "ቀሲስ አንዷለም",
-    "en": "Minus thirty-five, and a blizzard tonight. Timket does not wait for the weather. Is everything ready?",
-    "am": "ከዜሮ በታች ሠላሳ አምስት፤ ማታ ዐውሎ ነፋስ አለ። ጥምቀት አየር አይጠብቅም። ሁሉ ተዘጋጅቷል?"
+    "en": "Minus thirty-five, and a blizzard tonight. Timket does not wait for the weather. The Tabot goes down to the river at Dinsdale Park. Is everything ready?",
+    "am": "ከዜሮ በታች ሠላሳ አምስት፤ ማታ ዐውሎ ነፋስ አለ። ጥምቀት አየር አይጠብቅም። ታቦቱ ወደ ዲንስዴል ፓርክ ወንዝ ይወርዳል። ሁሉ ተዘጋጅቷል?"
   },
   "c4.isaac.1": {
     "sp": "Isaac",
@@ -270,8 +270,8 @@
   "c4.qes.3": {
     "sp": "Qesis Andualem",
     "spAm": "ቀሲስ አንዷለም",
-    "en": "The Tabot rests by the water tonight, and we keep vigil. But look at the sky. Take the grandmother home first.",
-    "am": "ታቦቱ ዛሬ ሌሊት በውኃው አጠገብ ያድራል፤ እኛም እንተጋለን። ግን ሰማዩን ተመልከት። አስቀድመህ አያቲቱን ወደ ቤት አድርስ።"
+    "en": "The Tabot rests here by the river tonight, and we keep vigil. But look at the sky. Take the grandmother home first.",
+    "am": "ታቦቱ ዛሬ ሌሊት እዚህ በወንዙ ዳር ያድራል፤ እኛም እንተጋለን። ግን ሰማዩን ተመልከት። አስቀድመህ አያቲቱን ወደ ቤት አድርስ።"
   },
   "c4.storm.1": {
     "sp": "Isaac",
@@ -292,8 +292,8 @@
     "am": "በዚህ መንገድ እግዚአብሔር ይጠብቅህ ልጄ።"
   },
   "c4.bless.1": {
-    "en": "Morning. The storm has passed. Qesis Andualem prays over the water and lowers the cross into it.",
-    "am": "ጠዋት። ዐውሎ ነፋሱ አልፏል። ቀሲስ አንዷለም በውኃው ላይ ጸልየው መስቀሉን ወደ ውኃው ያወርዳሉ።"
+    "en": "Morning at the river. The storm has passed. Qesis Andualem prays over the water and lowers the cross into it.",
+    "am": "ጠዋት በወንዙ ዳር። ዐውሎ ነፋሱ አልፏል። ቀሲስ አንዷለም በውኃው ላይ ጸልየው መስቀሉን ወደ ውኃው ያወርዳሉ።"
   },
   "c4.bless.2": {
     "en": "The blessed water is sprinkled over everyone — steam rising in the cold, children laughing.",
@@ -365,15 +365,9 @@
     "en": "The Holy Gospel. Stand in fear and listen.",
     "am": "ቅዱስ ወንጌል። በፍርሃት ቁሙ፣ አድምጡ።"
   },
-  "c1.isaac.tselyu": {
-    "sp": "Isaac",
-    "spAm": "ይስሐቅ",
-    "en": "Tselyu! Pray!",
-    "am": "ጸልዩ!"
-  },
   "c1.kidase.3": {
-    "en": "The deacon's place is beside the priest: to carry the light, to call the people to prayer, to ring the bell.",
-    "am": "የዲያቆኑ ቦታ ከካህኑ አጠገብ ነው፦ ብርሃን መያዝ፣ ሕዝቡን ለጸሎት መጥራት፣ ቃጭል መደወል።"
+    "en": "The nifk deacon's place is beside the priest: he carries the tuaf, reads his reading, and rings the qachil for Igzio.",
+    "am": "የንፍቅ ዲያቆኑ ቦታ ከካህኑ አጠገብ ነው፦ ጧፍ ይይዛል፣ ምንባቡን ያነባል፣ ለእግዚኦ ቃጭል ይደውላል።"
   },
   "c2.qes.mahlet": {
     "sp": "Qesis Andualem",
@@ -398,5 +392,21 @@
     "spAm": "ቀሲስ አንዷለም",
     "en": "Selam! From now on, joy and peace.",
     "am": "ሰላም! እምይእዜሰ ኮነ ፍሥሐ ወሰላም።"
+  },
+  "c1.readings": {
+    "en": "The readings: the wanna deacon, the nifk deacon and the nifk qes each read in turn. Then Qesis Andualem reads the Gospel.",
+    "am": "ምንባባቱ፦ ዋናው ዲያቆን፣ ንፍቁ ዲያቆንና ንፍቁ ቄስ በተራ ያነባሉ። ከዚያ ቀሲስ አንዷለም ወንጌልን ያነባሉ።"
+  },
+  "c1.isaac.reading": {
+    "sp": "Isaac",
+    "spAm": "ይስሐቅ",
+    "en": "A reading from the letters of the Apostles. May their blessing be with us. Amen.",
+    "am": "ከሐዋርያት መልእክት የተነበበ። በረከታቸው ከእኛ ጋር ይሁን። አሜን።"
+  },
+  "c1.igzio": {
+    "sp": "All",
+    "spAm": "ሁሉም",
+    "en": "Igzio tesahalene. Lord, have mercy on us.",
+    "am": "እግዚኦ ተሣሃለነ።"
   }
 }

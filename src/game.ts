@@ -10,6 +10,7 @@ import { Player } from './char/player';
 import { CameraRig } from './core/camera';
 import { World } from './world/world';
 import { Weather } from './world/weather';
+import { Park } from './world/park';
 import type { Season } from './world/materials';
 import { Church, CH } from './church/church';
 import { Human, makeIsaac, Outfit } from './char/human';
@@ -34,7 +35,7 @@ export class Game {
   debugCam: { pos: THREE.Vector3; look: THREE.Vector3 } | null = null;
   updaters: ((dt: number) => void)[] = [];
   focusPos = new THREE.Vector3();
-  facePhoto: HTMLImageElement | null = null; wantPause = false; private jump = false; private last = performance.now(); private waiters: (() => void)[] = []; private shaftT = 0; private wasInside = false; private lowFpsT = 0;
+  park!: Park; facePhoto: HTMLImageElement | null = null; wantPause = false; private jump = false; private last = performance.now(); private waiters: (() => void)[] = []; private shaftT = 0; private wasInside = false; private lowFpsT = 0;
 
   async boot() {
     const canvas = document.getElementById('game') as HTMLCanvasElement; if (this.auto) document.body.classList.add('auto');
@@ -51,6 +52,7 @@ export class Game {
       const side = (sx: number) => { const p = this.church.toWorld(sx * 12, 0, 0); const n = this.world.nearestRoad(p.x, p.z, true, 1); return n.seg ? n.d : 99; }; this.yardSide = side(1) < 10 && side(-1) > side(1) ? -1 : 1; }
     // the trees around the church, placed from Street View: the big elm at the corner, the row along Queens Avenue, the thick growth to the north and behind
     this.world.addTrees([[7.4, -12.6, 1.55, 0], [7.4, -3.5, 1.3, 0], [7.5, 5.5, 1.25, 1], [-9.6, -1.5, 1.35, 0], [-11.6, 3.2, 1.2, 1], [-9.2, 7.5, 1.4, 0], [-11.8, 11, 1.2, 1], [-12.4, -7.5, 1.1, 1], [-4.5, 13.8, 1.3, 0], [3.5, 14.2, 1.2, 1], [-8.8, 14.5, 1.0, 2]].map(([x, z, sc, t]) => { const w = this.church.toWorld(x, 0, z); return [w.x, w.z, sc, t]; }));
+    this.park = new Park(this.world, this.phys, this.engine.scene);
     this.weather = new Weather(this.engine);
     this.traffic = new Traffic(this.world, this.phys, this.engine.scene);
     this.peds = new Pedestrians(this.world, this.engine.scene);
@@ -86,7 +88,7 @@ export class Game {
   nextFrame() { return new Promise<void>((r) => this.waiters.push(r)); }
   async wait(s: number) { let t = 0; while (t < s) { await this.nextFrame(); t += this.dt; } }
   setOutfit(o: Outfit) { this.outfit = o; const held = this.isaac?.held ?? {}; const parent = this.isaac?.root.parent ?? this.player.group; const pos = this.isaac?.root.position.clone(), rot = this.isaac?.root.rotation.y ?? 0; if (this.isaac) { parent.remove(this.isaac.root); this.isaac.dispose(); } this.isaac = makeIsaac(o, this.save.data.moustache, this.facePhoto); parent.add(this.isaac.root); if (pos) { this.isaac.root.position.copy(pos); this.isaac.root.rotation.y = rot; } if (held.R) this.isaac.hold('R', held.R, held.R.position.toArray() as any, [held.R.rotation.x, held.R.rotation.y, held.R.rotation.z]); if (this.mode === 'car') this.isaac.play('drive', 1, true); }
-  setSeason(s: Season) { this.world.setSeason(s); this.engine.applyTime(true); }
+  setSeason(s: Season) { this.world.setSeason(s); this.park?.setSeason(s); this.engine.applyTime(true); }
   shoeSide = 1;
   setShoes(off: boolean) { this.shoesOff = off; this.shoePair.visible = off; const lp = this.church.toLocal(this.player.pos); if (off && Math.abs(lp.z + 7.5) < 1.6) this.shoeSide = lp.x >= 0 ? 1 : -1; this.shoePair.position.copy(this.church.toWorld(this.shoeSide * 1.95, CH.F, -7.25)); }
   tp(x: number, z: number, yaw?: number) { this.player.teleport(x, this.world.height(x, z) + 0.05, z, yaw); if (yaw !== undefined) this.rig.yaw = yaw; this.rig.snap(); }

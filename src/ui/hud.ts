@@ -156,7 +156,8 @@ export class Hud {
     if (dest === this.waypoint && dest && Math.hypot(dest.x - p.x, dest.z - p.z) < 14) { this.waypoint = null; this.toast(this.g.i18n.pick('You have arrived', 'ደርሰዋል')); }
     const d2 = this.waypoint ?? this.target;
     // short hops on foot need no road routing; inside the church there is no GPS line at all
-    if (!d2 || Math.hypot(d2.x - p.x, d2.z - p.z) < 30 || this.g.engine.interior) { this.route = d2 && !this.g.engine.interior ? [[p.x, p.z], [d2.x, d2.z]] : []; this.g.world.showRoute(this.g.mode === 'car' ? this.route : []); return; }
+    const offMap = this.g.world.sets.some((st) => Math.abs(p.x - st.x) < st.hw && Math.abs(p.z - st.z) < st.hd);   // e.g. at Dinsdale Park: no street routing there
+    if (!d2 || Math.hypot(d2.x - p.x, d2.z - p.z) < 30 || this.g.engine.interior || offMap) { this.route = d2 && !this.g.engine.interior ? [[p.x, p.z], [d2.x, d2.z]] : []; this.g.world.showRoute(this.g.mode === 'car' ? this.route : []); return; }
     this.route = this.g.world.route(p.x, p.z, d2.x, d2.z); this.g.world.showRoute(this.route);
   }
 

@@ -63,18 +63,17 @@ Deacon's vestments for Kidase and for feasts; priest's vestments; the procession
 
 ## 5. Answers only you can give
 
-1. Men on the left and women on the right when facing the curtain — is that how it is at Medhane Alem?
-2. Does the front door face 5th Street (the gravel road)? (Assumed yes from Street View.)
-3. What exactly does a deacon do in the Kidase here: who holds the tuaf, who rings the qachil, who reads which reading?
-4. Where does the Tabot go at Timket in Brandon, and where is the water blessed?
-5. Where is the Demera built — front lawn, side yard?
-6. How many clergy serve on a normal Sunday, and what colour vestments?
-7. Anything in the five chapters that is not how it is done.
-8. The Amharic text in `public/story/dialogue.json` and `src/core/i18n.ts` — please correct it.
+Answered already: sides for men and women, the front door, the deacon's roles, Dinsdale Park for Timket and the Demera, the congregation's dress. Still open:
+1. After you have played it: anything in the five chapters that is not how it is done.
+2. The exact wording the nifk deacon reads, and the people's response at "Igzio", if you want them word for word.
+3. Vestment colours for the clergy on a normal Sunday and on feasts.
+4. The Amharic text in `public/story/dialogue.json` and `src/core/i18n.ts` — please correct it.
+
+Still missing from the audio list: `timket_procession.mp3`, `timket_blessing.mp3`, `fasika_vigil.mp3`, and `mezmur_03` to `mezmur_05` (optional).
 
 ## 6. The map (optional)
 
-The game uses about 600 m around the church. If a mission should go somewhere specific (a member's street, the hall, the place the water is blessed), tell me where.
+The game uses about 600 m around the church, and Dinsdale Park is a separate hand-built location. For a real drive from the church to the park, export a second `.osm` from openstreetmap.org covering 5th Street north to the river and Dinsdale Park, and upload it as `reference/map/brandon_north.osm`. Photos of the park (the gravel turnaround, the river view, where the Demera and the water basin go) would let me match it.
 
 ## 7. One decision
 

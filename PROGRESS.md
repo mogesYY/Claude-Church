@@ -2,6 +2,15 @@
 
 **Live link:** https://mogesyy.github.io/Claude-Church/ — _goes live once GitHub Pages is switched on: repo Settings → Pages → Source: **GitHub Actions**, then re-run the "Deploy to GitHub Pages" workflow (Actions tab). The code is pushed and the CI build passes; only that setting is missing._
 
+## Update — fourth pass (your answers applied)
+
+- **Your recordings are in**: menu, solemn and festive music; Kidase, Mahlet, Meskel, Siqlet and Fasika chant; two mezmur for the car radio. Still generated: the Timket procession, the Timket blessing and the Fasika vigil (no files yet).
+- **Deacon's part in the Kidase** now follows what you described: Isaac serves as the nifk deacon — he holds the tuaf, reads the nifk deacon's reading, and rings the qachil for "Igzio". The narration names the wanna deacon, the nifk deacon and the nifk qes as the readers.
+- **Dinsdale Park by the river** is a new location (49.851967, −99.942136): gravel turnaround, lawn, rail fence, the Assiniboine beyond. The Demera is built there (Chapter 3) and the Tabot is taken there at Timket, where the water is blessed (Chapter 4). It is a hand-built set, not real map data — the park is outside the map you exported, so the drive there fades after a short stretch.
+- **Congregation**: up to 48 people in the pews (14 on Low), men on the left and women on the right, in netela that are tricolour-edged, plain, or marked with a cross. The real ~80 will not fit the pew layout as modelled.
+- **Wereb and Mahlet movement**: the staff is lifted and set down on the beat with the body swaying forward, back and to the side; wereb adds stepping, swaying and clapping; the drummer moves with the beat.
+- **Front door faces 5th Street** — confirmed.
+
 ## Update — third pass
 
 - **Voices**: every dialogue line now has its own generated voice file, one distinct voice per character (`tools/make_voices.py` → `public/audio/voice/`). English only; the browser voice is just a fallback.

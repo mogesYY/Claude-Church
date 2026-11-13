@@ -5,7 +5,7 @@ export class Audio {
   private wind?: { g: GainNode; f: BiquadFilterNode }; private engine?: { o: OscillatorNode; o2: OscillatorNode; g: GainNode; f: BiquadFilterNode; tire: GainNode };
   private fire?: GainNode; private crowd?: GainNode; private drone?: { g: GainNode; stop: () => void }; private chantEl: HTMLAudioElement | null = null; private chantName = '';
   private chantSynth = false; interior = 0; private birdT = 6; private trainT = 40; private stepPhase = 0; private patternT = 0; private patternI = 0; keberoOn = false; tsenatselOn = false;
-  radioIndex = -1; readonly radioSlots = ['mezmur_01', 'mezmur_02', 'mezmur_03', 'mezmur_04', 'mezmur_05'];
+  radioIndex = -1; readonly radioSlots = ['mezmur_01', 'mezmur_02'];   // add more names here as more recordings are uploaded
 
   constructor() { try { const v = localStorage.getItem('ma.vol'); if (v !== null) this.volume = +v; const m = localStorage.getItem('ma.mus'); if (m !== null) this.musicVol = +m; this.voiceOn = localStorage.getItem('ma.voice') !== '0'; } catch { /* ignore */ } try { window.speechSynthesis?.addEventListener?.('voiceschanged', () => { this.voices = window.speechSynthesis.getVoices(); }); } catch { /* ignore */ } }
   unlock() {

@@ -113,7 +113,9 @@ export class Ctx {
   /** congregation standing in the church; returns the NPCs */
   congregation(count: number, seed = 40, opts: { candles?: boolean } = {}) {
     const refs = this.g.church.refs; const out: Npc[] = []; const men = refs.standing.men, women = refs.standing.women; const faceE = this.g.church.faceYaw(0, 1);
-    for (let i = 0; i < count; i++) { const isM = i % 2 === 0; const list = isM ? men : women; const s = list[(i * 5 + (i >> 1) * 3) % list.length]; if (out.some((o) => (o as any)._s === s)) continue; const kinds: NpcKind[] = isM ? ['man', 'elder', 'man', 'kid'] : ['woman', 'elderWoman', 'woman', 'kid']; const n = this.npc(kinds[(i >> 1) % 4], seed + i, this.g.church.toWorld(s.x, s.y, s.z), faceE); (n as any)._s = s; n.fixedY = 1; if (opts.candles) this.giveCandle(n); out.push(n); }
+    // men on the left, women on the right (facing the curtain); pews fill from the front
+    for (let i = 0; i < count; i++) { const isM = i % 2 === 0; const list = isM ? men : women; const s = list[(i >> 1) % list.length]; if ((i >> 1) >= list.length) break;
+      const kinds: NpcKind[] = isM ? ['man', 'elder', 'man', 'man', 'kid'] : ['woman', 'elderWoman', 'woman', 'woman', 'kid']; const n = new Npc(kinds[(i >> 1) % 5], seed + i, this.g.world.season === 'winter', !isM); n.place(this.g.church.toWorld(s.x, s.y, s.z), faceE); this.g.engine.scene.add(n.human.root); this.story.npcs.push(n); (n as any)._s = s; n.fixedY = 1; if (opts.candles) this.giveCandle(n); out.push(n); }
     return out;
   }
   giveCandle(n: Npc | null) { const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.24, 6), new THREE.MeshStandardMaterial({ color: 0xf2e6c8 })); c.position.y = 0.12; const f = new THREE.Mesh(new THREE.SphereGeometry(0.016, 6, 6), new THREE.MeshStandardMaterial({ color: 0xffe6a0, emissive: 0xffa030, emissiveIntensity: 6 })); f.scale.y = 1.8; f.position.y = 0.26; g.add(c, f); const h = n ? n.human : this.g.isaac; h.hold('R', g, [0, -0.1, 0.04], [0.2, 0, 0]); if (n) n.act('candle'); else this.g.isaac.play('candle', 1, true); return g; }
