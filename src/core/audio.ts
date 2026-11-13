@@ -115,7 +115,7 @@ export class Audio {
   // ------------------------------------------------------------------ dialogue voice (browser speech synthesis)
   voiceOn = true; private voices: SpeechSynthesisVoice[] = [];
   setVoice(on: boolean) { this.voiceOn = on; if (!on) this.hush(); try { localStorage.setItem('ma.voice', on ? '1' : '0'); } catch { /* ignore */ } }
-  hush() { try { window.speechSynthesis?.cancel(); } catch { /* ignore */ } }
+  hush() { try { window.speechSynthesis?.cancel(); } catch { /* ignore */ } if (this.voiceEl) { this.voiceEl.pause(); this.voiceEl = null; } }
   /** speak a dialogue line; each speaker gets a consistent pitch and pace. Returns false when no voice is available. */
   speak(text: string, lang: 'en' | 'am', speaker = ''): boolean {
     const ss = window.speechSynthesis; if (!ss || !this.voiceOn || this.volume <= 0) return false;
@@ -128,8 +128,16 @@ export class Audio {
       u.pitch = prof[0]; u.rate = prof[1]; u.volume = Math.min(1, this.volume); ss.speak(u); return true;
     } catch { return false; }
   }
+  private voiceEl: HTMLAudioElement | null = null;
+  /** play the recorded/generated voice file for a dialogue key; resolves with its length in seconds (0 if there is none) */
+  voiceLine(key: string): Promise<number> {
+    this.hush(); if (!this.voiceOn || this.volume <= 0) return Promise.resolve(0);
+    return new Promise((res) => { const a = new window.Audio(`${import.meta.env.BASE_URL}audio/voice/${key}.mp3`); a.volume = Math.min(1, this.volume); let done = false; const fin = (v: number) => { if (!done) { done = true; res(v); } };
+      a.addEventListener('loadedmetadata', () => fin(isFinite(a.duration) ? a.duration : 4)); a.addEventListener('error', () => fin(0)); setTimeout(() => fin(0), 2500);
+      a.play().then(() => { this.voiceEl = a; }).catch(() => fin(0)); });
+  }
   private pausedAll = false;
-  pauseAll(p: boolean) { if (p === this.pausedAll) return; this.pausedAll = p; try { if (p) { window.speechSynthesis?.pause(); this.chantEl?.pause(); this.musicEl?.pause(); this.ctx?.suspend(); } else { window.speechSynthesis?.resume(); this.chantEl?.play().catch(() => {}); this.musicEl?.play().catch(() => {}); this.ctx?.resume(); } } catch { /* ignore */ } }
+  pauseAll(p: boolean) { if (p === this.pausedAll) return; this.pausedAll = p; try { if (p) { window.speechSynthesis?.pause(); this.voiceEl?.pause(); this.chantEl?.pause(); this.musicEl?.pause(); this.ctx?.suspend(); } else { window.speechSynthesis?.resume(); this.voiceEl?.play().catch(() => {}); this.chantEl?.play().catch(() => {}); this.musicEl?.play().catch(() => {}); this.ctx?.resume(); } } catch { /* ignore */ } }
 
   nextRadio(): string { this.radioIndex++; if (this.radioIndex >= this.radioSlots.length) { this.radioIndex = -1; this.chant(null); return ''; } const n = this.radioSlots[this.radioIndex]; this.chant(n, 0.6); return n; }
 

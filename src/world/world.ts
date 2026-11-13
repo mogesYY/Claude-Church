@@ -389,6 +389,15 @@ export class World {
     this.treeGeos = [mk(0), mk(1), mk(2)];
   }
 
+  /** hand-placed trees (e.g. the big elms around the church seen on Street View): [x, z, scale, species] */
+  addTrees(list: number[][]) {
+    const dummy = new THREE.Object3D(); const col = new THREE.Color();
+    for (let type = 0; type < 3; type++) { const l = list.filter((t) => t[3] === type); if (!l.length) continue;
+      const trunk = new THREE.InstancedMesh(this.treeGeos[type].trunk, this.mats.bark, l.length), crown = new THREE.InstancedMesh(this.treeGeos[type].crown, type === 2 ? this.mats.needles : this.mats.leaves, l.length);
+      l.forEach((t, i) => { dummy.position.set(t[0], this.height(t[0], t[1]) - 0.1, t[1]); dummy.rotation.y = (t[0] * 3.1 + t[1] * 1.7) % 6.28; dummy.scale.setScalar(t[2]); dummy.updateMatrix(); trunk.setMatrixAt(i, dummy.matrix); crown.setMatrixAt(i, dummy.matrix); crown.setColorAt(i, col.setHSL(0, 0, 0.82 + ((i * 37) % 10) / 55)); this.phys.staticCylinder(t[0], dummy.position.y + 2, t[1], 2, 0.34 * t[2]); });
+      trunk.castShadow = crown.castShadow = true; crown.receiveShadow = true; trunk.computeBoundingSphere(); crown.computeBoundingSphere(); this.group.add(trunk, crown); }
+  }
+
   // ------------------------------------------------------------ chunk streaming
   private inReserved(x: number, z: number) { return this.reserved.some((p) => pointInPoly(x, z, p)); }
   update(px: number, pz: number, dt: number) {

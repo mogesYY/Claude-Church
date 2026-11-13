@@ -94,7 +94,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   const M = THREE.MeshStandardMaterial;
   const panelTex = canvasTex(128, 128, (c, w, h) => { speckle(c, w, h, [226, 226, 222], 6, 31); for (let i = 0; i < 8; i++) { c.fillStyle = 'rgba(0,0,0,0.22)'; c.fillRect((i * w) / 8, 0, 1.5, h); } });
   const woodTex = canvasTex(256, 256, (c, w, h) => { speckle(c, w, h, [196, 118, 58], 14, 37, 1.5); const r = mulberry(8); c.strokeStyle = 'rgba(90,40,10,0.22)'; for (let i = 0; i < 70; i++) { const x = r() * w; c.lineWidth = 0.6 + r(); c.beginPath(); c.moveTo(x, 0); c.bezierCurveTo(x + 8 * (r() - 0.5), h * 0.3, x + 10 * (r() - 0.5), h * 0.7, x + 6 * (r() - 0.5), h); c.stroke(); } for (let i = 0; i < 4; i++) { c.fillStyle = 'rgba(60,25,5,0.5)'; c.fillRect((i * w) / 4, 0, 2, h); } });
-  const oakTex = canvasTex(256, 256, (c, w, h) => { speckle(c, w, h, [205, 150, 84], 12, 61, 1.5); const r = mulberry(18); c.strokeStyle = 'rgba(110,62,20,0.2)'; for (let i = 0; i < 80; i++) { const y = r() * h; c.lineWidth = 0.6 + r(); c.beginPath(); c.moveTo(0, y); c.bezierCurveTo(w * 0.3, y + 6 * (r() - 0.5), w * 0.7, y + 8 * (r() - 0.5), w, y + 5 * (r() - 0.5)); c.stroke(); } });
+  const oakTex = canvasTex(256, 256, (c, w, h) => { speckle(c, w, h, [176, 120, 62], 12, 61, 1.5); const r = mulberry(18); c.strokeStyle = 'rgba(110,62,20,0.2)'; for (let i = 0; i < 80; i++) { const y = r() * h; c.lineWidth = 0.6 + r(); c.beginPath(); c.moveTo(0, y); c.bezierCurveTo(w * 0.3, y + 6 * (r() - 0.5), w * 0.7, y + 8 * (r() - 0.5), w, y + 5 * (r() - 0.5)); c.stroke(); } });
   const carpetTex = canvasTex(256, 256, (c, w, h) => { speckle(c, w, h, [112, 30, 30], 10, 41, 0.5); const r = mulberry(12); for (let i = 0; i < 26; i++) { const x = r() * w, y = r() * h, R = 14 + r() * 26; for (const [ox, oy] of [[0, 0], [w, 0], [-w, 0], [0, h], [0, -h]]) { c.strokeStyle = i % 3 ? '#a8884e' : '#c2a866'; c.lineWidth = 5 + r() * 3; c.beginPath(); c.arc(x + ox, y + oy, R, 0, 7); c.stroke(); c.lineWidth = 2; c.beginPath(); c.arc(x + ox, y + oy, R * 0.5, 0, 7); c.stroke(); } } });
   const runnerTex = canvasTex(64, 64, (c, w, h) => speckle(c, w, h, [96, 18, 30], 12, 43, 0.4));
   const curtainTex = canvasTex(256, 256, (c, w, h) => { const g = c.createLinearGradient(0, 0, w, 0); for (let i = 0; i <= 12; i++) g.addColorStop(i / 12, i % 2 ? '#e0851f' : '#b85a12'); c.fillStyle = g; c.fillRect(0, 0, w, h); c.fillStyle = '#f2cf5a'; for (const [x, y] of [[64, 70], [192, 70], [128, 150], [64, 220], [192, 220]]) { c.fillRect(x - 3, y - 14, 6, 28); c.fillRect(x - 11, y - 6, 22, 6); c.beginPath(); c.arc(x, y - 3, 5, 0, 7); c.fill(); } }, { repeat: false });
@@ -191,7 +191,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   plain.box(-(xi - 0.07), F + 1.0, PZ - 1.68, 0.02, 0.05, 0.1, 0xc9a13a);
   plain.box(3.3, F + 1.05, zf + 0.02, 0.98, 2.14, 0.05, 0x4a2e1c); plain.box(3.3, F + 1.02, zf + 0.045, 0.84, 2.02, 0.03, 0x9a6a3e); plain.box(2.98, F + 1.0, zf + 0.07, 0.1, 0.05, 0.02, 0xc9a13a);
   // sound desk at the front-left, lectern with a green cloth and a microphone stand at the front-right
-  plain.box(3.35, F + 0.45, 3.4, 1.0, 0.9, 0.55, 0x6a4a2e); plain.box(3.35, F + 0.94, 3.4, 0.6, 0.08, 0.36, 0x1a1a1c); plain.box(3.1, F + 0.93, 3.25, 0.2, 0.05, 0.14, 0x101012);
+  plain.box(3.35, F + 0.45, 3.4, 1.0, 0.9, 0.55, 0x6a4a2e); plain.box(3.75, F + 0.8, 4.6, 0.4, 1.6, 0.9, 0x141416); for (const yy of [0.5, 0.95, 1.4]) plain.box(3.72, F + yy, 4.6, 0.42, 0.03, 0.92, 0x2a2a2e); plain.box(3.35, F + 0.94, 3.4, 0.6, 0.08, 0.36, 0x1a1a1c); plain.box(3.1, F + 0.93, 3.25, 0.2, 0.05, 0.14, 0x101012);
   for (let k = 0; k < 4; k++) plain.box(3.2 + k * 0.1, F + 1.02, 3.4, 0.012, 0.12, 0.012, 0x0a0a0a);
   plain.box(-3.0, F + 0.55, 4.0, 0.08, 1.1, 0.08, 0x3a2a1c); { const lm = new THREE.Matrix4().makeRotationX(-0.45).setPosition(-3.0, F + 1.14, 3.98); plain.setMatrix(lm); plain.box(0, 0, 0, 0.5, 0.03, 0.4, 0x1f5a3a); plain.box(0, 0.025, 0, 0.36, 0.02, 0.28, 0xf2ead8); plain.setMatrix(null); }
   plain.box(-2.3, F + 0.75, 4.25, 0.025, 1.5, 0.025, 0x18181a); plain.box(-2.3, F + 1.5, 4.2, 0.03, 0.03, 0.14, 0x0a0a0a); plain.box(-2.3, F + 0.02, 4.25, 0.3, 0.03, 0.3, 0x18181a);
@@ -261,20 +261,34 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   const lap = new THREE.Mesh(new THREE.PlaneGeometry(0.33, 0.21), new M({ color: 0x0a0a0c, emissive: 0x2a5a9a, emissiveIntensity: 0.6 })); lap.position.set(-3.45, F + 0.86, -5.07); lap.rotation.x = -0.25; root.add(lap);
   const camLed = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), new M({ color: 0x220000, emissive: 0xff2020, emissiveIntensity: 0 })); camLed.position.set(0.05, F + 2.38, zf + 0.3); root.add(camLed);
   colliders.push([-1.25, F + 0.7, -4.95, 0.4, 1.4, 0.4], [-3.45, F + 0.4, -4.95, 0.7, 0.8, 0.45]);
-  // ---- vestibule (tower base): warm wood paneling, coat hooks, shoe rack ----
-  const vx = TW - T, vz0 = TZ0 + T, vTop = F + 2.7;
+  // ---- entry room (the full width of the tower and its wings): wood paneling, shoe racks on both sides,
+  //      the door down to the basement on the left, coats hanging on the right ----
+  const vx = CH.WINGX - T, vz0 = TZ0 + T, vTop = F + 2.7, vzm = (vz0 + NZ0) / 2;
+  const wwin = (sx: number) => ({ at: sx * (TW + CH.WINGX) / 2, w: 0.56, y0: F + 0.5, y1: F + 2.05, peak: F + 2.42 });
   for (const sx of [-1, 1]) wall(wood, sx * vx, vz0, sx * vx, NZ0, [-sx, 0], F, vTop, [], wc, 1.6);
-  wall(wood, -vx, vz0, vx, vz0, [0, 1], F, vTop, [{ at: 0, w: 1.15, y0: F, y1: F + 2.12 }], wc, 1.6);
+  wall(wood, -vx, vz0, vx, vz0, [0, 1], F, vTop, [{ at: 0, w: 1.15, y0: F, y1: F + 2.12 }, wwin(-1), wwin(1)], wc, 1.6);
   wall(wood, -vx, NZ0, vx, NZ0, [0, -1], F, vTop, [doorHole], wc, 1.6);
+  for (const sx of [-1, 1]) { const cxw = sx * (TW + CH.WINGX) / 2; trimOutline(plain, (q, y) => [q, y, vz0 + 0.012], [[cxw - 0.28, F + 0.5], [cxw - 0.28, F + 2.05], [cxw, F + 2.42], [cxw + 0.28, F + 2.05], [cxw + 0.28, F + 0.5]], 0.09, white, true); }
   paint.quad([-vx, vTop, vz0], [vx, vTop, vz0], [vx, vTop, NZ0], [-vx, vTop, NZ0], white);
   plain.quad([-vx, F + 0.004, NZ0], [vx, F + 0.004, NZ0], [vx, F + 0.004, vz0], [-vx, F + 0.004, vz0], 0x6a5a4c);
-  plain.box(-vx + 0.03, F + 1.6, (vz0 + NZ0) / 2, 0.03, 0.1, 2.2, 0x5a3520);
-  for (let i = 0; i < 7; i++) plain.box(-vx + 0.07, F + 1.57, vz0 + 0.5 + i * 0.32, 0.07, 0.03, 0.02, 0xb8b8b8);
-  const shoes = new THREE.Group(); root.add(shoes);
-  for (const y of [0.12, 0.42, 0.72]) wood.box(vx - 0.2, F + y, (vz0 + NZ0) / 2 - 0.2, 0.34, 0.025, 1.7, 0x8a6a4a);
-  for (const z of [-0.85, 0.85]) wood.box(vx - 0.2, F + 0.4, (vz0 + NZ0) / 2 - 0.2 + z, 0.34, 0.8, 0.03, 0x8a6a4a);
-  const sr = mulberry(3); for (let i = 0; i < 9; i++) for (const dx of [-0.06, 0.06]) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.07, 0.24), new M({ color: [0x1a1a1c, 0x3a2a20, 0x5a5a60, 0xf0f0f0, 0x2a3a5a][Math.floor(sr() * 5)], roughness: 0.7 })); s.position.set(vx - 0.2 + dx, F + [0.17, 0.47, 0.77][i % 3], (vz0 + NZ0) / 2 - 0.85 + Math.floor(i / 3) * 0.55 + sr() * 0.1); shoes.add(s); }
-  colliders.push([vx - 0.2, F + 0.45, (vz0 + NZ0) / 2 - 0.2, 0.36, 0.9, 1.75]);
+  plain.box(0, F + 0.012, vzm, 1.3, 0.012, NZ0 - vz0 - 0.3, 0x5a1420);                                       // runner from the door
+  // left: the basement door
+  plain.box(vx - 0.02, F + 1.05, vzm + 0.35, 0.05, 2.14, 0.98, 0x3a2416); plain.box(vx - 0.045, F + 1.02, vzm + 0.35, 0.03, 2.02, 0.84, 0x8a5a34); plain.box(vx - 0.07, F + 1.0, vzm + 0.02, 0.02, 0.05, 0.1, 0xc9a13a);
+  plain.box(vx - 0.03, F + 2.25, vzm + 0.35, 0.02, 0.14, 0.5, 0xf2efe6);                                      // small sign above it
+  // right: coat rail with hooks, a shelf above it and a few coats
+  plain.box(-vx + 0.03, F + 1.62, vzm + 0.3, 0.03, 0.1, 1.9, 0x5a3520); plain.box(-vx + 0.14, F + 1.86, vzm + 0.3, 0.26, 0.03, 1.9, 0x6a4526);
+  for (let i = 0; i < 8; i++) plain.box(-vx + 0.07, F + 1.59, vzm - 0.55 + i * 0.24, 0.07, 0.03, 0.02, 0xb8b8b8);
+  const coatCols = [0x18181a, 0x2a3a5a, 0x5a2a2a, 0x3a4a3a, 0xf2f0ea]; for (let i = 0; i < 5; i++) { plain.box(-vx + 0.13, F + 1.12, vzm - 0.45 + i * 0.36, 0.14, 0.92, 0.3, coatCols[i]); plain.box(-vx + 0.13, F + 1.6, vzm - 0.45 + i * 0.36, 0.1, 0.1, 0.2, coatCols[i]); }
+  // shoe racks on both sides, by the front wall
+  const shoes = new THREE.Group(); root.add(shoes); const sr = mulberry(3);
+  for (const sx of [-1, 1]) {
+    const rx2 = sx * (vx - 0.22), rz = vz0 + 0.85;
+    for (const y of [0.1, 0.36, 0.62]) wood.box(rx2, F + y, rz, 0.36, 0.025, 1.3, 0x8a6a4a); for (const z of [-0.65, 0.65]) wood.box(rx2, F + 0.33, rz + z, 0.36, 0.66, 0.03, 0x8a6a4a);
+    for (let i = 0; i < 7; i++) for (const dx of [-0.07, 0.07]) { const sh = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.07, 0.24), new M({ color: [0x1a1a1c, 0x3a2a20, 0x5a5a60, 0xf0f0f0, 0x2a3a5a][Math.floor(sr() * 5)], roughness: 0.7 })); sh.position.set(rx2 + dx, F + [0.15, 0.41, 0.67][i % 3], rz - 0.5 + Math.floor(i / 3) * 0.42 + sr() * 0.08); shoes.add(sh); }
+    colliders.push([rx2, F + 0.36, rz, 0.4, 0.74, 1.34]);
+  }
+  // the phone on a stand at the right end of the stage, beside the side door (the second stream angle)
+  plain.box(-3.55, platY + 0.65, PZ - 1.3, 0.025, 1.3, 0.025, 0x18181a); plain.box(-3.55, platY + 0.02, PZ - 1.3, 0.34, 0.03, 0.34, 0x18181a); plain.box(-3.55, platY + 1.36, PZ - 1.31, 0.09, 0.17, 0.012, 0x0a0a0c);
   // ---- chandelier + recessed lights ----
   const chg = new THREE.Group(); chg.position.set(0, ceilEdge + ceilRise - 0.02, 0.4);
   const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.5, 6), mats.brass); stem.position.y = -0.25; chg.add(stem);
@@ -283,7 +297,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   root.add(chg);
   const chandelier = new THREE.PointLight(0xffe2b0, 0, 16, 1.4); chandelier.position.set(0, F + 2.55, 0.4); if (!low) { chandelier.castShadow = true; chandelier.shadow.mapSize.set(512, 512); chandelier.shadow.bias = -0.002; } root.add(chandelier);
   const fill = new THREE.PointLight(0xfff0d8, 0, 12, 1.5); fill.position.set(0, F + 2.6, -3.6); root.add(fill);
-  const vest = new THREE.PointLight(0xffe2b0, 0, 6, 1.6); vest.position.set(0, F + 2.3, (vz0 + NZ0) / 2); root.add(vest);
+  const vest = new THREE.PointLight(0xffe2b0, 0, 7, 1.6); vest.position.set(0, F + 2.3, vzm); root.add(vest);
   const recess = new Geo(); for (const [x, z] of [[-2.4, -3], [2.4, -3], [-2.4, 3.4], [2.4, 3.4], [-2.4, 0.2], [2.4, 0.2]]) { const y = ceilEdge + ceilRise * (1 - Math.abs(x) / xi) - 0.01; const d = new THREE.CircleGeometry(0.11, 12); d.rotateX(Math.PI / 2); d.translate(x, y, z); recess.merge(d, null, 0xffffff); }
   root.add(recess.mesh(mats.bulb, false));
   const add = (g: Geo, mat: THREE.Material) => { if (g.count) { const m = g.mesh(mat, false); m.receiveShadow = true; root.add(m); } };
@@ -291,7 +305,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   // chanters stand before the curtain, either side of the aisle (as in the practice photo)
   const chanters = [new THREE.Vector3(1.9, F, 2.4), new THREE.Vector3(-1.9, F, 2.4), new THREE.Vector3(2.0, F, 3.3), new THREE.Vector3(-2.0, F, 3.3), new THREE.Vector3(2.1, F, 4.2), new THREE.Vector3(-2.6, F, 4.3), new THREE.Vector3(2.9, F, 2.9), new THREE.Vector3(-2.9, F, 3.0)];
   const spots: Record<string, THREE.Vector3> = {
-    street: new THREE.Vector3(0, 0, -14.5), stairsBottom: new THREE.Vector3(0, 0, -12.4), landing: new THREE.Vector3(0, F, -9.3), vestibule: new THREE.Vector3(0, F, -7.0), shoeRack: new THREE.Vector3(0.75, F, -7.3),
+    street: new THREE.Vector3(0, 0, -14.5), stairsBottom: new THREE.Vector3(0, 0, -12.4), landing: new THREE.Vector3(0, F, -9.3), vestibule: new THREE.Vector3(0, F, -7.0), shoeRack: new THREE.Vector3(1.75, F, -7.55), shoeRackR: new THREE.Vector3(-1.75, F, -7.55),
     aisleBack: new THREE.Vector3(0, F, -4.2), aisleMid: new THREE.Vector3(0, F, 0), aisleFront: new THREE.Vector3(0, F, 3.0), candleL: new THREE.Vector3(-1.22, platY, PZ - 1.0), candleR: new THREE.Vector3(1.22, platY, PZ - 1.0),
     censer: new THREE.Vector3(-1.85, platY, PZ - 1.05), camera: new THREE.Vector3(-3.0, F, -4.5), kebero: new THREE.Vector3(-1.05, F, 2.8), curtain: new THREE.Vector3(0, platY, PZ - 1.1),
     priest: new THREE.Vector3(0.7, F, 3.9), deacon: new THREE.Vector3(-0.9, platY, PZ - 1.2), umbrellas: new THREE.Vector3(xi - 0.8, platY, PZ - 0.9), backLeft: new THREE.Vector3(-2.6, F, -4.3), elderSeat: new THREE.Vector3(-1.6, F, -1.0), mahlet: new THREE.Vector3(0, F, 3.4), bell: new THREE.Vector3(-0.9, platY, PZ - 1.2),

@@ -28,9 +28,10 @@ export class Ctx {
   async say(key: string, hold = false) {
     const l = this.story.dialog[key] ?? { en: key }; const g = this.g; this.check();
     g.hud.subtitle(g.i18n.pick(l.sp ?? '', l.spAm), l.en, l.am); g.input.take('skip'); g.input.take('interact');
-    // spoken voice: Amharic if the device has an Amharic voice and that language is selected, otherwise English
-    if (!g.auto) { const useAm = g.i18n.lang === 'am' && !!l.am; if (!(useAm && g.audio.speak(l.am!, 'am', l.sp ?? ''))) g.audio.speak(l.en, 'en', l.sp ?? 'narrator'); }
-    const dur = this.g.auto ? 0.25 : hold ? 1e9 : 2.2 + l.en.length * 0.072; let t = 0;
+    // every line has its own voice file (one voice per character); the browser voice is only a fallback
+    let dur = this.g.auto ? 0.25 : hold ? 1e9 : 2.2 + l.en.length * 0.072;
+    if (!g.auto) { const len = await g.audio.voiceLine(key); this.check(); if (len > 0) dur = hold ? 1e9 : len + 0.55; else g.audio.speak(l.en, 'en', l.sp ?? 'narrator'); }
+    let t = 0;
     while (t < dur) { await g.nextFrame(); this.check(); t += g.dt; if (t > 0.35 && (g.input.take('skip') || g.input.take('interact'))) break; }
     g.hud.hideSubtitle(); g.audio.hush(); await this.wait(0.12);
   }

@@ -229,6 +229,9 @@ for (const e of elements) {
   if (before !== buildings.length) console.log(`removed ${before - buildings.length} footprints that overlapped a road`);
 }
 
+// 5th Street beside the church is a gravel road (Street View)
+for (const r of roads) if (/^5th Street/i.test(r.name) && r.pts.some((q) => Math.hypot(q[0], q[1]) < 150)) r.surface = 'gravel';
+
 // ---------- church placement ----------
 let churchInfo = { x: 0, z: 0, yaw: 0, street: '5th Street' };
 {

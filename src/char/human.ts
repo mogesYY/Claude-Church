@@ -125,7 +125,7 @@ function headGeometry(female: boolean) {
   for (let i = 0; i < p.count; i++) {
     v.fromBufferAttribute(p, i).normalize(); const d = v.clone(); let rx = 0.068, ry = 0.118, rz = 0.094;
     // slim oval face: jaw tapers to a defined chin
-    const jaw = smooth(-0.05, -0.95, d.y); rx *= 1 + 0.07 * Math.exp(-((d.y + 0.72) ** 2) / 0.05) * (d.z > -0.2 ? 1 : 0.3); rx *= 1 + 0.1 * smooth(0.1, 0.6, d.y) * smooth(0.3, -0.5, d.z); rz *= 1 - 0.1 * jaw;
+    const jaw = smooth(-0.05, -0.95, d.y); rx *= 1 + 0.07 * Math.exp(-((d.y + 0.72) ** 2) / 0.05) * (d.z > -0.2 ? 1 : 0.3); rx *= 1 + 0.12 * smooth(-0.1, 0.5, d.y) * smooth(0.75, 0.1, d.z); rx *= 1 + 0.06 * Math.exp(-((d.y + 0.5) ** 2) / 0.03) * smooth(0.5, -0.1, d.z); rz *= 1 + 0.05 * smooth(0.2, 0.8, d.y) * smooth(-0.2, 0.6, d.z); rz *= 1 - 0.1 * jaw;
     if (d.z < 0) { rz *= 1 + 0.07 * smooth(0, -1, d.z) * smooth(-0.6, 0.5, d.y); }
     let x = d.x * rx, y = d.y * ry, z = d.z * rz;
     const front = smooth(0.2, 0.8, d.z);
@@ -147,11 +147,11 @@ function headGeometry(female: boolean) {
 }
 function hairGeometry(style: HairStyle, seed: number) {
   const src = new THREE.SphereGeometry(1, 40, 28); const p = src.attributes.position; const v = new THREE.Vector3(); const r = mulberry(seed);
-  const keep: boolean[] = []; const thick = style === 'afro' ? 0.045 : style === 'fade' ? 0.02 : 0.008;
+  const keep: boolean[] = []; const thick = style === 'afro' ? 0.045 : style === 'fade' ? 0.027 : 0.008;
   for (let i = 0; i < p.count; i++) {
     v.fromBufferAttribute(p, i).normalize(); const line = hairline(v.x, v.y, v.z, style) + (style === 'fade' ? (v.z > 0.25 ? 0 : 0.2) : 0.04); keep.push(v.y > line - 0.02);
     const edge = smooth(line - 0.02, line + 0.2, v.y); const t = thick * (style === 'fade' ? edge : 1) * (0.8 + r() * 0.5);
-    let rx = 0.0685 * (1 + 0.1 * smooth(0.1, 0.6, v.y) * smooth(0.3, -0.5, v.z)), rz = 0.0945; if (v.z < 0) rz *= 1 + 0.07 * smooth(0, -1, v.z) * smooth(-0.6, 0.5, v.y);
+    let rx = 0.0685 * (1 + 0.12 * smooth(-0.1, 0.5, v.y) * smooth(0.75, 0.1, v.z)), rz = 0.0945 * (1 + 0.05 * smooth(0.2, 0.8, v.y) * smooth(-0.2, 0.6, v.z)); if (v.z < 0) rz *= 1 + 0.07 * smooth(0, -1, v.z) * smooth(-0.6, 0.5, v.y);
     p.setXYZ(i, v.x * (rx + t), v.y * (0.118 + t) + 0.118, v.z * (rz + t) + 0.012);
   }
   const idx: number[] = []; const si = src.index!; for (let i = 0; i < si.count; i += 3) { const a = si.getX(i), b = si.getX(i + 1), c = si.getX(i + 2); if (keep[a] && keep[b] && keep[c]) idx.push(a, b, c); }
@@ -184,7 +184,7 @@ export class Human {
   phase = 0; speed = 0; action = ''; actionT = 0; actionDur = 1; actionHold = false; private actW = 0; private prevAction = '';
   private clothVel = new THREE.Vector3(); private clothAng = new THREE.Vector2(); private clothAngV = new THREE.Vector2(); private lastPos = new THREE.Vector3(); private lastYaw = 0;
   held: Partial<Record<'L' | 'R', THREE.Object3D>> = {};
-  time = 0; blink = 0; seated = false; wind = 0;
+  time = 0; blink = 0; seated = false; wind = 0; private prevQ: THREE.Quaternion[] = []; private hipY = 0.97;
   height: number;
 
   constructor(o: HumanOpts = {}) {
@@ -255,7 +255,7 @@ export class Human {
     this.head = new THREE.Mesh(headGeometry(o.female), new THREE.MeshStandardMaterial({ map: faceTexture({ skin: o.skin, hair: o.hair, moustache: o.moustache, female: o.female, seed: o.seed, beard: o.beard, photo: o.photo }), roughness: 0.58 }));
     this.head.castShadow = true; this.head.scale.setScalar(hs); this.bones.head.add(this.head);
     const earM = new THREE.MeshStandardMaterial({ color: skin, roughness: 0.65 });
-    for (const s of [1, -1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), earM); e.scale.set(0.45, 1.25, 0.8); e.position.set(s * 0.07 * hs, 0.105 * hs, 0.0); e.rotation.y = s * 0.35; this.bones.head.add(e); }
+    for (const s of [1, -1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 8), earM); e.scale.set(0.4, 1.3, 0.85); e.position.set(s * 0.076 * hs, 0.1 * hs, -0.004); e.rotation.y = s * 0.35; this.bones.head.add(e); }
     if (o.hair !== 'bald' && o.hair !== 'covered' && !o.turban) { const hm = new THREE.Mesh(hairGeometry(o.hair, o.seed), new THREE.MeshStandardMaterial({ color: o.hair === 'grey' ? 0x9a9a9a : 0x0c0a09, roughness: 1 })); hm.scale.setScalar(hs); hm.castShadow = true; this.bones.head.add(hm); }
     if (o.turban) { // white wrapped turban (temtem) worn by priests
       const tm = new THREE.MeshStandardMaterial({ color: 0xf6f4ee, roughness: 0.9 });
@@ -327,6 +327,10 @@ export class Human {
     if (this.action) { this.actionT += dt; if (!this.actionHold && this.actionT >= this.actionDur) { this.prevAction = this.action; this.action = ''; } }
     const name = this.action || this.prevAction;
     if (name && this.actW > 0.002) this.applyAction(name, this.actionHold ? this.actionT : Math.min(1, this.actionT / this.actionDur), this.actW);
+    // secondary motion so nothing is ever perfectly still: weight shift, slow head drift, breathing in the shoulders
+    if (!this.seated && w < 0.3) { const k = 1 - w / 0.3, sd = this.opts.seed; b.hips.rotation.z += 0.022 * Math.sin(t * 0.55 + sd) * k; b.spine.rotation.z -= 0.018 * Math.sin(t * 0.55 + sd) * k; b.hips.position.x = 0.012 * Math.sin(t * 0.55 + sd) * k; b.shoulderL.rotation.z += 0.02 * br * k; b.shoulderR.rotation.z -= 0.02 * br * k; b.upLegL.rotation.z += 0.02 * Math.sin(t * 0.55 + sd) * k; b.upLegR.rotation.z += 0.02 * Math.sin(t * 0.55 + sd) * k; }
+    // pose smoothing: every joint eases toward its target, so starts, stops and action changes blend instead of snapping
+    { const a = 1 - Math.exp(-dt * (w > 0.5 ? 26 : 13)); for (let i = 0; i < 19; i++) { const bone = b[BONES[i]]; const q = this.prevQ[i] ?? (this.prevQ[i] = bone.quaternion.clone()); q.slerp(bone.quaternion, a); bone.quaternion.copy(q); } this.hipY += (b.hips.position.y - this.hipY) * Math.min(1, dt * 16); b.hips.position.y = this.hipY; }
     // cloth spring bones (netela sway from motion + wind)
     if (this.cloth) {
       const wp = this.root.getWorldPosition(new THREE.Vector3()); const v = wp.clone().sub(this.lastPos).divideScalar(Math.max(dt, 1e-3)); this.lastPos.copy(wp);

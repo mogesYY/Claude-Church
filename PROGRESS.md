@@ -2,6 +2,17 @@
 
 **Live link:** https://mogesyy.github.io/Claude-Church/ — _goes live once GitHub Pages is switched on: repo Settings → Pages → Source: **GitHub Actions**, then re-run the "Deploy to GitHub Pages" workflow (Actions tab). The code is pushed and the CI build passes; only that setting is missing._
 
+## Update — third pass
+
+- **Voices**: every dialogue line now has its own generated voice file, one distinct voice per character (`tools/make_voices.py` → `public/audio/voice/`). English only; the browser voice is just a fallback.
+- **The priest is named Qesis Andualem.**
+- **Church front** corrected from the close-up photo (horizontal siding, flush wide front, real sign wording, grey railings, door plate, downspouts) and **trees placed from Street View**; 5th Street by the church is gravel.
+- **Entry room** is now the full width of the front: shoe racks on both sides, basement door on the left, coats on the right. The racks work at any time, in any mode.
+- **Animation**: every joint now eases between poses, with idle weight-shift and breathing. Still procedural, not motion capture.
+- **Head**: wider cranium, jaw and ears adjusted, fuller hair. A true match needs the photos listed in `RESOURCES.md`.
+- **See `RESOURCES.md`** for the complete list of what to send.
+- Not done: I could not open Google Maps or four of the photos (unsupported format).
+
 ## Update — second pass (your feedback)
 
 **Changed**

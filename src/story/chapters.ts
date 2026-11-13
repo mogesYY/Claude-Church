@@ -37,7 +37,12 @@ function exodus(c: Ctx, people: Npc[]) {
   people.forEach((n, i) => { n.fixedY = 1; n.human.stop(); n.idle = i % 3 === 0 ? 'talk' : ''; n.place(c.L(0, F, -6.6 + (i % 2) * 0.5), c.g.church.faceYaw(0, -1)); n.visible = false; n.human.root.visible = false;
     setTimeout(() => { if (c.dead) return; n.visible = true; n.speed = 1.0 + r() * 0.35; const side = (i % 2 ? 1 : -1) * (1.2 + r() * 6.5); n.walkTo(c.L((r() - 0.5) * 0.8, F, -9.2), c.L((r() - 0.5) * 1.2, 0.02, -12.6), c.L(side * 0.4, 0.02, -14.5 - r() * 2), c.L(side, 0.02, -15 - r() * 5)); }, i * 850); });
 }
-async function shoesStep(c: Ctx) { const g = c.g; if (g.shoesOff) return; c.obj('Remove your shoes at the rack inside the door', 'በሩ አጠገብ ጫማህን አውልቅ'); await c.interact(c.spot('shoeRack'), 'Remove shoes', 'ጫማ አውልቅ', 1.5, 'shoes', 1.8); g.setShoes(true); }
+async function shoesStep(c: Ctx) {
+  const g = c.g; if (g.shoesOff) return; const rack = c.spot('shoeRack');
+  c.obj('Take off your shoes at a rack in the entry room', 'በመግቢያው ክፍል ጫማህን አውልቅ'); g.hud.setTarget({ x: rack.x, z: rack.z });
+  if (g.auto) { await c.wait(0.3); g.player.teleport(rack.x, rack.y + 0.05, rack.z); g.setShoes(true); }
+  await c.until(() => g.shoesOff); g.hud.setTarget(null); await c.wait(1.5);
+}
 const yawTo = (from: THREE.Vector3, to: THREE.Vector3) => Math.atan2(-(to.x - from.x), -(to.z - from.z));
 function torchMesh() { const g = new THREE.Group(); const st = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.9, 6), new THREE.MeshStandardMaterial({ color: 0x5a3a22, roughness: 0.9 })); st.position.y = 0.3; const fl = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffd080, emissive: 0xff8a20, emissiveIntensity: 6 })); fl.scale.y = 1.6; fl.position.y = 0.84; g.add(st, fl); return g; }
 function processionalCross() { const g = new THREE.Group(); const geo = new Geo(); const c = 0xd0a83a; geo.box(0, 0.75, 0, 0.03, 1.5, 0.03, 0x6a4a2a); geo.box(0, 1.72, 0, 0.05, 0.46, 0.03, c); geo.box(0, 1.76, 0, 0.36, 0.05, 0.03, c); const m = new THREE.Matrix4().makeRotationZ(Math.PI / 4).setPosition(0, 1.76, 0); geo.setMatrix(m); geo.box(0, 0, 0, 0.2, 0.2, 0.025, c); geo.setMatrix(null); for (const [dx, dy] of [[0.18, 0], [-0.18, 0], [0, 0.23], [0, -0.2]]) geo.box(dx, 1.76 + dy, 0, dx ? 0.05 : 0.14, dx ? 0.14 : 0.05, 0.03, c); g.add(geo.mesh(new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.85, roughness: 0.3 }))); return g; }
@@ -58,7 +63,7 @@ async function kidan(c: Ctx) {
   await c.scene({ season: 'winter', month: 1, day: 11, hour: 8.72, snowfall: 0.3, wind: 0.25, temp: -18, outfit: 'netelaPuffer', timeScale: 14 });
   const car = c.car('sedan', 0x7d858c, g.churchParking(7));
   c.place(c.spot('stairsBottom'), ch.faceYaw(0, 1));
-  const qes = c.npc('priest', 1, c.spot('priest'), ch.faceYaw(0, -1), 'Qes'); qes.fixedY = 1; qes.act('holdCross');
+  const qes = c.npc('priest', 1, c.spot('priest'), ch.faceYaw(0, -1), 'Qesis Andualem'); qes.fixedY = 1; qes.act('holdCross');
   g.cutCam = { pos: c.L(0.6, 1.9, -31), look: c.L(0, 7.5, -8) }; await c.settle();
   // ---- Opening: before dawn, light snow; the camera pushes in on the church front ----
   await c.cut(async () => {
@@ -75,7 +80,7 @@ async function kidan(c: Ctx) {
   // ---- inside: shoes off, bow toward the sanctuary, greet the priest by kissing the cross ----
   await shoesStep(c);
   c.obj('Bow toward the sanctuary as you enter', 'ስትገባ ወደ መቅደሱ ስገድ'); await c.interact(c.spot('aisleBack'), 'Bow', 'ስገድ', 1.6, null); g.player.yaw = ch.faceYaw(0, 1); await c.act('cross', 2.4); await c.act('bow', 1.8);
-  c.obj('Greet the Qes: kiss the cross he holds', 'ቄሱን ሰላም በል፦ መስቀሉን ሳም');
+  c.obj('Greet Qesis Andualem: kiss the cross he holds', 'ቀሲስ አንዷለምን ሰላም በል፦ መስቀሉን ሳም');
   await c.interact(c.spot('priest').add(ch.toWorld(0, 0, -1.0).sub(ch.toWorld(0, 0, 0))), 'Kiss the cross', 'መስቀሉን ሳም', 1.8, null); qes.face(g.player.pos); qes.human.play('reach', 2.2); await c.act('kiss', 2.2);
   await c.talk('c1.qes.greet', 'c1.isaac.greet', 'c1.qes.tasks');
   c.obj('Light the candles on both stands', 'በሁለቱም መቅረዞች ላይ ሻማዎቹን አብራ');
@@ -108,12 +113,12 @@ async function kidan(c: Ctx) {
   qes.place(c.spot('curtain'), ch.faceYaw(0, -1)); qes.human.hold('R', null); const qc = censerMesh(); qes.human.hold('R', qc, [0, -0.02, 0.03]); (qc.getObjectByName('ember') as any).material.emissiveIntensity = 2.5; qes.act('censer');
   g.weather.smokeSources.push({ pos: ch.toWorld(0.25, F + 0.95, CH.PZ - 1.5), rate: 9, acc: 0 });
   g.audio.chant('kidase_opening'); g.audio.tsenatselOn = true;
-  c.obj('Take your place beside the Qes to serve', 'ለማገልገል ከቄሱ አጠገብ ቁም'); await c.reach(c.spot('deacon'), 1.1);
+  c.obj('Take your place beside Qesis Andualem to serve', 'ለማገልገል ከቀሲስ አንዷለም አጠገብ ቁም'); await c.reach(c.spot('deacon'), 1.1);
   await c.cut(async () => { c.place(c.spot('deacon'), ch.faceYaw(0.3, -1)); g.audio.bell(660); c.say('c1.kidase.1').catch(() => {});
     await c.cam(c.L(0, F + 1.7, -4.9), c.L(0, F + 1.5, 5), c.L(0, F + 1.9, -0.5), c.L(0, F + 1.6, 5.5), 9, 55);
     await c.cam(c.L(3.2, F + 1.5, 1.6), c.L(-1, F + 1.4, 4.6), c.L(2.6, F + 1.6, 4.4), c.L(-1.2, F + 1.5, 5.2), 7, 45); await c.say('c1.kidase.2'); });
   // the deacon's part: hold the light for the Gospel, call the people to prayer, ring the bell
-  c.obj('Hold the tuaf (candle) beside the Qes for the Gospel', 'ለወንጌል ንባብ ከቄሱ አጠገብ ጧፍ ያዝ'); await c.interact(c.spot('deacon'), 'Take the candle', 'ጧፉን ያዝ', 1.6, 'reach'); c.giveCandle(null); g.audio.tsenatselOn = false; g.audio.chant(null);
+  c.obj('Hold the tuaf (candle) beside Qesis Andualem for the Gospel', 'ለወንጌል ንባብ ከቀሲስ አንዷለም አጠገብ ጧፍ ያዝ'); await c.interact(c.spot('deacon'), 'Take the candle', 'ጧፉን ያዝ', 1.6, 'reach'); c.giveCandle(null); g.audio.tsenatselOn = false; g.audio.chant(null);
   qes.human.hold('R', null); qes.act('holdCross'); await c.talk('c1.gospel');
   c.obj('Call the people to prayer', 'ሕዝቡን ለጸሎት ጥራ'); await c.interact(c.spot('deacon'), 'Say: "Tselyu" — Pray', '«ጸልዩ» በል', 1.6, null); await c.say('c1.isaac.tselyu'); for (const n of people) n.human.play('bow', 2.6); await c.wait(2.2);
   c.obj('Ring the qachil at the consecration', 'በቅዳሴው ጊዜ ቃጭሉን ደውል'); await c.interact(c.spot('bell'), 'Ring the bell', 'ቃጭሉን ደውል', 1.6, 'reach'); g.audio.qachil(); for (const n of [...people, ...chanters]) n.human.play('bow', 3.4); await c.act('bow', 3.2);
@@ -161,7 +166,7 @@ async function hamer(c: Ctx) {
   // ---- present, the same evening: Mahlet practice ----
   await c.fadeOut(1.2);
   await c.scene({ season: 'summer', month: 6, day: 20, hour: 19.6, temp: 20, outfit: 'netela', timeScale: 6 }); c.removeNpc(mother); g.setShoes(true);
-  const chanters = mahlet(c, 6, 90); const qes = c.npc('priest', 1, c.L(0, F, 4.3), ch.faceYaw(0, -1), 'Qes'); qes.fixedY = 1; qes.human.hold('R', maqomiyaMesh(), [0, -1.02, 0.05]); qes.act('chant');
+  const chanters = mahlet(c, 6, 90); const qes = c.npc('priest', 1, c.L(0, F, 4.3), ch.faceYaw(0, -1), 'Qesis Andualem'); qes.fixedY = 1; qes.human.hold('R', maqomiyaMesh(), [0, -1.02, 0.05]); qes.act('chant');
   c.place(c.spot('aisleBack'), ch.faceYaw(0, 1)); await c.settle(); await c.fadeIn(); g.audio.chant('mahlet_practice'); g.audio.keberoOn = true; g.audio.tsenatselOn = true;
   g.hud.card(c.text('Mahlet', 'ማኅሌት'), c.text('Evening practice: staff, sistrum and drum', 'የምሽት ልምምድ፦ መቋሚያ፣ ጸናጽል፣ ከበሮ'), 3.5);
   c.obj('Take a maqomiya from the wall', 'ከግድግዳው መቋሚያ ውሰድ'); await c.interact(c.L(3.3, F, 4.6), 'Take a prayer staff', 'መቋሚያ ውሰድ', 1.8); g.isaac.hold('R', maqomiyaMesh(), [0, -1.02, 0.05]);
@@ -198,12 +203,12 @@ function videoEditor(c: Ctx): Promise<void> {
 // =====================================================================================================
 // CHAPTER 3 — MESKEL: the finding of the True Cross. Everything is prepared in the church yard.
 async function meskel(c: Ctx) {
-  const g = c.g, ch = g.church; const YS = g.yardSide;
+  const g = c.g, ch = g.church; const YS = -1; // branch piles are scattered on the north and front lawns
   await c.scene({ season: 'autumn', month: 9, day: 27, hour: 15, temp: 12, outfit: 'netela', wind: 0.35, timeScale: 12 });
   c.car('pickup', 0xe8e8e4, g.churchParking(8)); c.place(c.L(-1, 0.02, -14.5), ch.faceYaw(0, -1));
-  const qes = c.npc('priest', 1, c.L(1.5, 0.02, -14), ch.faceYaw(-1, -0.4), 'Qes'); qes.act('holdCross');
+  const qes = c.npc('priest', 1, c.L(1.5, 0.02, -14), ch.faceYaw(-1, -0.4), 'Qesis Andualem'); qes.act('holdCross');
   await c.settle(); await c.fadeIn(); await c.title(2); await c.talk('c3.qes.1', 'c3.isaac.1');
-  const site = c.L(8.5 * YS, 0.02, -9.5);
+  const site = c.L(-6.5, 0.02, -11.8);   // the front lawn, clear of the trees
   // the permit is a phone call, not a road trip
   c.obj('Phone the city for the open-air fire permit', 'ለእሳት ፈቃድ ወደ ከተማው አስተዳደር ደውል'); await c.interact(c.spot('stairsBottom'), 'Call City Hall', 'ደውል', 2.2, null); g.isaac.play('ululate', 1, true); await c.talk('c3.clerk.1', 'c3.isaac.2', 'c3.clerk.2'); g.isaac.stop(); g.audio.chime();
   // fallen branches from the elms around the lot
@@ -212,7 +217,7 @@ async function meskel(c: Ctx) {
   c.obj('Raise the Demera in the yard', 'ደመራውን በግቢው ውስጥ ትከል'); await c.interact(site, 'Build the Demera', 'ደመራውን ሥራ', 2.2, 'reach', 1.4);
   const demera = c.prop(demeraMesh()) as THREE.Group; demera.position.copy(site); demera.scale.setScalar(0.01); for (let t = 0; t < 1; t += g.dt / 1.5) { demera.scale.setScalar(Math.min(1, t)); await g.nextFrame(); c.check(); } demera.scale.setScalar(1);
   ch.setVariant('current', true, false);
-  for (const [i, p] of [c.L((8.5 - 1.6) * YS, 0.02, -9.5), c.L((8.5 + 1.6) * YS, 0.02, -9.5), c.L(8.5 * YS, 0.02, -11.1)].entries()) { c.obj(`Dress it with adey abeba, the yellow Meskel daisies (${i}/3)`, `በአደይ አበባ አስጊጠው (${i}/3)`); await c.interact(p, 'Place flowers', 'አበባ አስቀምጥ', 1.4, 'shoes', 1.4); const fl = new Geo(); const r = mulberry(i + 1); for (let k = 0; k < 14; k++) fl.box((r() - 0.5) * 0.7, 0.12 + r() * 0.12, (r() - 0.5) * 0.7, 0.08, 0.08, 0.08, 0xf2c81a); const m = c.prop(fl.mesh(new THREE.MeshStandardMaterial({ vertexColors: true }))); m.position.copy(p); }
+  for (const [i, p] of [c.L(-8.1, 0.02, -11.8), c.L(-4.9, 0.02, -11.8), c.L(-6.5, 0.02, -13.3)].entries()) { c.obj(`Dress it with adey abeba, the yellow Meskel daisies (${i}/3)`, `በአደይ አበባ አስጊጠው (${i}/3)`); await c.interact(p, 'Place flowers', 'አበባ አስቀምጥ', 1.4, 'shoes', 1.4); const fl = new Geo(); const r = mulberry(i + 1); for (let k = 0; k < 14; k++) fl.box((r() - 0.5) * 0.7, 0.12 + r() * 0.12, (r() - 0.5) * 0.7, 0.08, 0.08, 0.08, 0xf2c81a); const m = c.prop(fl.mesh(new THREE.MeshStandardMaterial({ vertexColors: true }))); m.position.copy(p); }
   await c.say('c3.qes.2');
   // ---- evening: the celebration ----
   await c.fadeOut(1.2); g.engine.setDateTime(9, 27, 19.9); g.engine.clockPaused = true; g.traffic.enabled = false; g.peds.enabled = false; g.setOutfit('deacon');
@@ -250,9 +255,9 @@ async function timket(c: Ctx) {
   const g = c.g, ch = g.church, R = ch.refs;
   await c.scene({ season: 'winter', month: 1, day: 18, hour: 13.6, temp: -35, snowfall: 0.2, wind: 0.5, outfit: 'netelaPuffer', festival: true, timeScale: 8 });
   const car = c.car('suv', 0x1f2a24, g.churchParking(7)); c.place(c.L(-1.2, 0.02, -14.6), ch.faceYaw(0, -1));
-  const qes = c.npc('priest', 1, c.L(1.2, 0.02, -14.2), ch.faceYaw(-1, -0.3), 'Qes'); qes.act('holdCross');
+  const qes = c.npc('priest', 1, c.L(1.2, 0.02, -14.2), ch.faceYaw(-1, -0.3), 'Qesis Andualem'); qes.act('holdCross');
   await c.settle(); await c.fadeIn(); await c.title(3); await c.talk('c4.qes.1', 'c4.isaac.1');
-  const basinP = c.L(8.5 * g.yardSide, 0.02, -9.5); const basin = c.prop(waterBasin()); basin.position.copy(basinP);
+  const basinP = c.L(-6.5, 0.02, -11.8); const basin = c.prop(waterBasin()); basin.position.copy(basinP);
   const drv = c.npc('man', 70, c.L(4, 0.02, -15.5), 0); drv.face(g.player.pos);
   c.obj('Arrange the rides home with the drivers', 'ከሹፌሮቹ ጋር የመመለሻ ጉዞ አስተባብር'); await c.interact(drv.pos.clone(), 'Talk to the drivers', 'ከሹፌሮቹ ጋር ተነጋገር', 2.2, null); drv.face(g.player.pos); drv.act('talk'); await c.talk('c4.driver.1', 'c4.driver.3');
   for (const [i, p] of [c.L(0, 0.05, -14), c.L(0, F, -9.4)].entries()) { c.obj(`Clear the snow from the path and steps (${i}/2)`, `ከመንገዱና ከደረጃው በረዶ አጽዳ (${i}/2)`); await c.interact(p, 'Shovel', 'አካፋ', 1.5, null); g.isaac.play('shovel', 2.2); await c.wait(2.2); }
@@ -270,11 +275,11 @@ async function timket(c: Ctx) {
   g.audio.chant('timket_procession'); g.audio.keberoOn = true; g.audio.tsenatselOn = true; g.player.maxSpeedOverride = 1.1;
   await c.fadeIn(1.2); g.hud.card(c.text('Ketera', 'ከተራ'), c.text('The Tabot goes out, covered, beneath the umbrellas', 'ታቦቱ ተሸፍኖ በጃንጥላ ሥር ይወጣል'), 4); g.audio.ililta();
   const off = (x: number, z: number) => ch.toWorld(x, 0, z).sub(ch.toWorld(0, 0, 0));
-  const route = [c.L(0, 0.02, -12.6), c.L(0, 0.05, -17.5), c.L(9 * g.yardSide, 0.05, -17.5), basinP.clone().add(off(0, -2.2))];
+  const route = [c.L(0, 0.02, -12.6), c.L(0, 0.05, -17.5), c.L(-6.5, 0.05, -17.0), basinP.clone().add(off(0, -2.2))];
   const lead = (async () => { for (const p of route) await Promise.all([qes.walkTo(p.clone()), um1.walkTo(p.clone().add(off(0.75, 0.2))), crs.walkTo(p.clone().add(off(0, -2.0))), drum.walkTo(p.clone().add(off(-0.9, -3.2))), ...crowd.map((nn, i) => nn.walkTo(p.clone().add(off(-2.4 + (i % 4) * 1.6, 2.4 + Math.floor(i / 4) * 1.3))))]); })();
-  c.obj('Walk beside the Qes and keep the umbrella over the Tabot', 'ከቄሱ ጎን ተራመድ፤ ጃንጥላውን ከታቦቱ በላይ ያዝ');
+  c.obj('Walk beside Qesis Andualem and keep the umbrella over the Tabot', 'ከቀሲስ አንዷለም ጎን ተራመድ፤ ጃንጥላውን ከታቦቱ በላይ ያዝ');
   let done = false; lead.then(() => (done = true)).catch(() => (done = true)); let warn = 0;
-  while (!done) { await c.wait(0.25); if (g.auto) { for (const nn of [qes, um1, crs, drum, ...crowd]) nn.speed = 14; g.player.teleport(qes.pos.x + 1, qes.pos.y, qes.pos.z); } const d = g.player.pos.distanceTo(qes.pos); g.hud.setTarget({ x: qes.pos.x, z: qes.pos.z }); if (d > 4.5) { warn += 0.25; if (warn > 2) { g.hud.toast(c.text('Stay close to the Qes', 'ከቄሱ አትራቅ'), 2); warn = 0; } } }
+  while (!done) { await c.wait(0.25); if (g.auto) { for (const nn of [qes, um1, crs, drum, ...crowd]) nn.speed = 14; g.player.teleport(qes.pos.x + 1, qes.pos.y, qes.pos.z); } const d = g.player.pos.distanceTo(qes.pos); g.hud.setTarget({ x: qes.pos.x, z: qes.pos.z }); if (d > 4.5) { warn += 0.25; if (warn > 2) { g.hud.toast(c.text('Stay close to Qesis Andualem', 'ከቀሲስ አንዷለም አትራቅ'), 2); warn = 0; } } }
   g.hud.setTarget(null); g.player.maxSpeedOverride = 0; for (const nn of crowd) nn.face(basinP);
   await c.say('c4.qes.3');
   // ---- the blizzard: one family still needs a ride ----
@@ -295,7 +300,7 @@ async function timket(c: Ctx) {
   const ip = basinP.clone().add(off(1.3, -1.5)); c.place(ip, yawTo(ip, basinP)); c.giveCandle(null);
   g.audio.chant('timket_blessing'); await c.fadeIn(2); g.hud.card(c.text('Timket', 'ጥምቀት'), c.text('Epiphany morning, −35 °C', 'የጥምቀት ጠዋት፣ −35 °C'), 4);
   await c.say('c4.bless.1');
-  c.obj('Hold the light close while the Qes blesses the water', 'ቄሱ ውኃውን ሲባርኩ ብርሃኑን አቅርብ'); await c.interact(basinP.clone().add(off(0.9, -0.9)), 'Hold the candle over the water', 'ጧፉን በውኃው ላይ ያዝ', 1.8, null);
+  c.obj('Hold the light close while Qesis Andualem blesses the water', 'ቀሲስ አንዷለም ውኃውን ሲባርኩ ብርሃኑን አቅርብ'); await c.interact(basinP.clone().add(off(0.9, -0.9)), 'Hold the candle over the water', 'ጧፉን በውኃው ላይ ያዝ', 1.8, null);
   await c.cut(async () => {
     g.cutCam = { pos: basinP.clone().add(V(-3, 1.7, -4.5)), look: basinP.clone().add(V(0, 1.3, 0)) }; qes.human.play('bow', 3.2); g.audio.bell(660); await c.wait(3);
     const sp = (async () => { for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 1.5 + 0.9; g.weather.sprinkle(basinP.clone().add(V(0, 1.3, 0)), V(Math.cos(a), 0, Math.sin(a))); if (i === 2) { g.audio.ililta(); for (const nn of ring) nn.act('clap'); } await c.wait(0.9); } })();
@@ -317,7 +322,7 @@ async function fasika(c: Ctx) {
   c.obj('Your classmate stopped by — talk to him', 'የክፍል ጓደኛህ መጥቷል — አነጋግረው'); await c.interact(friend.pos.clone(), 'Talk', 'ተነጋገር', 2.2, null); friend.face(g.player.pos); friend.act('talk'); await c.talk('c5.friend.1', 'c5.isaac.2', 'c5.friend.2');
   // Siqlet: Good Friday prostrations
   g.hud.card(c.text('Siqlet', 'ስቅለት'), c.text('Good Friday — a day of prostrations', 'የስግደት ቀን'), 3.5);
-  const qes = c.npc('priest', 1, c.spot('curtain'), ch.faceYaw(0, -1), 'Qes'); qes.fixedY = 1; qes.act('holdCross'); const few = c.congregation(10, 220); for (const n of few) n.act('pray');
+  const qes = c.npc('priest', 1, c.spot('curtain'), ch.faceYaw(0, -1), 'Qesis Andualem'); qes.fixedY = 1; qes.act('holdCross'); const few = c.congregation(10, 220); for (const n of few) n.act('pray');
   c.obj('Go in for the Siqlet service', 'ለስቅለት አገልግሎት ግባ'); await c.reach(c.spot('vestibule'), 1.6); await shoesStep(c); g.audio.chant('siqlet');
   c.obj('Join the sigdet in the open floor before the stage', 'ከመድረኩ ፊት ባለው ቦታ ስግደት ስገድ'); await c.reach(c.spot('aisleFront'), 1.3);
   for (let i = 0; i < 3; i++) { await c.interact(c.spot('aisleFront'), `Bow down: "Kiryalayson" (${i + 1}/3)`, `ስገድ፦ «ኪርያላይሶን» (${i + 1}/3)`, 2, null); g.player.yaw = ch.faceYaw(0, 1); g.input.enabled = false; g.isaac.play('sigdet', 3.2); for (const n of few) n.human.play('sigdet', 3.2); g.audio.staff(0.6); await c.wait(3.3); for (const n of few) n.act('pray'); g.input.enabled = true; }
@@ -328,7 +333,7 @@ async function fasika(c: Ctx) {
   const chanters = mahlet(c, 6, 280);
   c.place(c.spot('aisleBack'), ch.faceYaw(0, 1)); g.audio.chant('fasika_vigil', 0.6);
   await c.fadeIn(1.5); g.hud.card(c.text('The Vigil', 'የትንሣኤ ሌሊት'), c.text('Holy Saturday, toward midnight', 'ቅዳሜ ሌሊት'), 4);
-  c.obj('Receive the light from the Qes', 'ብርሃኑን ከቄሱ ተቀበል'); await c.interact(c.L(0, F, 4.6), 'Light your tuaf', 'ጧፍህን አብራ', 1.9, 'reach'); c.giveCandle(null);
+  c.obj('Receive the light from Qesis Andualem', 'ብርሃኑን ከቀሲስ አንዷለም ተቀበል'); await c.interact(c.L(0, F, 4.6), 'Light your tuaf', 'ጧፍህን አብራ', 1.9, 'reach'); c.giveCandle(null);
   const nearAisle = people.filter((q) => Math.abs((q as any)._s.x) < 1.6);
   for (let i = 0; i < 3; i++) { c.obj(`Pass the light to the people (${i}/3)`, `ብርሃኑን ለሕዝቡ አስተላልፍ (${i}/3)`); const n = nearAisle[(i * 3) % nearAisle.length]; await c.interact(n.pos.clone(), 'Share the light', 'ብርሃኑን አካፍል', 2.0, null); const upto = Math.floor(((i + 1) / 3) * people.length); for (let k = 0; k < upto; k++) if (!people[k].human.held.R) c.giveCandle(people[k]); g.audio.tsenatsel(0.5); }
   for (const n of people) if (!n.human.held.R) c.giveCandle(n);

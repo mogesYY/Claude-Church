@@ -1,7 +1,7 @@
 {
   "c1.qes.greet": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "Good morning, Deacon Isaac. Peace be with you. You are early, as always.",
     "am": "እንደምን አደርክ ዲያቆን ይስሐቅ። ሰላም ለአንተ ይሁን። እንደ ሁልጊዜው ቀድመህ መጣህ።"
   },
@@ -12,14 +12,14 @@
     "am": "አባ ይባርኩኝ። ከቅዳሴ በፊት ምን ላድርግ?"
   },
   "c1.qes.tasks": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "Light the candles and prepare the censer for me. Then start that camera of yours: our people far away pray with us through it.",
     "am": "ሻማዎቹን አብራ፣ ጽናውንም አዘጋጅልኝ። ከዚያ ካሜራህን አስጀምር፤ በሩቅ ያሉ ወገኖቻችን በእርሱ ከእኛ ጋር ይጸልያሉ።"
   },
   "c1.qes.ride": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "One more thing. Ato Tesfaye lives just around the corner, but he cannot walk in this cold. Will you bring him?",
     "am": "አንድ ነገር ቀረ። አቶ ተስፋዬ ቤታቸው ቅርብ ነው፣ ግን በዚህ ብርድ መራመድ አይችሉም። ታመጣቸዋለህ?"
   },
@@ -54,8 +54,8 @@
     "am": "ትንሽ ዘገየን፣ ግን በሰላም ደረስን። ዋናው እርሱ ነው። እንግባ።"
   },
   "c1.kidase.1": {
-    "en": "The Kidase begins. The Qes censes before the curtain; the chanters keep time with staff and sistrum.",
-    "am": "ቅዳሴው ጀመረ። ቄሱ ከመጋረጃው ፊት ያጥናሉ፤ መዘምራኑ በመቋሚያና በጸናጽል ዜማውን ይጠብቃሉ።"
+    "en": "The Kidase begins. Qesis Andualem censes before the curtain; the chanters keep time with staff and sistrum.",
+    "am": "ቅዳሴው ጀመረ። ቀሲስ አንዷለም ከመጋረጃው ፊት ያጥናሉ፤ መዘምራኑ በመቋሚያና በጸናጽል ዜማውን ይጠብቃሉ።"
   },
   "c1.kidase.2": {
     "en": "Behind the curtain is the Meqdes, where the Tabot rests. Only the clergy enter.",
@@ -146,8 +146,8 @@
     "am": "ግንቡን ሰማያዊ የቀባንበት ዓመት፣ ግማሹ ቀለም በእኛ በልጆቹ ላይ ነበር።"
   },
   "c2.photo.4": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "When the gold dome went up, we all wept. I filmed it on my phone. Take it for your video.",
     "am": "የወርቅ ጉልላቱ ሲሰቀል ሁላችንም አለቀስን። በስልኬ ቀርጬዋለሁ። ለቪዲዮህ ውሰደው።"
   },
@@ -158,8 +158,8 @@
     "am": "ተጭኗል። የአንድ ማኅበረሰብ ትዝታ በስድስት ደቂቃ።"
   },
   "c3.qes.1": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "Meskel eve is tonight. We need the city's fire permit, branches for the Demera, and adey abeba to dress it.",
     "am": "የመስቀል ዋዜማ ዛሬ ማታ ነው። የከተማው የእሳት ፈቃድ፣ ለደመራ ቅርንጫፍ፣ ለማስጌጫም አደይ አበባ ያስፈልገናል።"
   },
@@ -188,8 +188,8 @@
     "am": "ተፈቅዷል። ከዛፎቹ አርቁት። መልካም የመስቀል በዓል።"
   },
   "c3.qes.2": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "Beautiful. Tonight, when it burns, watch which way it falls.",
     "am": "ያማረ ነው። ማታ ሲነድ ወደየት እንደሚወድቅ ተመልከት።"
   },
@@ -198,8 +198,8 @@
     "am": "ምሽት። ማኅበረሰቡ ነጭ ለብሶ ተሰብስቧል። እየዘመሩ ደመራውን ሦስት ጊዜ ይዞራሉ።"
   },
   "c3.qes.3": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "In the name of the Father, and of the Son, and of the Holy Spirit, one God. Amen.",
     "am": "በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ። አሜን።"
   },
@@ -232,8 +232,8 @@
     "am": "ምንም ይሁን — እዚህ አብረን ነን።"
   },
   "c4.qes.1": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "Minus thirty-five, and a blizzard tonight. Timket does not wait for the weather. Is everything ready?",
     "am": "ከዜሮ በታች ሠላሳ አምስት፤ ማታ ዐውሎ ነፋስ አለ። ጥምቀት አየር አይጠብቅም። ሁሉ ተዘጋጅቷል?"
   },
@@ -262,14 +262,14 @@
     "am": "ዐውሎ ነፋሱ ቀድሞ ከመጣ አያቲቱና ትንሹ ልጅ አንተን ይፈልጋሉ ዲያቆን።"
   },
   "c4.qes.2": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "Good. Vest, and take an umbrella. The Tabot goes out covered, and it is never without shade.",
     "am": "ጥሩ። ልብሰ ተክህኖ ልበስ፣ ጃንጥላም ያዝ። ታቦቱ ተሸፍኖ ይወጣል፤ ያለ ጥላም አይሆንም።"
   },
   "c4.qes.3": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "The Tabot rests by the water tonight, and we keep vigil. But look at the sky. Take the grandmother home first.",
     "am": "ታቦቱ ዛሬ ሌሊት በውኃው አጠገብ ያድራል፤ እኛም እንተጋለን። ግን ሰማዩን ተመልከት። አስቀድመህ አያቲቱን ወደ ቤት አድርስ።"
   },
@@ -292,8 +292,8 @@
     "am": "በዚህ መንገድ እግዚአብሔር ይጠብቅህ ልጄ።"
   },
   "c4.bless.1": {
-    "en": "Morning. The storm has passed. The Qes prays over the water and lowers the cross into it.",
-    "am": "ጠዋት። ዐውሎ ነፋሱ አልፏል። ቄሱ በውኃው ላይ ጸልየው መስቀሉን ወደ ውኃው ያወርዳሉ።"
+    "en": "Morning. The storm has passed. Qesis Andualem prays over the water and lowers the cross into it.",
+    "am": "ጠዋት። ዐውሎ ነፋሱ አልፏል። ቀሲስ አንዷለም በውኃው ላይ ጸልየው መስቀሉን ወደ ውኃው ያወርዳሉ።"
   },
   "c4.bless.2": {
     "en": "The blessed water is sprinkled over everyone — steam rising in the cold, children laughing.",
@@ -330,8 +330,8 @@
     "am": "እሺ። መልካም ዕድል... ለሁሉም።"
   },
   "c5.qes.1": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "You are tired, my son. So were the ones who kept watch that night. Rest a little, and come for the vigil.",
     "am": "ደክሞሃል ልጄ። በዚያች ሌሊት የጠበቁትም ደክመው ነበር። ትንሽ ዕረፍ፣ ለሌሊቱ ጸሎት ና።"
   },
@@ -342,8 +342,8 @@
     "am": "እመጣለሁ አባ።"
   },
   "c5.tensae.1": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "Kristos tensa'e ke'mutan!  —  Christ is risen from the dead!",
     "am": "ክርስቶስ ተንሥአ እሙታን!"
   },
@@ -360,8 +360,8 @@
     "am": "ያው በር፣ ያው ደረጃ። አሁን በረዶ የለም። አንድ ዓመት — አንድ ቀንም አልለውጥም።"
   },
   "c1.gospel": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "The Holy Gospel. Stand in fear and listen.",
     "am": "ቅዱስ ወንጌል። በፍርሃት ቁሙ፣ አድምጡ።"
   },
@@ -376,14 +376,14 @@
     "am": "የዲያቆኑ ቦታ ከካህኑ አጠገብ ነው፦ ብርሃን መያዝ፣ ሕዝቡን ለጸሎት መጥራት፣ ቃጭል መደወል።"
   },
   "c2.qes.mahlet": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "Good. The staff carries us through the long hours; the sistrum and the drum carry the praise.",
     "am": "ጎበዝ። መቋሚያው በረጅሙ ሰዓት ይደግፈናል፤ ጸናጽሉና ከበሮው ምስጋናውን ይሸከማሉ።"
   },
   "c5.tensae.3": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "Asero le'Seytan! — He bound Satan!",
     "am": "አሰሮ ለሰይጣን!"
   },
@@ -394,8 +394,8 @@
     "am": "አግዐዞ ለአዳም!"
   },
   "c5.tensae.5": {
-    "sp": "Qes",
-    "spAm": "ቄስ",
+    "sp": "Qesis Andualem",
+    "spAm": "ቀሲስ አንዷለም",
     "en": "Selam! From now on, joy and peace.",
     "am": "ሰላም! እምይእዜሰ ኮነ ፍሥሐ ወሰላም።"
   }

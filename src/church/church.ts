@@ -9,11 +9,11 @@ import { buildInterior, InteriorRefs } from './interior';
 export type ChurchVariant = 'current' | 'blueFlag' | 'brownTower';
 export const CH = {
   F: 1.25, HW: 4.2, NZ0: -5.5, NZ1: 9.0, T: 0.2, EAVE: 4.6, PITCH: 0.72,
-  TW: 1.7, TZ0: -8.6, TY: 9.7, WINGX: 2.8, WINGZ: -7.4, PZ: 6.2,
+  TW: 1.7, TZ0: -8.6, TY: 9.7, WINGX: 2.8, WINGZ: -8.6, PZ: 6.2,
   WIN_Z: [-3.6, -1.0, 1.6, 4.2, 7.6], WIN_W: 0.78,
 };
 const VARIANTS: Record<ChurchVariant, { tower: number; vertical: boolean; nave: number; skirt: number; steps: number; stepsWood: boolean; door: number; dome: number; cross: number; banner: boolean; roof: number; rail: number }> = {
-  current: { tower: 0x6f8597, vertical: true, nave: 0xe6dcb2, skirt: 0x2f5c4b, steps: 0xb9b6ae, stepsWood: false, door: 0x8c9299, dome: 0xd9a927, cross: 0xf4f4f0, banner: false, roof: 0x5c5148, rail: 0x1c1c1e },
+  current: { tower: 0x6f7f98, vertical: false, nave: 0xe9e2c0, skirt: 0x3b5a60, steps: 0xc4c1b8, stepsWood: false, door: 0x9a9ea6, dome: 0xd9a927, cross: 0xf4f4f0, banner: false, roof: 0x5c5148, rail: 0x9c9e9c },
   blueFlag: { tower: 0x2c50b4, vertical: false, nave: 0xe9e3a6, skirt: 0x27332d, steps: 0x4a3a2c, stepsWood: true, door: 0xf2f2ee, dome: 0xd9a927, cross: 0x9db8e8, banner: true, roof: 0x4a4640, rail: 0x2a2420 },
   brownTower: { tower: 0x4b3628, vertical: true, nave: 0xe2d9b4, skirt: 0x3a4a3e, steps: 0x2f6a46, stepsWood: true, door: 0x6a4a34, dome: 0xf0f0ea, cross: 0xf4f4f0, banner: false, roof: 0x4a4640, rail: 0x2f6a46 },
 };
@@ -52,19 +52,18 @@ export function trimOutline(g: Geo, P: (s: number, y: number) => number[], pts: 
 }
 
 function signTexture(): THREE.CanvasTexture {
-  return canvasTex(1024, 384, (c, w, h) => {
+  // half-oval board, white with green lettering and a small flag at each end — as on the building
+  return canvasTex(1024, 352, (c, w, h) => {
     c.clearRect(0, 0, w, h);
-    // arched board
-    c.fillStyle = '#f7f6ee'; c.strokeStyle = '#1f6b3a'; c.lineWidth = 10;
-    c.beginPath(); c.moveTo(20, h - 16); c.lineTo(20, h - 110); c.quadraticCurveTo(w / 2, -150, w - 20, h - 110); c.lineTo(w - 20, h - 16); c.quadraticCurveTo(w / 2, h - 96, 20, h - 16); c.closePath(); c.fill(); c.stroke();
-    c.fillStyle = '#1f6b3a'; c.textAlign = 'center';
-    const arc = (text: string, font: string, radius: number, cy: number, spread: number) => { c.font = font; const chars = [...text]; const total = chars.reduce((s2, ch) => s2 + c.measureText(ch).width, 0); let ang = -total / radius / 2; for (const ch of chars) { const cw = c.measureText(ch).width; ang += cw / radius / 2; c.save(); c.translate(w / 2 + Math.sin(ang * spread) * radius, cy - Math.cos(ang * spread) * radius); c.rotate(ang * spread); c.fillText(ch, 0, 0); c.restore(); ang += cw / radius / 2; } };
-    arc('የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተ ክርስቲያን', "700 54px 'Noto Sans Ethiopic', sans-serif", 900, 1020, 1);
-    c.font = "700 60px 'Noto Sans Ethiopic', sans-serif"; c.fillText('መድኃኔ ዓለም', w / 2, 232);
-    c.font = "600 30px 'Noto Sans', sans-serif"; c.fillText('Ethiopian Orthodox Tewahedo', w / 2, 270);
-    c.fillText('Medhane Alem Church · Brandon', w / 2, 304);
-    // small cross
-    c.fillRect(w / 2 - 4, 76, 8, 44); c.fillRect(w / 2 - 16, 88, 32, 8);
+    c.fillStyle = '#fbfbf6'; c.strokeStyle = '#2f9a4a'; c.lineWidth = 7;
+    c.beginPath(); c.moveTo(8, h - 8); c.ellipse(w / 2, h - 8, w / 2 - 8, h - 16, 0, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#2f9a4a'; c.textAlign = 'center';
+    // Amharic line follows the curve of the board
+    const text = 'የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ መድኃኔዓለም'; c.font = "700 50px 'Noto Sans Ethiopic', sans-serif"; const chars = [...text]; const total = chars.reduce((a, ch) => a + c.measureText(ch).width, 0);
+    const rx = w / 2 - 78, ry = h - 86; let acc = 0; for (const ch of chars) { const cw = c.measureText(ch).width; const t = (acc + cw / 2) / total; const a = Math.PI * (1.0 - (0.13 + t * 0.74)); const x = w / 2 + Math.cos(a) * rx, y = h - 8 - Math.sin(a) * ry; c.save(); c.translate(x, y); c.rotate(Math.atan2(Math.cos(a) * ry, Math.sin(a) * rx)); c.fillText(ch, 0, 16); c.restore(); acc += cw; }
+    c.font = "700 46px 'Noto Sans Ethiopic', sans-serif"; c.fillText('ቤተ ክርስቲያን', w / 2, 196);
+    c.font = "800 30px 'Noto Sans', Arial, sans-serif"; c.fillText('ETHIOPIAN ORTHODOX', w / 2, 240); c.fillText('TEWAHDO MEDHANE ALEM CHURCH', w / 2, 276); c.fillText('BRANDON', w / 2, 312);
+    for (const sx of [-1, 1]) { const fx = w / 2 + sx * 440 - 22, fy = h - 62; c.save(); c.translate(fx + 22, fy + 16); c.rotate(sx * 0.5); for (const [k, col] of ['#12893f', '#f7d417', '#d8232a'].entries()) { c.fillStyle = col; c.fillRect(-22, -16 + k * 10.6, 44, 10.6); } c.restore(); }
   }, { repeat: false });
 }
 function flagTexture(kind: 'ethiopia' | 'canada') {
@@ -123,7 +122,7 @@ export class Church {
   toLocal(p: THREE.Vector3, out = new THREE.Vector3()) { return out.copy(p).sub(this.pos).applyAxisAngle(new THREE.Vector3(0, 1, 0), -this.yaw); }
   /** world yaw for a character that should face local direction (dx,dz) */
   faceYaw(dx: number, dz: number) { return Math.atan2(-dx, -dz) + this.yaw; }
-  isInside(p: THREE.Vector3) { const l = this.toLocal(p); return l.y > CH.F - 0.4 && l.y < CH.F + 4 && ((Math.abs(l.x) < CH.HW && l.z > CH.NZ0 && l.z < CH.NZ1) || (Math.abs(l.x) < CH.TW && l.z > CH.TZ0 + 0.1 && l.z <= CH.NZ0)); }
+  isInside(p: THREE.Vector3) { const l = this.toLocal(p); return l.y > CH.F - 0.4 && l.y < CH.F + 4 && ((Math.abs(l.x) < CH.HW && l.z > CH.NZ0 && l.z < CH.NZ1) || (Math.abs(l.x) < CH.WINGX && l.z > CH.TZ0 + 0.1 && l.z <= CH.NZ0)); }
   /** lot outline in world space (for reserving ground) */
   lot(): number[][] { return [[-13, -17], [-7, -17], [-7, -33], [7, -33], [7, -17], [13, -17], [13, 13], [-13, 13]].map(([x, z]) => { const v = this.toWorld(x, 0, z); return [v.x, v.z]; }); }
 
@@ -168,12 +167,12 @@ export class Church {
     const tg = tower;
     const door: Hole = { at: 0, w: 1.15, y0: F, y1: F + 2.12 };
     wall(tg, -TW, TZ0, TW, TZ0, [0, -1], sy, TY, [door], cT);
-    wall(tg, -TW, TZ0, -TW, NZ0, [-1, 0], sy, TY, [], cT); wall(tg, TW, TZ0, TW, NZ0, [1, 0], sy, TY, [], cT);
+    wall(tg, -TW, TZ0, -TW, NZ0, [-1, 0], F + 2.85, TY, [], cT); wall(tg, TW, TZ0, TW, NZ0, [1, 0], F + 2.85, TY, [], cT);   // the entry room below is as wide as the wings
     wall(tg, -TW, NZ0, TW, NZ0, [0, 1], EAVE, TY, [], cT);
     wall(conc, -TW, TZ0, TW, TZ0, [0, -1], -0.4, sy, [{ at: 0, w: 1.15, y0: F - 0.01, y1: sy + 1 }], cS);
     for (const sx of [-1, 1]) wall(conc, sx * TW, TZ0, sx * TW, WINGZ, [sx, 0], -0.4, sy, [], cS);
     // white corner boards + cornice
-    for (const sx of [-1, 1]) { trim.box(sx * (TW + 0.015), (sy + TY) / 2, TZ0 - 0.015, 0.14, TY - sy, 0.14, W); trim.box(sx * (TW + 0.015), (EAVE + 1 + TY) / 2, NZ0 + 0.015, 0.14, TY - EAVE - 1, 0.14, W); }
+    for (const sx of [-1, 1]) { trim.box(sx * (TW + 0.015), (F + 3.45 + TY) / 2, TZ0 - 0.015, 0.14, TY - F - 3.45, 0.14, W); trim.box(sx * (TW + 0.015), (EAVE + 1 + TY) / 2, NZ0 + 0.015, 0.14, TY - EAVE - 1, 0.14, W); }
     trim.box(0, TY + 0.06, (TZ0 + NZ0) / 2, TW * 2 + 0.5, 0.2, NZ0 - TZ0 + 0.5, W);
     trim.box(0, sy, TZ0 - 0.02, TW * 2, 0.1, 0.06, W);
     // door surround with pointed head (white), grey door inside handled separately (animated)
@@ -182,7 +181,7 @@ export class Church {
     trim.tri(PF(-0.64, F + 2.2), PF(0.64, F + 2.2), PF(0, F + 2.92), cT.clone().multiplyScalar(0.9));
     trim.box(0, F + 2.16, TZ0 - 0.03, 1.3, 0.1, 0.05, W);
     // arched sign above the door
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 1.09), this.mats.sign); sign.position.set(0, F + 3.74, TZ0 - 0.06); sign.rotation.y = Math.PI; ex.add(sign);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.85, 0.98), this.mats.sign); sign.position.set(0, F + 3.78, TZ0 - 0.06); sign.rotation.y = Math.PI; ex.add(sign);
     // triple lancet group (front) and paired lancets (sides)
     const lanc = (P: (s: number, y: number) => number[], c: number, w2: number, y0: number, y1: number, pk: number, fill: Geo, col: number) => {
       fill.quad(P(c - w2 / 2, y0), P(c + w2 / 2, y0), P(c + w2 / 2, y1), P(c - w2 / 2, y1), col); fill.tri(P(c - w2 / 2, y1), P(c + w2 / 2, y1), P(c, pk), col);
@@ -220,14 +219,17 @@ export class Church {
     const crossM = crossG.mesh(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0.1 })); ex.add(crossM);
     // ---- vestibule wings beside the tower ----
     for (const sx of [-1, 1]) {
-      const x0 = sx * TW, x1 = sx * WINGX, top = F + 2.7;
-      wall(tg, x0, WINGZ, x1, WINGZ, [0, -1], sy, top, [{ at: sx * (TW + WINGX) / 2, w: 0.5, y0: F + 0.9, y1: F + 1.75, peak: F + 2.15 }], cT);
+      const x0 = sx * TW, x1 = sx * WINGX, top = F + 2.85;
+      wall(tg, x0, WINGZ, x1, WINGZ, [0, -1], sy, top, [{ at: sx * (TW + WINGX) / 2, w: 0.56, y0: F + 0.5, y1: F + 2.05, peak: F + 2.42 }], cT);
       wall(tg, x1, WINGZ, x1, NZ0, [sx, 0], sy, top, [], cT);
       wall(conc, x0, WINGZ, x1, WINGZ, [0, -1], -0.4, sy, [], cS); wall(conc, x1, WINGZ, x1, NZ0, [sx, 0], -0.4, sy, [], cS);
       const cxw = sx * (TW + WINGX) / 2;
-      glass.quad([cxw - 0.25, F + 0.9, WINGZ + 0.05], [cxw + 0.25, F + 0.9, WINGZ + 0.05], [cxw + 0.25, F + 1.75, WINGZ + 0.05], [cxw - 0.25, F + 1.75, WINGZ + 0.05], 0xffffff);
-      gR.tri([cxw - 0.25, F + 1.75, WINGZ + 0.05], [cxw + 0.25, F + 1.75, WINGZ + 0.05], [cxw, F + 2.15, WINGZ + 0.05], 0xffffff);
-      trimOutline(trim, (s, y) => [s, y, WINGZ - 0.03], [[cxw - 0.25, F + 0.9], [cxw - 0.25, F + 1.75], [cxw, F + 2.15], [cxw + 0.25, F + 1.75], [cxw + 0.25, F + 0.9]], 0.09, W, true);
+      glass.quad([cxw - 0.28, F + 0.5, WINGZ + 0.05], [cxw + 0.28, F + 0.5, WINGZ + 0.05], [cxw + 0.28, F + 2.05, WINGZ + 0.05], [cxw - 0.28, F + 2.05, WINGZ + 0.05], 0xffffff);
+      trim.box(cxw, F + 1.28, WINGZ + 0.04, 0.56, 0.05, 0.03, W); trim.box(cxw, F + 2.05, WINGZ + 0.04, 0.56, 0.05, 0.03, W);
+      // white downspout at the outer corner, with its kick-out at the bottom
+      trim.box(sx * (WINGX + 0.07), (top + 0.3) / 2 + 0.1, WINGZ - 0.07, 0.07, top - 0.1, 0.07, W); trim.beam([sx * (WINGX + 0.07), 0.32, WINGZ - 0.07], [sx * (WINGX + 0.75), 0.12, WINGZ - 0.35], 0.07, W);
+      glass.tri([cxw - 0.28, F + 2.05, WINGZ + 0.05], [cxw + 0.28, F + 2.05, WINGZ + 0.05], [cxw, F + 2.42, WINGZ + 0.05], 0xffffff);
+      trimOutline(trim, (s, y) => [s, y, WINGZ - 0.03], [[cxw - 0.28, F + 0.5], [cxw - 0.28, F + 2.05], [cxw, F + 2.42], [cxw + 0.28, F + 2.05], [cxw + 0.28, F + 0.5]], 0.1, W, true);
       trim.box(sx * (WINGX + 0.015), (sy + top) / 2, WINGZ - 0.015, 0.12, top - sy, 0.12, W);
       // shed roof with white edge
       const ro = 0.3; const a = [x0, top + 0.75, WINGZ - ro], b = [x1 + sx * ro, top + 0.12, WINGZ - ro], c = [x1 + sx * ro, top + 0.12, NZ0], d = [x0, top + 0.75, NZ0];
@@ -237,7 +239,7 @@ export class Church {
       tg.tri([x0, top, WINGZ], [x1, top, WINGZ], [x0, top + 0.7, WINGZ], cT);
     }
     // ---- stairs, landing, railings ----
-    const nSteps = 8, run = 0.3, riseS = F / nSteps, landD = 1.3, sw = 2.3; const cSt = new THREE.Color(this.snow && !V.stepsWood ? 0xdfe4ea : V.steps);
+    const nSteps = 8, run = 0.3, riseS = F / nSteps, landD = 1.3, sw = 2.6; const cSt = new THREE.Color(this.snow && !V.stepsWood ? 0xdfe4ea : V.steps);
     const stepGeo = V.stepsWood ? wood : conc;
     stepGeo.box(0, F / 2 - 0.2, TZ0 - landD / 2, sw, F + 0.4, landD, cSt);
     for (let i = 0; i < nSteps - 1; i++) { const h = F - (i + 1) * riseS; stepGeo.box(0, h / 2 - 0.2, TZ0 - landD - (i + 0.5) * run, sw, h + 0.4, run, cSt); }
@@ -252,7 +254,12 @@ export class Church {
       for (let i = 1; i < 7; i++) { const t = i / 7, z = TZ0 - landD + (zEnd - (TZ0 - landD)) * t, yb = F * (1 - t); iron.box(x, yb + 0.5, z, 0.02, 0.96, 0.02, cR); }
     }
     // path from the stairs to the public sidewalk
-    conc.box(0, 0.03, zEnd - 3.4, 1.6, 0.06, 6.8, new THREE.Color(this.snow ? 0xe6eaef : 0xb9b6ae));
+    conc.box(0, 0.05, zEnd - 1.0, 3.3, 0.1, 2.3, new THREE.Color(this.snow ? 0xe6eaef : 0xc4c1b8));           // concrete pad at the foot of the steps
+    conc.box(0, 0.03, zEnd - 4.6, 1.6, 0.06, 5.0, new THREE.Color(this.snow ? 0xe6eaef : 0xb9b6ae));
+    iron.box(0, 0.115, zEnd - 0.75, 0.9, 0.03, 0.55, 0x1c1c1e);                                                // doormat
+    // by the door: the "1260" plate, mailbox, floodlight and security camera
+    trim.box(-0.8, F + 1.78, TZ0 - 0.04, 0.3, 0.14, 0.02, 0xe8e8e4); iron.box(-0.98, F + 1.32, TZ0 - 0.07, 0.34, 0.2, 0.1, 0x18181a);
+    iron.box(0.05, F + 2.98, TZ0 - 0.1, 0.24, 0.12, 0.14, 0x18181a); trim.box(-0.55, F + 3.14, TZ0 - 0.1, 0.13, 0.13, 0.13, 0xf0f0ec);
     // ---- festival dressing: flags by the door ----
     if (this.festival) for (const sx of [-1, 1]) {
       const m = new THREE.Matrix4().makeRotationZ(-sx * 0.35).setPosition(sx * 1.25, F + 2.2, TZ0 - 0.25); iron.setMatrix(m); iron.box(0, 0.6, 0, 0.035, 2.4, 0.035, 0xd8d8d8); iron.setMatrix(null);
@@ -289,12 +296,12 @@ export class Church {
     const box = (cx: number, cy: number, cz: number, sx: number, sy: number, sz: number) => { const w = this.toWorld(cx, cy, cz); this.bodies.push(this.phys.staticBox(w.x, w.y, w.z, sx / 2, sy / 2, sz / 2, this.yaw).body); };
     const H = 5;
     box(-HW + T / 2, H / 2, (NZ0 + NZ1) / 2, T, H, NZ1 - NZ0); box(HW - T / 2, H / 2, (NZ0 + NZ1) / 2, T, H, NZ1 - NZ0); box(0, H / 2, NZ1 - T / 2, HW * 2, H, T);
-    for (const sx of [-1, 1]) { box(sx * (HW + 0.75) / 2, H / 2, NZ0 + T / 2, HW - 0.75, H, T); box(sx * (TW - T / 2), H / 2, (TZ0 + NZ0) / 2, T, H, NZ0 - TZ0); box(sx * (TW + 0.575) / 2, H / 2, TZ0 + T / 2, TW - 0.575, H, T); box(sx * (TW + WINGX) / 2, 2, (WINGZ + NZ0) / 2, WINGX - TW, 4, NZ0 - WINGZ); }
+    for (const sx of [-1, 1]) { box(sx * (HW + 0.75) / 2, H / 2, NZ0 + T / 2, HW - 0.75, H, T); box(sx * (WINGX - T / 2), H / 2, (TZ0 + NZ0) / 2, T, H, NZ0 - TZ0); box(sx * (WINGX + 0.575) / 2, H / 2, TZ0 + T / 2, WINGX - 0.575, H, T); }
     box(0, F + 2.12 + 1, TZ0 + T / 2, 1.2, 2, T); box(0, F + 2.15 + 1, NZ0 + T / 2, 1.5, 2, T);
     box(0, F / 2 - 0.25, (TZ0 + NZ1) / 2, HW * 2, F + 0.5, NZ1 - TZ0);                       // floor slab (also blocks the crawl space)
     box(0, H / 2, PZ + 0.15, HW * 2, H, 0.3);                                              // Meqdes screen: never passable
     box(0, F + 0.09, PZ - 0.8, HW * 2 - 2 * T, 0.18, 1.6);                                   // platform
-    const nSteps = 8, run = 0.3, rise = F / nSteps, landD = 1.3, sw = 2.3;
+    const nSteps = 8, run = 0.3, rise = F / nSteps, landD = 1.3, sw = 2.6;
     box(0, F / 2 - 0.2, TZ0 - landD / 2, sw, F + 0.4, landD);
     for (let i = 0; i < nSteps - 1; i++) { const h = F - (i + 1) * rise; box(0, h / 2 - 0.2, TZ0 - landD - (i + 0.5) * run, sw, h + 0.4, run); }
     const zEnd = TZ0 - landD - (nSteps - 1) * run;

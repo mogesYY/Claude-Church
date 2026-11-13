@@ -200,7 +200,7 @@ export class Engine {
       if (ultra) final = traa(final, depth, scenePass.getTextureNode('velocity'), this.camera);
       else final = fxaa(final);
       // colour grade: a touch more saturation so the church colours, flags and vestments read vividly
-      try { final = vec4((saturation as any)(final.rgb, 1.22), final.a); } catch { /* older three: skip */ }
+      try { final = vec4((saturation as any)(final.rgb, 1.1), final.a); } catch { /* older three: skip */ }
       post.outputNode = final;
       this.post = post;
     } catch (e) {
