@@ -10,7 +10,7 @@ npm install
 npm run dev        # http://localhost:5173
 npm run build      # production build in dist/
 npm run world      # rebuild world data from reference/map/brandon.osm(.json)
-npm test           # headless auto-play of all five chapters (needs a prior `npm run build`)
+npm test           # headless auto-play of all three levels (needs a prior `npm run build`)
 ```
 URL options: `?q=low|high|ultra` graphics preset · `?chapter=1..5` jump to a chapter · `?roam` free roam · `?webgl` force WebGL2 · `?agx` AgX tone mapping.
 

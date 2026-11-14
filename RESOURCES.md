@@ -13,14 +13,11 @@ Only use recordings the church has the right to share (your own streams are idea
 | `menu.mp3` | `public/audio/music/` | Main menu | A calm mezmur or begena piece |
 | `solemn.mp3` | `public/audio/music/` | Opening shot, quiet scenes | Slow mezmur or begena |
 | `festive.mp3` | `public/audio/music/` | People leaving after Kidase, celebrations | A joyful mezmur with kebero |
-| `kidase_opening.mp3` | `public/audio/chant/` | Chapter 1, the Kidase | Priest and deacon responses from the start of a Kidase |
-| `mahlet_practice.mp3` | `public/audio/chant/` | Chapter 2, Mahlet | Mahlet with maqomiya, tsenatsel, kebero |
-| `meskel_demera.mp3` | `public/audio/chant/` | Chapter 3, Demera | Meskel hymns (your "Meskel Abriha Wereb" stream) |
-| `timket_procession.mp3` | `public/audio/chant/` | Chapter 4, Ketera | Timket wereb with kebero |
-| `timket_blessing.mp3` | `public/audio/chant/` | Chapter 4, blessing of the water | The prayer over the water |
-| `siqlet.mp3` | `public/audio/chant/` | Chapter 5, Good Friday | Siqlet chant with "Kiryalayson" |
-| `fasika_vigil.mp3` | `public/audio/chant/` | Chapter 5, vigil | The vigil before the proclamation |
-| `fasika_tensae.mp3` | `public/audio/chant/` | Chapter 5, Resurrection and credits | Fasika mezmur |
+| `kidase_opening.mp3` | `public/audio/chant/` | Level 1, the Kidase | Priest and deacon responses from the start of a Kidase |
+| `mahlet_practice.mp3` | `public/audio/chant/` | Level 1, Mahlet | Mahlet with maqomiya, tsenatsel, kebero |
+| `meskel_demera.mp3` | `public/audio/chant/` | Level 2, Demera | Meskel hymns (your "Meskel Abriha Wereb" stream) |
+| `siqlet.mp3` | `public/audio/chant/` | Level 3, Good Friday | Siqlet chant with "Kiryalayson" |
+| `fasika_tensae.mp3` | `public/audio/chant/` | Level 3, Resurrection and credits | Fasika mezmur |
 | `mezmur_01.mp3` … `mezmur_05.mp3` | `public/audio/chant/` | Car radio | Any five mezmur |
 
 **Real instrument sounds** (optional, each 1–2 seconds, recorded close with a phone): one kebero low hit, one kebero high hit, one tsenatsel shake, one qachil ring, one maqomiya strike on the floor, a few seconds of ililta. Send them with any names and tell me which is which.
@@ -64,17 +61,21 @@ Deacon's vestments for Kidase and for feasts; priest's vestments; the procession
 ## 5. Answers only you can give
 
 Answered already: sides for men and women, the front door, the deacon's roles, Dinsdale Park for Timket and the Demera, the congregation's dress. Still open:
-1. After you have played it: anything in the five chapters that is not how it is done.
+1. After you have played it: anything in the three levels that is not how it is done.
 2. The exact wording the nifk deacon reads, and the people's response at "Igzio", if you want them word for word.
 3. Vestment colours for the clergy on a normal Sunday and on feasts.
 4. The Amharic text in `public/story/dialogue.json` and `src/core/i18n.ts` — please correct it.
 
-Still missing from the audio list: `timket_procession.mp3`, `timket_blessing.mp3`, `fasika_vigil.mp3`, and `mezmur_03` to `mezmur_05` (optional).
+Optional extra audio: `mezmur_03` to `mezmur_05` for the radio.
 
 ## 6. The map (optional)
 
 The game uses about 600 m around the church, and Dinsdale Park is a separate hand-built location. For a real drive from the church to the park, export a second `.osm` from openstreetmap.org covering 5th Street north to the river and Dinsdale Park, and upload it as `reference/map/brandon_north.osm`. Photos of the park (the gravel turnaround, the river view, where the Demera and the water basin go) would let me match it.
 
-## 7. One decision
+## 7. Photos and privacy
 
-The repository is public and includes your reference photos and a face texture made from your photo. Say **keep** or **remove from the public repo**.
+Reference photos are no longer published; they stay private. They remain in the repository's old history until you say **purge**.
+
+## 8. Measurements (most useful thing now)
+
+Nave width and length, ceiling height at the wall and at the centre, pew length, aisle width, stage height and depth, lobby width and depth, total height of the five lobby steps.

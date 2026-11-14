@@ -1,7 +1,7 @@
 // Headless smoke test: auto-plays every chapter (teleporting through objectives) and reports runtime errors.
 // node tools/smoke.mjs [firstChapter] [lastChapter]   — also saves one screenshot per chapter into captures/
 import { serve, launch } from './browser.mjs';
-const a = +(process.argv[2] ?? 1), b = +(process.argv[3] ?? 5);
+const a = +(process.argv[2] ?? 1), b = +(process.argv[3] ?? 3);
 const srv = await serve(); let failed = false;
 for (let ch = a; ch <= b; ch++) {
   const { browser, page, errors } = await launch({ width: +(process.env.W ?? 320), height: +(process.env.H ?? 180) });

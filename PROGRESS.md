@@ -1,130 +1,46 @@
 # PROGRESS — Medhane Alem: A Deacon's Year
 
-**Live link:** https://mogesyy.github.io/Claude-Church/ — _goes live once GitHub Pages is switched on: repo Settings → Pages → Source: **GitHub Actions**, then re-run the "Deploy to GitHub Pages" workflow (Actions tab). The code is pushed and the CI build passes; only that setting is missing._
+**Live link:** https://mogesyy.github.io/Claude-Church/
 
-## Update — fourth pass (your answers applied)
+## Pass 5 (this update)
 
-- **Your recordings are in**: menu, solemn and festive music; Kidase, Mahlet, Meskel, Siqlet and Fasika chant; two mezmur for the car radio. Still generated: the Timket procession, the Timket blessing and the Fasika vigil (no files yet).
-- **Deacon's part in the Kidase** now follows what you described: Isaac serves as the nifk deacon — he holds the tuaf, reads the nifk deacon's reading, and rings the qachil for "Igzio". The narration names the wanna deacon, the nifk deacon and the nifk qes as the readers.
-- **Dinsdale Park by the river** is a new location (49.851967, −99.942136): gravel turnaround, lawn, rail fence, the Assiniboine beyond. The Demera is built there (Chapter 3) and the Tabot is taken there at Timket, where the water is blessed (Chapter 4). It is a hand-built set, not real map data — the park is outside the map you exported, so the drive there fades after a short stretch.
-- **Congregation**: up to 48 people in the pews (14 on Low), men on the left and women on the right, in netela that are tricolour-edged, plain, or marked with a cross. The real ~80 will not fit the pew layout as modelled.
-- **Wereb and Mahlet movement**: the staff is lifted and set down on the beat with the body swaying forward, back and to the side; wereb adds stepping, swaying and clapping; the drummer moves with the beat.
-- **Front door faces 5th Street** — confirmed.
+**Church rebuilt from the new photos and videos**
+- The entry lobby is now lower than the nave, as in the building: you come in at door level, take your shoes off at the wooden shelves on the right, and climb five carpeted steps with handrails, between cream panelled walls, to the double wooden doors with black crosses. The doors swing open as you approach. Red-framed basement door on the left; coat rail and white table on the right.
+- Nave: white ceiling with a flat centre strip and sloped sides, pointed windows with white board panelling below and yellow wall above, icons between the windows, long oak pews with curved ends and book racks, open floor before the stage, maroon runner, chair, folding chair, kebero.
+- Back wall as photographed: cross doors, stream camera on its shelf, clock, TV, fire bell, Last Supper, icon grids, St Mary, corner door.
+- Front: carved arches with cross tiles, copper-orange curtains with gold fringe, pictures in the photographed order, two black TVs, clock, speakers, equipment shelf, lace-draped stand, dotted-cloth table with flowers, green brocade lectern, side door.
+- One set of dimensions drives outside and inside (`CH` in `src/church/church.ts`), so the proportions agree. **They are estimates from photos, not measurements** (nave 9.8 m wide, 14.5 m long; lobby floor 0.85 m below the nave).
 
-## Update — third pass
+**Three short levels** (no passenger pick-ups, no errands)
+1. **Kidase** — shoes off, bow, kiss the cross, light the candles, prepare the censer, start the stream, serve beside the priest (tuaf, qachil), then join the Mahlet.
+2. **Meskel** — one short drive toward the river, raise and dress the Demera at Dinsdale Park, circle it three times, light it.
+3. **Fasika** — Siqlet prostrations, the vigil light, the proclamation, spring dawn, credits.
 
-- **Voices**: every dialogue line now has its own generated voice file, one distinct voice per character (`tools/make_voices.py` → `public/audio/voice/`). English only; the browser voice is just a fallback.
-- **The priest is named Qesis Andualem.**
-- **Church front** corrected from the close-up photo (horizontal siding, flush wide front, real sign wording, grey railings, door plate, downspouts) and **trees placed from Street View**; 5th Street by the church is gravel.
-- **Entry room** is now the full width of the front: shoe racks on both sides, basement door on the left, coats on the right. The racks work at any time, in any mode.
-- **Animation**: every joint now eases between poses, with idle weight-shift and breathing. Still procedural, not motion capture.
-- **Head**: wider cranium, jaw and ears adjusted, fuller hair. A true match needs the photos listed in `RESOURCES.md`.
-- **See `RESOURCES.md`** for the complete list of what to send.
-- Not done: I could not open Google Maps or four of the photos (unsupported format).
+**Sound**
+- Every recording you gave is used: `menu` (menu), `solemn` (opening, vigil), `festive` (after Kidase), `kidase_opening`, `mahlet_practice`, `meskel_demera`, `siqlet`, `fasika_tensae`, and `mezmur_01`/`mezmur_02` on the car radio (it comes on when you get in; R changes track).
+- Removed: all synthesized instruments (kebero, tsenatsel, staff, bells, qachil), ililta, crows, magpies, train horn, crowd noise, the synthesized background music and the browser's robot voice. What remains generated: wind, footsteps, car engine, horn, door, fire crackle, and the spoken dialogue lines.
 
-## Update — second pass (your feedback)
+**Driving**
+- S or Space now stops the car firmly (about 3× the previous braking); lifting off W slows it noticeably; S reverses once stopped. Steering is a little quicker at speed.
 
-**Changed**
-- **GPS**: rewritten. Faster routing, starts from where you actually are, a gold guidance line on the road, a distance read-out, and it refreshes as you drive. No GPS line inside the church.
-- **Houses on roads**: the map no longer invents houses or garages (real footprints only), driveways and parking aisles are not drawn as roads, and any building that would touch a road is pulled back or shrunk.
-- **Map size**: cut to about 600 m around the church — only what the story uses.
-- **Missions**: no more long drives. Chapter 2 happens entirely at the church (memories, Mahlet practice, asking the people in the room for their photos, the video). The Meskel permit is a phone call and the branches are in the yard. Only two short drives remain (the elder around the corner; one family home in the blizzard).
-- **Rites**: the Qes censes, not the deacon. The deacon prepares the censer, holds the tuaf for the Gospel, calls "Tselyu", and rings the qachil. You bow and cross yourself on entering and kiss the priest's cross. Mahlet has two facing rows with maqomiya, tsenatsel and kebero. The Demera is circled three times before it is lit with a chibo. At Timket a processional cross leads, the Tabot goes out covered under the umbrella, and the Qes lowers the cross into the water. Siqlet has "Kiryalayson" prostrations. Fasika has the full call and response.
-- **Church interior**: rebuilt from your two photos — open floor before the stage, oak benches, the exact icon/TV/clock layout on the front wall, side door near the front, two doors on the back wall, sound desk, lectern and microphone, lace table, flower table, kettle table with lilies, ceiling fan, floor vents, stream camera above the entrance.
-- **Your face**: your front photo is now projected onto the 3D head (`tools/make_face.py` → `public/char/isaac_face.png`), and the head was reshaped to the photo's proportions.
-- **Driving**: arcade assists (traction and steering help), stronger engine and brakes, much less sliding in winter.
-- **Pause**: Esc (or Tab/P) pauses everything and opens a menu: resume, map, missions, settings, photo mode, restart chapter, quit to main menu. Losing window focus also pauses.
-- **New settings**: music volume, dialogue voice on/off, FPS counter (on by default), mouse sensitivity, renderer.
-- **Look**: interface restyled (green, gold and red band, Ethiopian cross, parchment dialogue box); smoother trees; richer colours and colour grading; surface relief (normal maps) on siding, stucco, shingles, asphalt, carpet and wood.
-- **Sound**: reworked kebero, tsenatsel, qachil bell, maqomiya strike and ililta; a begena-and-krar style instrumental for the menu and scenes; every dialogue line is spoken.
-
-**What is still not real, and why**
-- **Mezmur, Kidase and Mahlet audio are not recordings.** I cannot download from YouTube or record anything here. Put your own MP3s in `public/audio/chant/` and `public/audio/music/` (file names are in the README in each folder) and they replace the generated instrumental automatically.
-- **Voices are the browser's built-in speech**, not actors. English always works; Amharic is spoken only if your device has an Amharic voice installed. Real voice-over would need recordings.
-- **Instrument sounds are synthesized**, not sampled from real instruments. Recordings of your own kebero and tsenatsel would be better; tell me and I will wire them in.
-- I could not look at your YouTube thumbnails (no access to YouTube from here). The rites above are from what I know of the services; please correct anything that is not how it is done at Medhane Alem.
-- The world is still stylised geometry. It is smoother and more colourful now, but it is not photoreal.
-
-## What I need from you (Isaac)
-
-1. **Switch on GitHub Pages** for `mogesYY/Claude-Church`: Settings → Pages → Source: *GitHub Actions*, then re-run the failed deploy in the Actions tab. (I can push code but am not permitted to change that setting.)
-2. **The map — received, thank you.** `reference/map/brandon.osm` is now the source of the world: real streets and ~3,700 real building footprints from roughly Southern Ave down to Maryland Ave, 1st to 18th St. It does **not** reach downtown (Rosser/Princess/Victoria), Brandon University or the Assiniboine River, so those are not in the game yet. If you want them, export a second, taller area (same width, north edge at the river) and replace the file. About 900 houses are still generated where the map has no footprint.
-   The map shows the church on the **west side of 5th Street at the corner of Queens Avenue**, long axis east–west. I assumed the **front door faces east, toward 5th Street** — please confirm (that puts the Meqdes at the west end).
-3. **Missing photos** named in the brief: `church_03` (brown tower), `church_04` (festival day), `isaac_03`, `isaac_05`. See `reference/INVENTORY.md`.
-4. **Chant recordings** — see `public/audio/chant/README.md` for the exact file names. Until they exist, a soft neutral drone plays instead (I did not synthesize imitation chant).
-5. **Answers to the custom/accuracy questions below.**
-
-## Questions (I did not want to guess)
-
-**The church**
-- Does the front door face east toward 5th Street (as assumed from the map), which would put the Meqdes at the west end? Or is the entrance on another side?
-- The brief says the Qene Mahlet is by the entrance, but your photos show the chanters and kebero at the front before the curtain, and the church has pews. I followed the photos. Is that right for our church?
-- Men's and women's sides: I put men on the left (north) and women on the right when facing the curtain. Correct?
-- What exactly is written on the arched sign over the door? (I wrote: "የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተ ክርስቲያን / መድኃኔ ዓለም / Ethiopian Orthodox Tewahedo Medhane Alem Church · Brandon".)
-- Does the front door open outward, and is the shoe rack in the entry (tower) room?
-
-**Customs**
-- Deacon's vestments: I used a white robe with a short red-and-gold embroidered cape. What should a deacon here wear for Kidase, for the Timket procession, and for the Fasika vigil? Is a crown (aklil) worn?
-- Is it right for a deacon to light the altar-side candles and prepare the censer before the Kidase, and to cense during it, or is censing only the priest's?
-- Chapter 1 shows Isaac kissing the door on arrival and bowing to greet the Qes. Should he kiss the Qes's hand cross instead of bowing?
-- Good Friday (Siqlet): the game has three full prostrations (sigdet) in the aisle. Is that appropriate to show, and should the count/gesture differ?
-- Timket in Brandon at −35 °C: where does the Tabot actually go, and where is the water blessed (indoors, a basin in the yard, somewhere else)? I staged a short street procession (Ketera) and a basin blessed in the church yard the next morning.
-- Is one Tabot carried, and who holds the umbrella over it — a deacon? In the game the Tabot is only ever a brocade-covered form on the priest's head, under an umbrella.
-- Meskel: is the Demera lit by the priest, and is it acceptable that the game shows elders reading the direction of its fall? (Lines are light-hearted; easy to change in `public/story/dialogue.json`.)
-- Fasika: the proclamation is written "Kristos tensa'e ke'mutan" / "Be'abiy hayl wesiltan". Please check the wording and the Ge'ez spelling (ክርስቶስ ተንሥአ እሙታን / በዐቢይ ኃይል ወሥልጣን).
-- **All Amharic text** (UI in `src/core/i18n.ts`, dialogue in `public/story/dialogue.json`) was written by me, not a native speaker. Please review it — especially honorifics (I used "አባ" for the Qes and "አቶ ተስፋዬ" for the elder, an invented generic character).
-
-## Status by build phase
-
-| # | Phase | State |
-|---|---|---|
-| 1 | Vite + three.js WebGPU project, Pages workflow, third-person controller | Done. WebGPU with automatic WebGL2 fallback (both exercised in software). Pushed to `mogesYY/Claude-Church`; CI build passes; deploy waits on Pages being enabled. |
-| 2 | OSM import → neighbourhood, roads, minimap | Importer done (`tools/osm_to_world.ts`, reads Overpass JSON or `.osm` XML). Running on your real OSM export (south-central Brandon). Roads with widths, centre/lane lines, stop bars, sidewalks, curbs, boulevards, signals, stop signs, lamps, rail line, river, parks, nav graph + A* routing, minimap and full map with waypoints. |
-| 3 | Church exterior and interior | Done from the photos: three variants (`current`, `blueFlag`, `brownTower`), festival flags, enterable interior with the three-arch curtained screen, icons (original artwork), pews, chandelier, candles, censer, kebero, maqomiya, tsenatsel, umbrellas, shoe rack, livestream camera. The Meqdes cannot be entered and the camera cannot pass the curtain. |
-| 4 | Vehicles and traffic | Done: 5 modern vehicles (pickup, minivan, sedan, SUV, hatchback) + 2 older ones for flashbacks; raycast suspension, headlights, wipers, horn, snow/ice grip, enter/exit any parked car, radio with 5 mezmur slots; AI traffic keeps right and obeys stop signs/signals; pedestrians on sidewalks. |
-| 5 | Houses, trees, materials, weather, seasons | Done: seeded procedural houses (bungalow, 1½-storey, 2-storey; stucco or lap siding; porches, dormers, chimneys, garages, wood and chain-link fences), elms/ash/spruce, power poles; four seasons (snow roofs, snowbanks, bare trees, autumn colour, spring melt patches), snowfall, blizzard, breath vapour, real sun position for Brandon by date and time. |
-| 6 | Isaac, netela, animations, NPCs | Done as a procedural rig (see gaps): sculpted head with painted face from the photos, fade haircut, moustache toggle, outfits (netela, netela over puffer, deacon, casual, winter), spring-bone netela, ~25 procedural animations; generic NPC kinds (Qes with turban and hand cross, elders in gabi, women in netela, children, neighbours). |
-| 7 | Story system + Chapters 1–5 | Done: opening shot and all five chapters playable start to finish; dialogue in editable JSON (EN + AM). |
-| 8 | Audio, bilingual UI, photo mode, touch, performance | Done: synthesized wind, crows/magpies, train horn, footsteps (snow crunch), engine + tire slush, kebero, tsenatsel, bell, church reverb; EN/AM toggle; photo mode with free camera and path tracing; touch controls; Low/High/Ultra presets with auto-detect and automatic step-down. |
+**Privacy**
+- Reference photos are removed from the public repository and ignored from now on. **They are still in the repository's earlier history** — see "What I need from you".
+- No real person from the photos is in the game. Only Isaac's face texture (`public/char/isaac_face.png`) comes from a photo, and the game needs it to be public to load it.
 
 ## How it was verified
+Headless Chromium with software rendering: all three levels auto-play start to finish with no runtime errors (`npm test`); type-check and production build pass. Screenshots of the new lobby and nave are in `captures/`.
 
-There is no GPU on the build machine, so everything was checked in headless Chromium with software rendering:
-- **All five chapters auto-play start to finish with zero runtime errors** (`npm test`: objectives are completed by teleporting; takes ~8–10 min per chapter in software).
-- **Driving physics test** (`node tools/cartest.mjs`): accelerate, steer (correct direction), brake, reverse, suspension settles on the road.
-- **Both render backends run**: WebGL2 fallback (Low/High/Ultra) and the **WebGPU backend on a software adapter** (High and Ultra, outdoors and inside the church). This caught and fixed a WebGPU-only validation error in the Ultra pipeline.
-- Screenshots in `captures/` (church exterior/interior, Isaac, street, chapter 1 scenes, WebGPU Ultra frames).
-- If WebGPU still fails on your machine, the game retries itself on WebGL2 automatically, and Phone → Settings → Renderer switches by hand.
+**Not verified (needs your machine):** frame rate, how the braking feels in the hand, audio balance, and the levels played by hand at normal speed.
 
-**Not verified, because it needs real hardware:** frame rate (60 fps at 1440p Ultra on the RTX 5070 Ti is a target, not a measurement), the look of SSR/TRAA/cascaded shadows at full resolution, the path-traced photo mode (never run here), gamepad and touch on real devices, audio balance, and playing the chapters by hand at normal speed (only the automated run was done). Please try these first and tell me what you see.
+## What I need from you
+1. **Tape measurements** to replace my estimates: nave width and length (back doors to the stage), ceiling height at the wall and at the centre, pew length, aisle width, stage height and depth, lobby width and depth, height of the five steps.
+2. **Photo history:** say **purge** if you want the old photos erased from the repository history as well (this rewrites history with a force-push), or make the repository private (GitHub Pages on a free account needs it public).
+3. Play the three levels and tell me what is not how it is done.
+4. Review of the Amharic text (`public/story/dialogue.json`, `src/core/i18n.ts`).
 
-## Known gaps (honest list)
-
-**Graphics**
-- "Volumetric" incense and light shafts are billboard particles and additive planes, not true volumetrics. No screen-space wet-road puddles; SSR is only enabled on Ultra and is untested on real WebGPU.
-- No texture downloads: Poly Haven / ambientCG were blocked by the network, so all materials are small procedural canvas textures (no normal maps). Assets are generated at load time in code rather than shipped as Draco/KTX2 GLB files.
-- Night sky is plain (stars and a simple dawn/dusk glow; no moon disc). Interior lighting runs a little bright and there is a faint ceiling shading artifact near the chandelier.
-- First time each new kind of object appears there can be a short shader-compile hitch.
-- Elevation is approximated (gentle rise away from the river, ~15 m valley drop); no Canadian DEM was reachable.
-
-**Character**
-- Isaac is a stylised procedural model, not a photoreal scan: likeness comes from proportions, skin tone, hair and painted features. It was not built in Blender (not available here). Eyes do not blink, there is no lip-sync, hands are mitten-like, and removed shoes are shown as a pair on the rack rather than bare feet.
-- The netela is a spring-bone drape, not a full cloth simulation; it can clip the forearms in big arm movements.
-- Animations are procedural (no mocap): enter/exit car is a fade-free snap into the seat, not an animated door sequence.
-
-**World**
-- The map export covers south-central Brandon only. Brandon University, Assiniboine College, City Hall, downtown and the river are outside it, so missions that mention them (university in Chapters 2 and 5, City Hall in Chapter 3) currently send you to a nearby residential street instead. The Co-op grocery is real. Large buildings are simple extruded blocks.
-- Houses do not yet match individual real houses; back-lane garages and fences are generated per lot.
-- No interior for any building except the church.
-
-**Gameplay**
-- Traffic AI is on rails (no lane changes, no overtaking; it stops for the player and each other).
-- Chapter 4 "plan the route" is a single marker to confirm rather than a map-drawing tool.
-- Save stores chapter progress and settings, not mid-chapter position.
-- The first load builds everything procedurally; measured load here is a few seconds on software rendering, but the JS bundle is ~2.1 MB gzipped (three.js WebGPU + Rapier).
-
-## Next steps I would take
-1. Swap in the real OSM data and re-check church placement/orientation, landmarks and mission routes.
-2. Apply your answers on customs and vestments; correct the Amharic.
-3. Tune on your RTX 5070 Ti (WebGPU, Ultra), then on a phone.
-4. Character pass: blinking, better hands, a proper cloth solver for the netela, animated car doors.
+## Known gaps
+- Proportions are photo estimates until measured. Icons are repainted originals in the photographed positions, not copies.
+- The basement and the upper stair are closed doors.
+- Characters are stylised procedural models; animations are procedural.
+- The map covers about 600 m around the church; Dinsdale Park is a separate hand-built location reached by a fade.
+- Dialogue voices are generated English speech; there is no Amharic voice-over.

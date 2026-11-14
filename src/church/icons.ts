@@ -52,11 +52,17 @@ function angel(c: Ctx, x: number, y: number, s: number, flip = 1, robeCol = '#b3
 }
 function sun(c: Ctx, x: number, y: number, r: number) { c.fillStyle = '#f0c040'; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
 
-export type IconKind = 'mary' | 'medhaneAlem' | 'michael' | 'george' | 'trinity' | 'crucifixion' | 'gabriel' | 'thorns' | 'grace' | 'gethsemane';
+export type IconKind = 'mary' | 'medhaneAlem' | 'michael' | 'george' | 'trinity' | 'crucifixion' | 'gabriel' | 'thorns' | 'grace' | 'gethsemane' | 'supper';
 
 function paint(kind: IconKind, c: Ctx, w: number, h: number) {
   const cx = w / 2;
-  if (kind === 'thorns') { // Christ crowned with thorns (dark, devotional print style)
+  if (kind === 'supper') { // the Last Supper: Christ at the centre of a long table with the Twelve
+    frame(c, w, h, '#7a1a20', '#3a2416');
+    for (let i = 0; i < 12; i++) { const k = i < 6 ? i : i + 1; const x = 60 + k * 33; robe(c, x, 300, 60, 120, ['#1f4f8f', '#1f6b3a', '#b3261e', '#3a2a7a', '#8a6a2a'][i % 5]); halo(c, x, 270, 20); head(c, x, 272, 14, { hair: INK, beard: i % 2 ? INK : undefined }); }
+    robe(c, cx, 270, 90, 160, '#c9302a'); halo(c, cx, 232, 34, true); head(c, cx, 236, 24, { hair: '#2a160c', beard: '#2a160c' });
+    c.fillStyle = '#f4f0e4'; c.strokeStyle = INK; c.lineWidth = 3; c.fillRect(40, 400, w - 80, 150); c.strokeRect(40, 400, w - 80, 150); c.fillStyle = '#e2b33c'; for (let i = 0; i < 7; i++) { c.beginPath(); c.arc(90 + i * 56, 440, 12, 0, 7); c.fill(); }
+    c.fillStyle = '#b3261e'; c.fillRect(cx - 14, 425, 28, 34);
+  } else if (kind === 'thorns') { // Christ crowned with thorns (dark, devotional print style)
     frame(c, w, h, '#1a1410', '#2a1c12');
     robe(c, cx, 420, 360, 300, '#7a1a1e', '#3a2a1a'); halo(c, cx, 290, 120); head(c, cx, 300, 96, { hair: '#2a160c', beard: '#2a160c', tilt: 0.14 });
     c.strokeStyle = '#4a3a22'; c.lineWidth = 9; for (let i = 0; i < 3; i++) { c.beginPath(); c.ellipse(cx + 8, 228 + i * 9, 100, 26, 0.14, Math.PI * 1.02, Math.PI * 1.98); c.stroke(); }

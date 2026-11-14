@@ -8,9 +8,10 @@ import { buildInterior, InteriorRefs } from './interior';
 
 export type ChurchVariant = 'current' | 'blueFlag' | 'brownTower';
 export const CH = {
-  F: 1.25, HW: 4.2, NZ0: -5.5, NZ1: 9.0, T: 0.2, EAVE: 4.6, PITCH: 0.72,
+  // F = nave floor; FL = lobby floor / front-door threshold. You enter at FL and climb five steps to the nave.
+  F: 2.1, FL: 1.25, HW: 4.9, NZ0: -5.5, NZ1: 9.0, T: 0.2, EAVE: 4.85, PITCH: 0.6,
   TW: 1.7, TZ0: -8.6, TY: 9.7, WINGX: 2.8, WINGZ: -8.6, PZ: 6.2,
-  WIN_Z: [-3.6, -1.0, 1.6, 4.2, 7.6], WIN_W: 0.78,
+  WIN_Z: [-4.2, -1.9, 0.4, 2.7, 5.0], WIN_W: 0.8,
 };
 const VARIANTS: Record<ChurchVariant, { tower: number; vertical: boolean; nave: number; skirt: number; steps: number; stepsWood: boolean; door: number; dome: number; cross: number; banner: boolean; roof: number; rail: number }> = {
   current: { tower: 0x6f7f98, vertical: false, nave: 0xe9e2c0, skirt: 0x3b5a60, steps: 0xc4c1b8, stepsWood: false, door: 0x9a9ea6, dome: 0xd9a927, cross: 0xf4f4f0, banner: false, roof: 0x5c5148, rail: 0x9c9e9c },
@@ -122,7 +123,7 @@ export class Church {
   toLocal(p: THREE.Vector3, out = new THREE.Vector3()) { return out.copy(p).sub(this.pos).applyAxisAngle(new THREE.Vector3(0, 1, 0), -this.yaw); }
   /** world yaw for a character that should face local direction (dx,dz) */
   faceYaw(dx: number, dz: number) { return Math.atan2(-dx, -dz) + this.yaw; }
-  isInside(p: THREE.Vector3) { const l = this.toLocal(p); return l.y > CH.F - 0.4 && l.y < CH.F + 4 && ((Math.abs(l.x) < CH.HW && l.z > CH.NZ0 && l.z < CH.NZ1) || (Math.abs(l.x) < CH.WINGX && l.z > CH.TZ0 + 0.1 && l.z <= CH.NZ0)); }
+  isInside(p: THREE.Vector3) { const l = this.toLocal(p); return l.y > CH.FL - 0.4 && l.y < CH.F + 4 && ((Math.abs(l.x) < CH.HW && l.z > CH.NZ0 && l.z < CH.NZ1) || (Math.abs(l.x) < CH.WINGX && l.z > CH.TZ0 + 0.1 && l.z <= CH.NZ0)); }
   /** lot outline in world space (for reserving ground) */
   lot(): number[][] { return [[-13, -17], [-7, -17], [-7, -33], [7, -33], [7, -17], [13, -17], [13, 13], [-13, 13]].map(([x, z]) => { const v = this.toWorld(x, 0, z); return [v.x, v.z]; }); }
 
@@ -134,11 +135,12 @@ export class Church {
   private buildExterior() {
     const ex = this.exterior; for (const c of [...ex.children]) { ex.remove(c); (c as THREE.Mesh).geometry?.dispose?.(); }
     this.flags = [];
-    const V = VARIANTS[this.variant], { F, HW, NZ0, NZ1, EAVE, PITCH, TW, TZ0, TY, WINGX, WINGZ } = CH;
+    // in this function F is the door-threshold level (the whole front is measured from it); FN is the nave floor
+    const V = VARIANTS[this.variant], { F: FN, FL: F, HW, NZ0, NZ1, EAVE, PITCH, TW, TZ0, TY, WINGX, WINGZ } = CH;
     const tower = new Geo(), stucco = new Geo(), roof = new Geo(), trim = new Geo(), conc = new Geo(), iron = new Geo(), glass = new Geo(), gR = new Geo(), gG = new Geo(), louvre = new Geo(), wood = new Geo();
     const cT = new THREE.Color(V.tower), cN = new THREE.Color(V.nave), cS = new THREE.Color(V.skirt), W = new THREE.Color(0xf4f4f0), cRoof = new THREE.Color(this.snow ? 0xf2f5fa : V.roof);
     const sy = F - 0.12; // top of the dark skirt
-    const win = (z: number): Hole => ({ at: z, w: CH.WIN_W, y0: F + 0.95, y1: F + 2.0, peak: F + 2.5 });
+    const win = (z: number): Hole => ({ at: z, w: CH.WIN_W, y0: FN + 1.0, y1: FN + 2.0, peak: FN + 2.4 });
     const rise = HW * PITCH;
     // ---- nave ----
     for (const sx of [-1, 1]) {
@@ -146,15 +148,15 @@ export class Church {
       wall(conc, sx * HW, NZ0, sx * HW, NZ1, [sx, 0], -0.4, sy, [], cS);
       trim.box(sx * (HW + 0.02), sy, (NZ0 + NZ1) / 2, 0.06, 0.1, NZ1 - NZ0, W);
       for (const z of CH.WIN_Z) {
-        this.windowDress(trim, glass, CH.WIN_Z.indexOf(z) % 2 ? gG : gR, (s, y) => [sx * (HW + 0.025), y, s], (s, y) => [sx * (HW - 0.1), y, s], z, CH.WIN_W, F + 0.95, F + 2.0, F + 2.5, W);
+        this.windowDress(trim, glass, CH.WIN_Z.indexOf(z) % 2 ? gG : gR, (s, y) => [sx * (HW + 0.025), y, s], (s, y) => [sx * (HW - 0.1), y, s], z, CH.WIN_W, FN + 1.0, FN + 2.0, FN + 2.4, W);
         // basement window (white louvre panel) in the skirt
         trim.box(sx * (HW + 0.03), 0.55, z, 0.05, 0.5, 0.8, W); louvre.box(sx * (HW + 0.05), 0.55, z, 0.03, 0.4, 0.7, 0xe8e8e4);
       }
     }
-    const fw: Hole[] = [{ at: 0, w: 1.5, y0: -0.4, y1: F + 2.15 }];
-    wall(stucco, -HW, NZ0, HW, NZ0, [0, -1], sy, EAVE, [{ at: -3.5, w: 0.7, y0: F + 0.95, y1: F + 1.9, peak: F + 2.35 }, { at: 3.5, w: 0.7, y0: F + 0.95, y1: F + 1.9, peak: F + 2.35 }, { ...fw[0], y0: sy }], cN, 1, rise);
+    const fw: Hole[] = [{ at: 0, w: 1.7, y0: -0.4, y1: FN + 2.05 }];
+    wall(stucco, -HW, NZ0, HW, NZ0, [0, -1], sy, EAVE, [{ at: -3.85, w: 0.7, y0: F + 0.95, y1: F + 1.9, peak: F + 2.35 }, { at: 3.85, w: 0.7, y0: F + 0.95, y1: F + 1.9, peak: F + 2.35 }, { ...fw[0], y0: sy }], cN, 1, rise);
     wall(conc, -HW, NZ0, -TW, NZ0, [0, -1], -0.4, sy, [], cS); wall(conc, TW, NZ0, HW, NZ0, [0, -1], -0.4, sy, [], cS);
-    for (const x of [-3.5, 3.5]) this.windowDress(trim, glass, gR, (s, y) => [s, y, NZ0 - 0.025], (s, y) => [s, y, NZ0 + 0.1], x, 0.7, F + 0.95, F + 1.9, F + 2.35, W);
+    for (const x of [-3.85, 3.85]) this.windowDress(trim, glass, gR, (s, y) => [s, y, NZ0 - 0.025], (s, y) => [s, y, NZ0 + 0.1], x, 0.7, F + 0.95, F + 1.9, F + 2.35, W);
     wall(stucco, -HW, NZ1, HW, NZ1, [0, 1], sy, EAVE, [], cN, 1, rise); wall(conc, -HW, NZ1, HW, NZ1, [0, 1], -0.4, sy, [], cS);
     // roof (ridge along z)
     const o = 0.4, yo = EAVE - o * PITCH, ry = EAVE + rise;
@@ -292,15 +294,16 @@ export class Church {
 
   private buildColliders() {
     for (const b of this.bodies) this.phys.world.removeRigidBody(b); this.bodies = [];
-    const { F, HW, NZ0, NZ1, T, TW, TZ0, WINGX, WINGZ, PZ } = CH;
+    const { F: FN, FL: F, HW, NZ0, NZ1, T, TW, TZ0, WINGX, WINGZ, PZ } = CH; void TW; void WINGZ;
     const box = (cx: number, cy: number, cz: number, sx: number, sy: number, sz: number) => { const w = this.toWorld(cx, cy, cz); this.bodies.push(this.phys.staticBox(w.x, w.y, w.z, sx / 2, sy / 2, sz / 2, this.yaw).body); };
-    const H = 5;
+    const H = 6.4;
     box(-HW + T / 2, H / 2, (NZ0 + NZ1) / 2, T, H, NZ1 - NZ0); box(HW - T / 2, H / 2, (NZ0 + NZ1) / 2, T, H, NZ1 - NZ0); box(0, H / 2, NZ1 - T / 2, HW * 2, H, T);
-    for (const sx of [-1, 1]) { box(sx * (HW + 0.75) / 2, H / 2, NZ0 + T / 2, HW - 0.75, H, T); box(sx * (WINGX - T / 2), H / 2, (TZ0 + NZ0) / 2, T, H, NZ0 - TZ0); box(sx * (WINGX + 0.575) / 2, H / 2, TZ0 + T / 2, WINGX - 0.575, H, T); }
-    box(0, F + 2.12 + 1, TZ0 + T / 2, 1.2, 2, T); box(0, F + 2.15 + 1, NZ0 + T / 2, 1.5, 2, T);
-    box(0, F / 2 - 0.25, (TZ0 + NZ1) / 2, HW * 2, F + 0.5, NZ1 - TZ0);                       // floor slab (also blocks the crawl space)
+    for (const sx of [-1, 1]) { box(sx * (HW + 0.85) / 2, H / 2, NZ0 + T / 2, HW - 0.85, H, T); box(sx * (WINGX - T / 2), H / 2, (TZ0 + NZ0) / 2, T, H, NZ0 - TZ0); box(sx * (WINGX + 0.575) / 2, H / 2, TZ0 + T / 2, WINGX - 0.575, H, T); }
+    box(0, F + 2.12 + 1, TZ0 + T / 2, 1.2, 2, T); box(0, FN + 2.05 + 1.2, NZ0 + T / 2, 1.7, 2.4, T);
+    box(0, FN / 2 - 0.25, (NZ0 + NZ1) / 2, HW * 2, FN + 0.5, NZ1 - NZ0);                     // nave floor slab
+    box(0, F / 2 - 0.25, (TZ0 + NZ0) / 2, WINGX * 2, F + 0.5, NZ0 - TZ0);                     // lobby floor slab (lower)
     box(0, H / 2, PZ + 0.15, HW * 2, H, 0.3);                                              // Meqdes screen: never passable
-    box(0, F + 0.09, PZ - 0.8, HW * 2 - 2 * T, 0.18, 1.6);                                   // platform
+    box(0, FN + 0.14, PZ - 0.8, HW * 2 - 2 * T, 0.28, 1.6);                                  // the stage
     const nSteps = 8, run = 0.3, rise = F / nSteps, landD = 1.3, sw = 2.6;
     box(0, F / 2 - 0.2, TZ0 - landD / 2, sw, F + 0.4, landD);
     for (let i = 0; i < nSteps - 1; i++) { const h = F - (i + 1) * rise; box(0, h / 2 - 0.2, TZ0 - landD - (i + 0.5) * run, sw, h + 0.4, run); }
@@ -311,7 +314,8 @@ export class Church {
 
   update(dt: number, playerPos: THREE.Vector3, time: number) {
     // auto-open the front door when someone approaches
-    const l = this.toLocal(playerPos); const near = Math.abs(l.x) < 1.6 && l.z > CH.TZ0 - 2.3 && l.z < CH.TZ0 + 1.8 && l.y > CH.F - 0.6;
+    const l = this.toLocal(playerPos); const near = Math.abs(l.x) < 1.6 && l.z > CH.TZ0 - 2.3 && l.z < CH.TZ0 + 1.8 && l.y > CH.FL - 0.6;
+    this.refs.naveDoorWant = Math.abs(l.x) < 1.4 && l.z > CH.NZ0 - 2.3 && l.z < CH.NZ0 + 1.9 ? 1 : 0;
     const want = Math.max(near ? 1 : 0, this.doorWant);
     this.doorOpen += (want - this.doorOpen) * Math.min(1, dt * 4);
     this.door.rotation.y = this.doorOpen * 1.75;

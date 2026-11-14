@@ -114,7 +114,7 @@ export class Car {
     const vc = this.vc; if (!vc) return;
     const s = this.spec; const v = this.speed; this.throttle = throttle;
     // speed-sensitive steering with smooth ramp (no twitch at speed, tight at parking speed)
-    const maxSteer = 0.6 / (1 + Math.abs(v) * 0.11); const target = -steer * maxSteer;
+    const maxSteer = 0.62 / (1 + Math.abs(v) * 0.085); const target = -steer * maxSteer;
     this.steer += (target - this.steer) * Math.min(1, dt * (Math.abs(steer) > 0.05 ? 6 : 9));
     let engine = 0, br = brake ? s.mass * 0.045 : 0;
     const power = s.power * 2.2 * Math.min(1, 0.55 + this.grip * 0.5);
@@ -135,6 +135,10 @@ export class Car {
     if (contacts >= 2) {
       // 1) traction control: bleed off sideways slide (less on ice, so winter still feels like winter)
       const k = Math.min(1, dt * (2.5 + 9 * this.grip)); this.body.setLinvel({ x: lv.x - sx * k, y: lv.y, z: lv.z - sz * k }, true);
+      // 1b) arcade brakes: S (or Space) stops the car firmly and predictably; lifting off the throttle slows it like engine braking
+      { const lv2 = this.body.linvel(); const sp = lv2.x * f.x + lv2.z * f.z; const opp = (throttle < -0.02 && sp > 0.5) || (throttle > 0.02 && sp < -0.5);
+        const dec = (brake ? 20 : opp ? 15 : Math.abs(throttle) < 0.02 ? 3.2 : 0) * (0.35 + 0.65 * this.grip);
+        if (dec > 0) { const ns = Math.abs(sp) <= dec * dt ? 0 : sp - Math.sign(sp) * dec * dt; this.body.setLinvel({ x: lv2.x + f.x * (ns - sp), y: lv2.y, z: lv2.z + f.z * (ns - sp) }, true); } }
       // 2) steering assist: nudge the yaw rate toward what the wheels are asking for
       const want = (fwd * Math.tan(this.steer)) / s.wheelbase; const a = Math.min(1, dt * (3 + 7 * this.grip));
       this.body.setAngvel({ x: av.x * 0.9, y: av.y + (want - av.y) * a, z: av.z * 0.9 }, true);

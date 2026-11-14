@@ -1,5 +1,7 @@
 # Reference image inventory
 
+> **Privacy:** the reference photos themselves are no longer in the public repository (removed at Isaac's request). The table below records what each one showed and how it was used. No real person from any photo appears in the game: everyone except Isaac is a generic generated character.
+
 Every image in the repo, what it shows, and exactly how the game uses it. Scanned: 13 image files plus a Street View frame and a PDF of the YouTube channel.
 The prompt lists a few file names that have **not** been received yet — see "Missing" at the bottom.
 
@@ -33,3 +35,6 @@ The prompt lists a few file names that have **not** been received yet — see "M
 - `church_04.png` (festival day with flags) — festival dressing is built from the description.
 - `isaac_03.png`, `isaac_05.png` — only four photos of Isaac were received; `isaac_01` doubles as the skin-tone reference.
 - `reference/map/brandon.osm` — see `PROGRESS.md` (OpenStreetMap download failed from the build machine).
+
+| `reference/interior/interior_06…12` (private) | Seven photos of the nave: back wall with the cross doors, icon grids, Last Supper, camera shelf; side walls; stage and curtains; ceiling. | Rebuild of the nave in `src/church/interior.ts`. |
+| `reference/lobby/lobby_01.jpg` + two walkthrough videos (private) | Entry lobby: lower floor, five carpeted steps with handrails between cream panelled walls up to double wooden doors with black crosses; red-framed basement door on the left; shoe shelves and coat nook on the right. | Lobby level `CH.FL`, stairs, doors, shoe shelves, coat nook. |

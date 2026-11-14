@@ -62,7 +62,7 @@ export class Game {
     this.facePhoto = await new Promise<HTMLImageElement | null>((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = `${import.meta.env.BASE_URL}char/isaac_face.png`; setTimeout(() => res(null), 8000); });
     this.setOutfit('netela');
     this.shoePair = new THREE.Group(); for (const dx of [-0.07, 0.07]) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.27), new THREE.MeshStandardMaterial({ color: 0x18181a, roughness: 0.7 })); s.position.set(dx, 0.04, 0); this.shoePair.add(s); }
-    this.shoePair.position.copy(this.church.toWorld(0.95, CH.F, -7.9)); this.shoePair.rotation.y = this.church.group.rotation.y; this.shoePair.visible = false; this.engine.scene.add(this.shoePair);
+    this.shoePair.position.copy(this.church.toWorld(-1.75, CH.FL, -6.15)); this.shoePair.rotation.y = this.church.group.rotation.y; this.shoePair.visible = false; this.engine.scene.add(this.shoePair);
     this.hud = new Hud(this); this.story = new Story(this); await this.story.load(); this.photo = new PhotoMode(this);
     this.applyQuality();
     // Esc while the mouse is captured only releases the capture (the browser keeps the key): treat that as "pause"
@@ -90,7 +90,7 @@ export class Game {
   setOutfit(o: Outfit) { this.outfit = o; const held = this.isaac?.held ?? {}; const parent = this.isaac?.root.parent ?? this.player.group; const pos = this.isaac?.root.position.clone(), rot = this.isaac?.root.rotation.y ?? 0; if (this.isaac) { parent.remove(this.isaac.root); this.isaac.dispose(); } this.isaac = makeIsaac(o, this.save.data.moustache, this.facePhoto); parent.add(this.isaac.root); if (pos) { this.isaac.root.position.copy(pos); this.isaac.root.rotation.y = rot; } if (held.R) this.isaac.hold('R', held.R, held.R.position.toArray() as any, [held.R.rotation.x, held.R.rotation.y, held.R.rotation.z]); if (this.mode === 'car') this.isaac.play('drive', 1, true); }
   setSeason(s: Season) { this.world.setSeason(s); this.park?.setSeason(s); this.engine.applyTime(true); }
   shoeSide = 1;
-  setShoes(off: boolean) { this.shoesOff = off; this.shoePair.visible = off; const lp = this.church.toLocal(this.player.pos); if (off && Math.abs(lp.z + 7.5) < 1.6) this.shoeSide = lp.x >= 0 ? 1 : -1; this.shoePair.position.copy(this.church.toWorld(this.shoeSide * 1.95, CH.F, -7.25)); }
+  setShoes(off: boolean) { this.shoesOff = off; this.shoePair.visible = off; const lp = this.church.toLocal(this.player.pos); this.shoePair.position.copy(this.church.toWorld(-1.75, CH.FL, -6.15)); }
   tp(x: number, z: number, yaw?: number) { this.player.teleport(x, this.world.height(x, z) + 0.05, z, yaw); if (yaw !== undefined) this.rig.yaw = yaw; this.rig.snap(); }
   cam(px?: number, py?: number, pz?: number, lx = 0, ly = 0, lz = 0) { this.debugCam = px === undefined ? null : { pos: new THREE.Vector3(px, py, pz), look: new THREE.Vector3(lx, ly, lz) }; }
   camLocal(px: number, py: number, pz: number, lx: number, ly: number, lz: number) { const a = this.church.toWorld(px, py, pz), b = this.church.toWorld(lx, ly, lz); this.cam(a.x, a.y, a.z, b.x, b.y, b.z); }
@@ -109,9 +109,10 @@ export class Game {
     if (this.mode !== 'foot') return; this.mode = 'car'; this.activeCar = car; car.occupied = true; car.parked = false; car.enableLamps(this.engine.quality !== 'low'); this.player.setCollides(false);
     this.player.group.remove(this.isaac.root); car.mesh.add(this.isaac.root); this.isaac.root.position.set(car.seat.x, car.seat.y - 0.52, car.seat.z); this.isaac.root.rotation.y = Math.PI; this.isaac.seated = true; this.isaac.play('drive', 1, true);
     const f = car.forward(); this.rig.yaw = Math.atan2(-f.x, -f.z); this.rig.pitch = 0.24; this.rig.snap(); this.audio.door(); if (this.engine.sunElevation < 0.05) car.headlights = true;
+    if (!this.audio.chantPlaying) { this.audio.radioIndex = -1; const n = this.audio.nextRadio(); if (n) this.hud.radio(`♪ ${this.i18n.t('radio')}: ${n}.mp3`); }   // a mezmur comes on with the engine
   }
   exitCar(force = false) {
-    const car = this.activeCar; if (!car) return; if (!force && Math.abs(car.speed) > 2.5) return;
+    const car = this.activeCar; if (!car) return; if (!force && Math.abs(car.speed) > 2.5) return; if (this.audio.radioIndex >= 0) { this.audio.radioIndex = -1; this.audio.chant(null); }
     car.mesh.remove(this.isaac.root); this.player.group.add(this.isaac.root); this.isaac.root.position.set(0, 0, 0); this.isaac.root.rotation.y = 0; this.isaac.seated = false; this.isaac.stop();
     const left = new THREE.Vector3(1, 0, 0).applyQuaternion(car.quat); const p = car.pos.clone().addScaledVector(left, car.spec.W / 2 + 0.75); const f = car.forward();
     this.player.teleport(p.x, Math.max(this.world.height(p.x, p.z), car.pos.y - 0.3) + 0.1, p.z, Math.atan2(-f.x, -f.z)); this.player.setCollides(true);
@@ -137,7 +138,7 @@ export class Game {
       if (this.mode === 'foot') {
         const car = this.traffic.nearest(this.player.pos);
         // the shoe racks always work: shoes off going in, on again going out
-        const sp = this.church.refs.spots; const lp = this.church.toLocal(this.player.pos); const atRack = inp.enabled && !this.story.promptOwner && Math.abs(lp.y - CH.F) < 0.6 && (Math.hypot(lp.x - sp.shoeRack.x, lp.z - sp.shoeRack.z) < 1.25 || Math.hypot(lp.x - sp.shoeRackR.x, lp.z - sp.shoeRackR.z) < 1.25);
+        const sp = this.church.refs.spots; const lp = this.church.toLocal(this.player.pos); const atRack = inp.enabled && !this.story.promptOwner && Math.abs(lp.y - CH.FL) < 0.6 && (Math.hypot(lp.x - sp.shoeRack.x, lp.z - sp.shoeRack.z) < 1.25 || Math.hypot(lp.x - sp.shoeRackR.x, lp.z - sp.shoeRackR.z) < 1.25);
         if (atRack) { this.hud.prompt(this.shoesOff ? this.i18n.pick('Put your shoes on', 'ጫማህን አድርግ') : this.i18n.pick('Take off your shoes', 'ጫማህን አውልቅ')); if (inp.take('interact')) { this.isaac.play('shoes', 1.8); this.shoeSide = lp.x > 0 ? 1 : -1; this.setShoes(!this.shoesOff); } }
         else if (car && !this.story.promptOwner && inp.enabled) this.hud.promptRaw(`<b>F</b> ${this.i18n.t('enterCar')} — ${car.spec.name}`); else if (!this.story.promptOwner) this.hud.prompt(null);
         if (inp.take('enter') && car && inp.enabled) this.enterCar(car);
@@ -163,7 +164,7 @@ export class Game {
     const inside = this.church.isInside(this.debugCam ? this.debugCam.pos : this.cutCam && this.mode === 'cutscene' ? this.cutCam.pos : this.mode === 'photo' ? this.engine.camera.position : this.player.pos);
     if (this.mode === 'foot') {
       const inNave = local.z > CH.NZ0 + 0.35 && Math.abs(local.x) < CH.HW && local.y > CH.F - 0.3 && local.z < CH.NZ1;
-      if (inNave && !this.shoesOff) { const p = this.church.toWorld(0, CH.F, CH.NZ0 - 0.6); this.player.teleport(p.x, p.y, p.z); if (this.time - this.shoeWarnT > 3) { this.hud.toast(this.i18n.t('shoesFirst'), 3); this.shoeWarnT = this.time; } }
+      if (inNave && !this.shoesOff) { const p = this.church.toWorld(-0.9, CH.FL, -7.9); this.player.teleport(p.x, p.y, p.z); if (this.time - this.shoeWarnT > 3) { this.hud.toast(this.i18n.t('shoesFirst'), 3); this.shoeWarnT = this.time; } }
       if (inNave && local.z > CH.PZ - 0.75 && this.time - this.meqdesT > 8) { this.hud.toast(this.i18n.t('sanctuary'), 3.5); this.meqdesT = this.time; }
       if (!this.church.isInside(this.player.pos) && this.shoesOff && local.z < CH.TZ0 - 1.5) this.setShoes(false);
     }
