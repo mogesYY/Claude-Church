@@ -2,3 +2,7 @@ node_modules
 dist
 *.tmp
 .DS_Store
+
+# Interior photos that show other people: kept out of the public repo until Isaac decides
+reference/interior/interior_0[6-9]_*.jpg
+reference/interior/interior_1[0-2]_*.jpg
