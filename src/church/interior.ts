@@ -143,7 +143,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   // ---------------------------------------------------------------- back wall: double doors, icon grids, Last Supper, TV, camera shelf, clock, St Mary, corner door
   const dH = { at: 0, w: 1.7, y0: F, y1: F + 2.05 };
   wall(panel, -xi, zf, xi, zf, [0, 1], F, capY, [{ ...dH, y1: capY }], pw); wall(paint, -xi, zf, xi, zf, [0, 1], capY, ceilEdge, [{ ...dH, y0: capY }], yellow); gable(paint, zf, 1, yellow);
-  plain.box(0, capY, zf + 0.02, 2 * xi, 0.06, 0.04, white);
+  for (const sx of [-1, 1]) plain.box(sx * (0.99 + xi) / 2, capY, zf + 0.02, xi - 0.99, 0.06, 0.04, white);
   trimOutline(plain, (s, y) => [s, y, zf + 0.014], [[-0.92, F], [-0.92, F + 2.12], [0.92, F + 2.12], [0.92, F]], 0.14, redFrame);
   for (const sx of [-1, 1]) plain.quad([sx * 0.85, F, NZ0 - 0.02], [sx * 0.85, F, zf + 0.02], [sx * 0.85, F + 2.05, zf + 0.02], [sx * 0.85, F + 2.05, NZ0 - 0.02], redFrame);
   plain.quad([-0.85, F + 2.05, NZ0], [0.85, F + 2.05, NZ0], [0.85, F + 2.05, zf], [-0.85, F + 2.05, zf], redFrame);
