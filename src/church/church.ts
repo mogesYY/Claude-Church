@@ -9,9 +9,9 @@ import { buildInterior, InteriorRefs } from './interior';
 export type ChurchVariant = 'current' | 'blueFlag' | 'brownTower';
 export const CH = {
   // F = nave floor; FL = lobby floor / front-door threshold. You enter at FL and climb five steps to the nave.
-  F: 2.1, FL: 1.25, HW: 5.25, NZ0: -5.5, NZ1: 9.9, T: 0.2, EAVE: 5.65, PITCH: 0.6,
-  TW: 1.82, TZ0: -8.6, TY: 10.4, WINGX: 4.6, WINGZ: -8.6, PZ: 6.9,   // footprint 10.5 m x 18.5 m, as surveyed in the Manitoba Lands Initiative / OSM building outline
-  WIN_Z: [-4.1, -1.5, 1.1, 3.7, 6.3], WIN_W: 0.8, WY0: 1.1, WY1: 2.3, WPK: 2.85,   // window sill / spring / peak above the nave floor
+  F: 2.1, FL: 1.25, HW: 5.25, NZ0: -5.5, NZ1: 9.9, T: 0.2, EAVE: 5.9, PITCH: 0.6,
+  TW: 1.82, TZ0: -8.6, TY: 10.9, WINGX: 4.6, WINGZ: -8.6, PZ: 6.9,   // footprint 10.5 m x 18.5 m, as surveyed in the Manitoba Lands Initiative / OSM building outline
+  WIN_Z: [-4.1, -1.5, 1.1, 3.7, 6.3], WIN_W: 0.8, WY0: 1.15, WY1: 2.4, WPK: 3.0,   // window sill / spring / peak above the nave floor
 };
 const VARIANTS: Record<ChurchVariant, { tower: number; vertical: boolean; nave: number; skirt: number; steps: number; stepsWood: boolean; door: number; dome: number; cross: number; banner: boolean; roof: number; rail: number }> = {
   current: { tower: 0x6f7f98, vertical: false, nave: 0xe9e2c0, skirt: 0x3b5a60, steps: 0xc4c1b8, stepsWood: false, door: 0x9a9ea6, dome: 0xd9a927, cross: 0xf4f4f0, banner: false, roof: 0x5c5148, rail: 0x9c9e9c },
