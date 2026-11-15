@@ -272,10 +272,16 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   // door level floor; in the middle five carpeted steps with metal nosings rise between two panelled walls to the cross doors;
   // left of the steps a wall with the red-framed basement doorway; right of the steps a white post, then the open alcove with the tall
   // pine shoe shelves under the sloping underside of the upper stair, and the white coat closet with its rail, hangers and table.
-  const lx = WINGX - T, lz0 = TZ0 + T, lTop = FL + 2.75, sx0 = 0.95, sz0 = -7.4, nS = 5, rise = (F - FL) / nS, run = 0.27, zTop = sz0 + nS * run;
+  const lx = xi, lz0 = CH.MZ0 + T, vx = WINGX - T, vz0 = TZ0 + T, vTop = FL + 2.85, lTop = FL + 2.75, sx0 = 0.95, sz0 = -7.4, nS = 5, rise = (F - FL) / nS, run = 0.27, zTop = sz0 + nS * run;
   for (const sx of [-1, 1]) wall(cream, sx * lx, lz0, sx * lx, NZ0, [-sx, 0], FL, lTop, [], W, 1);
   const lwin = (sx: number) => ({ at: sx * (TW + WINGX) / 2, w: 0.56, y0: FL + 0.5, y1: FL + 2.05, peak: FL + 2.42 });
-  wall(cream, -lx, lz0, lx, lz0, [0, 1], FL, lTop, [{ at: 0, w: 1.15, y0: FL, y1: FL + 2.12 }, lwin(-1), lwin(1)], W, 1);
+  const cwin = (sx: number) => ({ at: sx * 3.6 / kx, w: 0.5 / kx, y0: FL + 1.15, y1: FL + 2.3, peak: FL + 2.55 });
+  wall(cream, -lx, lz0, lx, lz0, [0, 1], FL, lTop, [{ at: (sx0 - vx) / 2, w: sx0 + vx, y0: FL, y1: vTop }, cwin(-1), cwin(1)], W, 1);
+  const vwin = (sx: number) => ({ at: sx * 1.46 / kx, w: 0.52 / kx, y0: FL + 1.08, y1: FL + 2.5, peak: FL + 2.72 });
+  // the small entry vestibule inside the blue front block: the outside door and a tall window either side of it
+  for (const sx of [-1, 1]) wall(cream, sx * vx, vz0, sx * vx, lz0, [-sx, 0], FL, vTop, [], W, 1);
+  wall(cream, -vx, vz0, vx, vz0, [0, 1], FL, vTop, [{ at: 0, w: 1.15, y0: FL, y1: FL + 2.12 }, vwin(-1), vwin(1)], W, 1);
+  G.paint.quad([-vx, vTop, vz0], [vx, vTop, vz0], [vx, vTop, lz0], [-vx, vTop, lz0], 0xeeeadc); G.lobby.quad([-vx, FL + 0.004, lz0], [vx, FL + 0.004, lz0], [vx, FL + 0.004, vz0], [-vx, FL + 0.004, vz0], W, [0, 0, 4, 1]);
   // stairwell walls (inner faces) and the wall above the nave doors
   for (const sx of [-1, 1]) wall(cream, sx * sx0, sz0, sx * sx0, NZ0, [-sx, 0], FL, F + 2.75, [], W, 1);
   wall(cream, -sx0, NZ0, sx0, NZ0, [0, -1], F, F + 2.75, [{ at: 0, w: 1.7, y0: F, y1: F + 2.05 }], W, 1);
@@ -295,21 +301,23 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   }
   plain.box(sx0 - 0.012, FL + 1.22, sz0 + 0.42, 0.02, 0.16, 0.2, 0x151515);                                              // black plate on the left wall
   for (const sx of [-1, 1]) { const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.27), new M({ color: 0xf6f6f2, roughness: 0.9 })); void paper; void sx; }
-  // left of the steps: the wall facing the entrance with the basement doorway (dark red frame, stairs going down in the dark)
-  wall(cream, sx0, sz0, lx, sz0, [0, -1], FL, lTop, [{ at: 1.72, w: 0.86, y0: FL, y1: FL + 2.02 }], W, 1);
-  trimOutline(plain, (s2, y) => [s2, y, sz0 - 0.014], [[1.24, FL], [1.24, FL + 2.08], [2.2, FL + 2.08], [2.2, FL]], 0.11, redFrame);
-  plain.box(1.72, FL + 1.01, sz0 + 0.5, 0.86, 2.02, 0.02, 0x15171a); for (const sx of [-1, 1]) plain.box(1.72 + sx * 0.43, FL + 1.01, sz0 + 0.25, 0.02, 2.02, 0.5, 0xb8b4a8); plain.box(1.72, FL + 0.3, sz0 + 0.3, 0.86, 0.02, 0.6, 0x2a2a2c);
-  colliders.push([(sx0 + lx) / 2, FL + 1.5, (sz0 + NZ0) / 2, lx - sx0, 3, NZ0 - sz0]);
+  // left of the steps: the stairwell's left wall runs on to the front wall; in that stretch, before the first step, is the red-framed
+  // basement doorway. The basement stair behind it runs along the front wall under the left-most front window.
+  { const wx = sx0 + 0.12, dz = (lz0 + sz0) / 2 + 0.02, dw = Math.min(0.82, sz0 - lz0 - 0.14);
+    wall(cream, wx - 0.12, lz0, wx - 0.12, sz0, [-1, 0], FL, lTop, [{ at: dz, w: dw, y0: FL, y1: FL + 2.02 }], W, 1);
+    trimOutline(plain, (s2, y) => [wx - 0.134, y, s2], [[dz - dw / 2 - 0.05, FL], [dz - dw / 2 - 0.05, FL + 2.08], [dz + dw / 2 + 0.05, FL + 2.08], [dz + dw / 2 + 0.05, FL]], 0.11, redFrame);
+    plain.box(wx + 0.5, FL + 1.01, dz, 0.02, 2.02, dw, 0x15171a); for (const s3 of [-1, 1]) plain.box(wx + 0.2, FL + 1.01, dz + s3 * dw / 2, 0.62, 2.02, 0.02, 0xb8b4a8); plain.box(wx + 0.2, FL + 0.3, dz, 0.62, 0.02, dw, 0x2a2a2c);
+    colliders.push([(wx - 0.12 + lx) / 2, FL + 1.5, (lz0 + NZ0) / 2, lx - wx + 0.12, 3, NZ0 - lz0]); }
   // right of the steps: the stairwell wall's outer face, the white post, the alcove
   wall(cream, -sx0 - 0.12, sz0, -sx0 - 0.12, NZ0, [-1, 0], FL, lTop, [], W, 1); wall(cream, -sx0 - 0.12, sz0, -sx0, sz0, [0, -1], FL, lTop, [], W, 1); wall(cream, -lx, NZ0, -sx0, NZ0, [0, -1], FL, lTop, [], W, 1);
   plain.box(-sx0 - 0.06, FL + 1.375, sz0 - 0.02, 0.17, 2.75, 0.17, 0xf2efe4);
   const shoes = new THREE.Group(); root.add(shoes); const sr = mulberry(3); const shx = -1.95, shz = NZ0 - 0.17, pine = 0xe2bc84;
-  for (let k = 0; k < 9; k++) wood.box(shx, FL + 0.1 + k * 0.265, shz, 0.74, 0.022, 0.32, pine); for (const dx of [-0.38, 0.38]) wood.box(shx + dx, FL + 1.12, shz, 0.025, 2.24, 0.32, pine); wood.box(shx, FL + 2.235, shz, 0.78, 0.025, 0.32, pine);
+  for (let k = 0; k < 9; k++) plain.box(shx, FL + 0.1 + k * 0.265, shz, 0.74, 0.022, 0.32, pine); for (const dx of [-0.38, 0.38]) plain.box(shx + dx, FL + 1.12, shz, 0.025, 2.24, 0.32, pine); plain.box(shx, FL + 2.235, shz, 0.78, 0.025, 0.32, pine);
   for (const [k, dx, col] of [[3, -0.2, 0x3a3a40], [3, 0.12, 0x18181a], [0, 0.05, 0x2a2a30], [1, -0.18, 0x5a4a3a], [2, 0.2, 0xe8e8e8]] as [number, number, number][]) for (const d of [-0.06, 0.06]) { const sh = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.07, 0.24), new M({ color: col, roughness: 0.7 })); sh.position.set(shx + dx + d, FL + 0.145 + k * 0.265, shz); shoes.add(sh); } void sr;
   colliders.push([shx, FL + 1.1, shz, 0.8, 2.2, 0.36]);
   // the sloping underside of the upper stair: high beside the stairwell wall, coming down toward the outer wall
-  G.paint.quad([-sx0 - 0.12, lTop, NZ0 - 1.25], [-sx0 - 0.12, lTop, NZ0], [-lx, FL + 1.35, NZ0], [-lx, FL + 1.35, NZ0 - 1.25], 0xe8e2d0); G.paint.quad([-lx, FL + 1.35, NZ0 - 1.25], [-sx0 - 0.12, lTop, NZ0 - 1.25], [-sx0 - 0.12, lTop, NZ0 - 1.251], [-lx, lTop, NZ0 - 1.25], 0xe8e2d0);
-  plain.beam([-sx0 - 0.14, lTop - 0.03, NZ0 - 1.25], [-lx, FL + 1.33, NZ0 - 1.25], 0.05, 0xf2efe4, 0.09);
+  G.paint.quad([-sx0 - 0.12, lTop, NZ0 - 0.95], [-sx0 - 0.12, lTop, NZ0], [-lx, FL + 1.75, NZ0], [-lx, FL + 1.75, NZ0 - 0.95], 0xe8e2d0); G.paint.quad([-lx, FL + 1.75, NZ0 - 0.95], [-sx0 - 0.12, lTop, NZ0 - 0.95], [-sx0 - 0.12, lTop, NZ0 - 0.951], [-lx, lTop, NZ0 - 0.95], 0xe8e2d0);
+  plain.beam([-sx0 - 0.14, lTop - 0.03, NZ0 - 0.95], [-lx, FL + 1.73, NZ0 - 0.95], 0.05, 0xf2efe4, 0.09);
   // the white coat closet on the outer wall, nearer the front door: side panels, shelf, rail with hangers, white table with coats
   const cz0 = -7.95, cz1 = -6.55, cd = 0.62;
   for (const z of [cz0, cz1]) plain.box(-lx + cd / 2, FL + 1.1, z, cd, 2.2, 0.03, 0xf4f2ea); plain.box(-lx + cd / 2, FL + 2.2, (cz0 + cz1) / 2, cd, 0.03, cz1 - cz0, 0xf4f2ea);
@@ -344,7 +352,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   // ---------------------------------------------------------------- places
   const chanters = [new THREE.Vector3(2.0, F, 3.20), new THREE.Vector3(-2.2, F, 3.20), new THREE.Vector3(2.2, F, 4.10), new THREE.Vector3(-2.4, F, 4.10), new THREE.Vector3(1.9, F, 4.85), new THREE.Vector3(-2.0, F, 4.85), new THREE.Vector3(3.2, F, 3.70), new THREE.Vector3(-3.0, F, 4.60)];
   const spots: Record<string, THREE.Vector3> = {
-    street: new THREE.Vector3(0, 0, -14.5), stairsBottom: new THREE.Vector3(0, 0, -12.4), landing: new THREE.Vector3(0, FL, -9.3), vestibule: new THREE.Vector3(0, FL, -7.9), shoeRack: new THREE.Vector3(-1.95, FL, -6.2), shoeRackR: new THREE.Vector3(-1.9, FL, -7.3),
+    street: new THREE.Vector3(0, 0, -15.80), stairsBottom: new THREE.Vector3(0, 0, -13.70), landing: new THREE.Vector3(0, FL, -10.60), vestibule: new THREE.Vector3(0, FL, -7.9), shoeRack: new THREE.Vector3(-1.95, FL, -6.2), shoeRackR: new THREE.Vector3(-1.9, FL, -7.3),
     naveDoor: new THREE.Vector3(0, F, -5.9), aisleBack: new THREE.Vector3(0, F, -4.3), aisleMid: new THREE.Vector3(0, F, 0), aisleFront: new THREE.Vector3(0, F, 4.6), candleL: new THREE.Vector3(3.1, F, PZ - 2.6), candleR: new THREE.Vector3(-2.8, F, PZ - 2.95),
     censer: new THREE.Vector3(-2.6, platY, PZ - 1.05), camera: new THREE.Vector3(0.4, F, -4.5), kebero: new THREE.Vector3(-0.85, F, 3.2), curtain: new THREE.Vector3(0, platY, PZ - 0.7), priest: new THREE.Vector3(0.8, F, 4.9), deacon: new THREE.Vector3(0.75, platY, PZ - 1.1),
     umbrellas: new THREE.Vector3(xi - 1.0, F, frontZ + 0.6), lectern: new THREE.Vector3(-3.85, F, PZ - 2.55), bell: new THREE.Vector3(0.75, platY, PZ - 1.1), mahlet: new THREE.Vector3(0.9, F, 4.0), staffs: new THREE.Vector3(3.2, F, frontZ + 0.75),

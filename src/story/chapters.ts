@@ -30,7 +30,7 @@ function waterBasin() { const g = new THREE.Group(); const geo = new Geo(); geo.
 function photoProp(color = 0xe8dcc0) { const g = new THREE.Group(); const m = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.22, 0.01), new THREE.MeshStandardMaterial({ color, roughness: 0.6, emissive: 0xffe0a0, emissiveIntensity: 0.25 })); m.position.y = 1.2; m.rotation.x = -0.3; g.add(m); return g; }
 
 /** opening shot: slow push-in on the church front; `spring` mirrors it for the ending */
-async function pushIn(c: Ctx, secs = 10) { await c.cam(c.L(0.6, 1.9, -31), c.L(0, 7.5, -8), c.L(0.2, 3.0, -19), c.L(0, 8.6, -7), secs, 42); }
+async function pushIn(c: Ctx, secs = 10) { await c.cam(c.L(0.6, 1.9, -32.3), c.L(0, 7.5, -8), c.L(0.2, 3.0, -20.3), c.L(0, 8.6, -7), secs, 42); }
 /** everybody leaves through the front doors and spreads along the walk */
 function exodus(c: Ctx, people: Npc[]) {
   c.g.church.doorWant = 1; const r = mulberry(9);
@@ -71,14 +71,14 @@ async function kidan(c: Ctx) {
   c.car('sedan', 0x7d858c, g.churchParking(7));
   c.place(c.spot('stairsBottom'), ch.faceYaw(0, 1));
   const qes = c.npc('priest', 1, c.spot('priest'), ch.faceYaw(0, -1), 'Qesis Andualem'); qes.fixedY = 1; qes.act('holdCross');
-  g.cutCam = { pos: c.L(0.6, 1.9, -31), look: c.L(0, 7.5, -8) }; await c.settle();
+  g.cutCam = { pos: c.L(0.6, 1.9, -32.3), look: c.L(0, 7.5, -8) }; await c.settle();
   await c.cut(async () => {
     g.audio.music('solemn'); c.fadeIn(2.5).catch(() => {}); g.hud.card(c.text('MEDHANE ALEM', 'መድኃኔ ዓለም'), c.text("A Deacon's Year · Brandon, Manitoba", 'የአንድ ዲያቆን ዓመት · ብራንደን፣ ማኒቶባ'), 6);
     await pushIn(c, 9);
-    await c.cam(c.L(0.2, 3.0, -19), c.L(0, 8.6, -7), c.L(-2.6, 1.5, -15.2), c.L(0, 1.5, -12.4), 3, 42);
+    await c.cam(c.L(0.2, 3.0, -20.3), c.L(0, 8.6, -7), c.L(-2.6, 1.5, -16.5), c.L(0, 1.5, -13.7), 3, 42);
     await c.act('cross', 2.8); await c.act('bow', 1.8);
-    const up = c.walk([c.L(0, 0.3, -11.9), c.L(0, FL, -9.9), c.L(0, FL, -8.95)], 1.05);
-    await c.cam(c.L(-2.6, 1.5, -15.2), c.L(0, 1.5, -12.4), c.L(-2.2, 2.4, -11.8), c.L(0, FL + 1.5, -8.9), 5, 42); await up;
+    const up = c.walk([c.L(0, 0.3, -13.2), c.L(0, FL, -11.2), c.L(0, FL, -10.25)], 1.05);
+    await c.cam(c.L(-2.6, 1.5, -16.5), c.L(0, 1.5, -13.7), c.L(-2.2, 2.4, -13.1), c.L(0, FL + 1.5, -10.2), 5, 42); await up;
     await c.act('kiss', 2.4); g.audio.door();
   });
   c.place(c.L(0, FL, -8.1), ch.faceYaw(0, 1));
@@ -120,10 +120,10 @@ async function kidan(c: Ctx) {
   await c.cut(async () => {
     await c.fadeOut(1.2); g.audio.chant(null); g.isaac.hold('R', null); g.isaac.stop();
     g.weather.snowfall = 0.15; g.engine.setDateTime(1, 11, 11.6); g.weather.smokeSources = [];
-    for (const n of chanters) n.human.hold('R', null); c.place(c.L(-1.6, 0.02, -14.2), ch.faceYaw(0.3, 1)); g.isaac.play('talk', 1, true);
+    for (const n of chanters) n.human.hold('R', null); c.place(c.L(-1.6, 0.02, -15.5), ch.faceYaw(0.3, 1)); g.isaac.play('talk', 1, true);
     exodus(c, [...people, ...chanters]); g.audio.music('festive');
-    g.cutCam = { pos: c.L(4.5, 1.7, -19), look: c.L(0, 2.6, -9) }; await c.fadeIn(1);
-    c.say('c1.end').catch(() => {}); await c.cam(c.L(4.5, 1.7, -19), c.L(0, 2.6, -9), c.L(1.2, 2.4, -24), c.L(0, 4.5, -8), 13, 45);
+    g.cutCam = { pos: c.L(4.5, 1.7, -20.3), look: c.L(0, 2.6, -10.3) }; await c.fadeIn(1);
+    c.say('c1.end').catch(() => {}); await c.cam(c.L(4.5, 1.7, -20.3), c.L(0, 2.6, -10.3), c.L(1.2, 2.4, -25.3), c.L(0, 4.5, -8), 13, 45);
     await c.fadeOut(1); g.audio.music(null); g.isaac.stop();
   });
 }
@@ -133,8 +133,8 @@ async function kidan(c: Ctx) {
 async function meskel(c: Ctx) {
   const g = c.g, ch = g.church; const YS = -1; // branch piles are scattered on the north and front lawns
   await c.scene({ season: 'autumn', month: 9, day: 27, hour: 15, temp: 12, outfit: 'netela', wind: 0.35, timeScale: 12 });
-  const car = c.car('pickup', 0xe8e8e4, g.churchParking(8)); c.place(c.L(-1, 0.02, -14.5), ch.faceYaw(0, -1));
-  const qes = c.npc('priest', 1, c.L(1.5, 0.02, -14), ch.faceYaw(-1, -0.4), 'Qesis Andualem'); qes.act('holdCross');
+  const car = c.car('pickup', 0xe8e8e4, g.churchParking(8)); c.place(c.L(-1, 0.02, -15.8), ch.faceYaw(0, -1));
+  const qes = c.npc('priest', 1, c.L(1.5, 0.02, -15.3), ch.faceYaw(-1, -0.4), 'Qesis Andualem'); qes.act('holdCross');
   await c.settle(); await c.fadeIn(); await c.title(1); await c.talk('c3.qes.1', 'c3.isaac.1');
   const site = g.park.P(-26, -8, 0.02);   // Dinsdale Park: the lawn beside the gravel turnaround
   c.obj('Get in the truck (F) — the Demera is built at Dinsdale Park', 'መኪናው ውስጥ ግባ (F) — ደመራው በዲንስዴል ፓርክ ይሠራል'); await c.drive(car);
@@ -180,7 +180,7 @@ async function meskel(c: Ctx) {
 async function fasika(c: Ctx) {
   const g = c.g, ch = g.church, R = ch.refs;
   await c.scene({ season: 'spring', month: 4, day: 10, hour: 14.5, temp: 3, wind: 0.3, outfit: 'netela', timeScale: 14 });
-  c.car('hatchback', 0x2f5f8a, g.churchParking(7)); c.place(c.L(-1.5, 0.02, -15), ch.faceYaw(0, 1));
+  c.car('hatchback', 0x2f5f8a, g.churchParking(7)); c.place(c.L(-1.5, 0.02, -16.3), ch.faceYaw(0, 1));
   await c.settle(); await c.fadeIn(); await c.title(2); await c.say('c5.isaac.1');
   // Siqlet: Good Friday prostrations
   g.hud.card(c.text('Siqlet', 'ስቅለት'), c.text('Good Friday — a day of prostrations', 'የስግደት ቀን'), 3.5);
@@ -208,9 +208,9 @@ async function fasika(c: Ctx) {
     await c.cam(c.L(-3.4, F + 1.6, -2.5), c.L(1.5, F + 1.3, 1), c.L(3.2, F + 1.8, 3), c.L(-1.5, F + 1.4, 0), 9, 50);
     // ---- spring dawn: the congregation pours out; the opening shot, mirrored ----
     await c.fadeOut(1.5); g.engine.setDateTime(4, 12, 6.45); g.lightOverride = -1; R.setCandles(0); for (const n of [...people, ...chanters]) n.human.hold('R', null); g.isaac.hold('R', null); g.setOutfit('netela');
-    c.place(c.L(0, 0.02, -13.2), ch.faceYaw(0, -1)); g.isaac.stop(); exodus(c, [...people, ...chanters]);
-    g.cutCam = { pos: c.L(0.2, 3.0, -19), look: c.L(0, 8.6, -7) }; await c.fadeIn(2);
-    c.say('c5.end').catch(() => {}); await c.cam(c.L(0.2, 3.0, -19), c.L(0, 8.6, -7), c.L(0.6, 1.9, -31), c.L(0, 7.5, -8), 14, 42);
+    c.place(c.L(0, 0.02, -14.5), ch.faceYaw(0, -1)); g.isaac.stop(); exodus(c, [...people, ...chanters]);
+    g.cutCam = { pos: c.L(0.2, 3.0, -20.3), look: c.L(0, 8.6, -7) }; await c.fadeIn(2);
+    c.say('c5.end').catch(() => {}); await c.cam(c.L(0.2, 3.0, -20.3), c.L(0, 8.6, -7), c.L(0.6, 1.9, -32.3), c.L(0, 7.5, -8), 14, 42);
     await credits(c); await c.fadeOut(2); g.audio.chant(null);
   });
 }

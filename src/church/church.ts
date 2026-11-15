@@ -10,7 +10,7 @@ export type ChurchVariant = 'current' | 'blueFlag' | 'brownTower';
 export const CH = {
   // F = nave floor; FL = lobby floor / front-door threshold. You enter at FL and climb five steps to the nave.
   F: 2.1, FL: 1.25, HW: 5.25, NZ0: -5.5, NZ1: 9.9, T: 0.2, EAVE: 5.9, PITCH: 0.6,
-  TW: 1.82, TZ0: -8.6, TY: 10.9, WINGX: 4.6, WINGZ: -8.6, PZ: 6.9,   // footprint 10.5 m x 18.5 m, as surveyed in the Manitoba Lands Initiative / OSM building outline
+  TW: 1.42, TZ0: -9.9, MZ0: -8.6, TY: 10.4, WINGX: 2.35, WINGZ: -9.9, PZ: 6.9,   // footprint 10.5 m x 18.5 m, as surveyed in the Manitoba Lands Initiative / OSM building outline
   WIN_Z: [-4.1, -1.5, 1.1, 3.7, 6.3], WIN_W: 0.8, WY0: 1.15, WY1: 2.4, WPK: 3.0,   // window sill / spring / peak above the nave floor
 };
 const VARIANTS: Record<ChurchVariant, { tower: number; vertical: boolean; nave: number; skirt: number; steps: number; stepsWood: boolean; door: number; dome: number; cross: number; banner: boolean; roof: number; rail: number }> = {
@@ -123,7 +123,7 @@ export class Church {
   toLocal(p: THREE.Vector3, out = new THREE.Vector3()) { return out.copy(p).sub(this.pos).applyAxisAngle(new THREE.Vector3(0, 1, 0), -this.yaw); }
   /** world yaw for a character that should face local direction (dx,dz) */
   faceYaw(dx: number, dz: number) { return Math.atan2(-dx, -dz) + this.yaw; }
-  isInside(p: THREE.Vector3) { const l = this.toLocal(p); return l.y > CH.FL - 0.4 && l.y < CH.F + 4 && ((Math.abs(l.x) < CH.HW && l.z > CH.NZ0 && l.z < CH.NZ1) || (Math.abs(l.x) < CH.WINGX && l.z > CH.TZ0 + 0.1 && l.z <= CH.NZ0)); }
+  isInside(p: THREE.Vector3) { const l = this.toLocal(p); return l.y > CH.FL - 0.4 && l.y < CH.F + 4 && ((Math.abs(l.x) < CH.HW && l.z > CH.MZ0 && l.z < CH.NZ1) || (Math.abs(l.x) < CH.WINGX && l.z > CH.TZ0 + 0.1 && l.z <= CH.MZ0)); }
   /** lot outline in world space (for reserving ground) */
   lot(): number[][] { return [[-13, -17], [-7, -17], [-7, -33], [7, -33], [7, -17], [13, -17], [13, 13], [-13, 13]].map(([x, z]) => { const v = this.toWorld(x, 0, z); return [v.x, v.z]; }); }
 
@@ -136,7 +136,7 @@ export class Church {
     const ex = this.exterior; for (const c of [...ex.children]) { ex.remove(c); (c as THREE.Mesh).geometry?.dispose?.(); }
     this.flags = [];
     // in this function F is the door-threshold level (the whole front is measured from it); FN is the nave floor
-    const V = VARIANTS[this.variant], { F: FN, FL: F, HW, NZ0, NZ1, EAVE, PITCH, TW, TZ0, TY, WINGX, WINGZ } = CH;
+    const V = VARIANTS[this.variant], { F: FN, FL: F, HW, MZ0: NZ0, NZ1, EAVE, PITCH, TW, TZ0, TY, WINGX, WINGZ } = CH; const TB = TZ0 + 2 * TW;
     const tower = new Geo(), stucco = new Geo(), roof = new Geo(), trim = new Geo(), conc = new Geo(), iron = new Geo(), glass = new Geo(), gR = new Geo(), gG = new Geo(), louvre = new Geo(), wood = new Geo();
     const cT = new THREE.Color(V.tower), cN = new THREE.Color(V.nave), cS = new THREE.Color(V.skirt), W = new THREE.Color(0xf4f4f0), cRoof = new THREE.Color(this.snow ? 0xf2f5fa : V.roof);
     const sy = F - 0.12; // top of the dark skirt
@@ -153,10 +153,10 @@ export class Church {
         trim.box(sx * (HW + 0.03), 0.55, z, 0.05, 0.5, 0.8, W); louvre.box(sx * (HW + 0.05), 0.55, z, 0.03, 0.4, 0.7, 0xe8e8e4);
       }
     }
-    const fw: Hole[] = [{ at: 0, w: 1.7, y0: -0.4, y1: FN + 2.05 }];
-    wall(stucco, -HW, NZ0, HW, NZ0, [0, -1], sy, EAVE, [{ at: -3.85, w: 0.7, y0: F + 0.95, y1: F + 1.9, peak: F + 2.35 }, { at: 3.85, w: 0.7, y0: F + 0.95, y1: F + 1.9, peak: F + 2.35 }, { ...fw[0], y0: sy }], cN, 1, rise);
+    const fw: Hole[] = [{ at: 0, w: 2 * (WINGX - 0.2), y0: -0.4, y1: F + 2.85 }];
+    wall(stucco, -HW, NZ0, HW, NZ0, [0, -1], sy, EAVE, [{ at: -3.6, w: 0.5, y0: F + 1.15, y1: F + 2.3, peak: F + 2.55 }, { at: 3.6, w: 0.5, y0: F + 1.15, y1: F + 2.3, peak: F + 2.55 }, { ...fw[0], y0: sy }], cN, 1, rise);
     wall(conc, -HW, NZ0, -TW, NZ0, [0, -1], -0.4, sy, [], cS); wall(conc, TW, NZ0, HW, NZ0, [0, -1], -0.4, sy, [], cS);
-    for (const x of [-3.85, 3.85]) this.windowDress(trim, glass, gR, (s, y) => [s, y, NZ0 - 0.025], (s, y) => [s, y, NZ0 + 0.1], x, 0.7, F + 0.95, F + 1.9, F + 2.35, W);
+    for (const x of [-3.6, 3.6]) this.windowDress(trim, glass, gR, (s, y) => [s, y, NZ0 - 0.025], (s, y) => [s, y, NZ0 + 0.1], x, 0.5, F + 1.15, F + 2.3, F + 2.55, W);
     wall(stucco, -HW, NZ1, HW, NZ1, [0, 1], sy, EAVE, [], cN, 1, rise); wall(conc, -HW, NZ1, HW, NZ1, [0, 1], -0.4, sy, [], cS);
     // roof (ridge along z)
     const o = 0.4, yo = EAVE - o * PITCH, ry = EAVE + rise;
@@ -168,14 +168,15 @@ export class Church {
     // ---- tower ----
     const tg = tower;
     const door: Hole = { at: 0, w: 1.15, y0: F, y1: F + 2.12 };
-    wall(tg, -TW, TZ0, TW, TZ0, [0, -1], sy, TY, [door], cT);
-    wall(tg, -TW, TZ0, -TW, NZ0, [-1, 0], F + 2.85, TY, [], cT); wall(tg, TW, TZ0, TW, NZ0, [1, 0], F + 2.85, TY, [], cT);   // the entry room below is as wide as the wings
-    wall(tg, -TW, NZ0, TW, NZ0, [0, 1], EAVE, TY, [], cT);
+    const fwin = (sx: number): Hole => ({ at: sx * 1.46, w: 0.52, y0: F + 1.08, y1: F + 2.5, peak: F + 2.72 });
+    wall(tg, -WINGX, TZ0, WINGX, TZ0, [0, -1], sy, F + 3.05, [door, fwin(-1), fwin(1)], cT); wall(tg, -TW, TZ0, TW, TZ0, [0, -1], F + 3.05, TY, [], cT);
+    wall(tg, -TW, TZ0, -TW, TB, [-1, 0], F + 3.05, TY, [], cT); wall(tg, TW, TZ0, TW, TB, [1, 0], F + 3.05, TY, [], cT);   // the entry room below is as wide as the wings
+    wall(tg, -TW, TB, TW, TB, [0, 1], EAVE, TY, [], cT);
     wall(conc, -TW, TZ0, TW, TZ0, [0, -1], -0.4, sy, [{ at: 0, w: 1.15, y0: F - 0.01, y1: sy + 1 }], cS);
     for (const sx of [-1, 1]) wall(conc, sx * TW, TZ0, sx * TW, WINGZ, [sx, 0], -0.4, sy, [], cS);
     // white corner boards + cornice
-    for (const sx of [-1, 1]) { trim.box(sx * (TW + 0.015), (F + 3.45 + TY) / 2, TZ0 - 0.015, 0.14, TY - F - 3.45, 0.14, W); trim.box(sx * (TW + 0.015), (EAVE + 1 + TY) / 2, NZ0 + 0.015, 0.14, TY - EAVE - 1, 0.14, W); }
-    trim.box(0, TY + 0.06, (TZ0 + NZ0) / 2, TW * 2 + 0.5, 0.2, NZ0 - TZ0 + 0.5, W);
+    for (const sx of [-1, 1]) { trim.box(sx * (TW + 0.015), (F + 3.45 + TY) / 2, TZ0 - 0.015, 0.14, TY - F - 3.45, 0.14, W); trim.box(sx * (TW + 0.015), (EAVE + 1 + TY) / 2, TB + 0.015, 0.14, TY - EAVE - 1, 0.14, W); }
+    trim.box(0, TY + 0.06, (TZ0 + TB) / 2, TW * 2 + 0.5, 0.2, TB - TZ0 + 0.5, W);
     trim.box(0, sy, TZ0 - 0.02, TW * 2, 0.1, 0.06, W);
     // door surround with pointed head (white), grey door inside handled separately (animated)
     const PF = (s: number, y: number) => [s, y, TZ0 - 0.03];
@@ -200,9 +201,9 @@ export class Church {
       lanc(PFr, 0, 0.54, F + 4.3, F + 7.25, F + 7.95, louvre, 0x5d6973); lanc(PFr, -0.66, 0.5, F + 4.3, F + 6.55, F + 7.2, louvre, 0x5d6973); lanc(PFr, 0.66, 0.5, F + 4.3, F + 6.55, F + 7.2, louvre, 0x5d6973);
       for (const c of [-0.66, 0, 0.66]) trim.quad(PFr(c - 0.25, F + 5.5), PFr(c + 0.25, F + 5.5), PFr(c + 0.25, F + 5.58), PFr(c - 0.25, F + 5.58), W);
     }
-    for (const sx of [-1, 1]) { const PS = (s: number, y: number) => [sx * (TW + 0.035), y, (TZ0 + NZ0) / 2 + sx * s]; lanc(PS, -0.42, 0.44, F + 6.0, F + 7.2, F + 7.75, louvre, 0x5d6973); lanc(PS, 0.42, 0.44, F + 6.0, F + 7.2, F + 7.75, louvre, 0x5d6973); }
+    for (const sx of [-1, 1]) { const PS = (s: number, y: number) => [sx * (TW + 0.035), y, (TZ0 + TB) / 2 + sx * s]; lanc(PS, -0.42, 0.44, F + 6.0, F + 7.2, F + 7.75, louvre, 0x5d6973); lanc(PS, 0.42, 0.44, F + 6.0, F + 7.2, F + 7.75, louvre, 0x5d6973); }
     // tower roof: low flared pyramid, then drum, onion dome and cross
-    const tcx = 0, tcz = (TZ0 + NZ0) / 2, e = 0.5, hx = TW + e, hz = (NZ0 - TZ0) / 2 + e, py = TY + 0.16, pk = TY + 1.3;
+    const tcx = 0, tcz = (TZ0 + TB) / 2, e = 0.5, hx = TW + e, hz = (TB - TZ0) / 2 + e, py = TY + 0.16, pk = TY + 1.3;
     const cTR = new THREE.Color(this.snow ? 0xf2f5fa : 0x4a4f55);
     roof.tri([tcx - hx, py, tcz + hz], [tcx + hx, py, tcz + hz], [tcx, pk, tcz], cTR); roof.tri([tcx + hx, py, tcz - hz], [tcx - hx, py, tcz - hz], [tcx, pk, tcz], cTR);
     roof.tri([tcx + hx, py, tcz + hz], [tcx + hx, py, tcz - hz], [tcx, pk, tcz], cTR); roof.tri([tcx - hx, py, tcz - hz], [tcx - hx, py, tcz + hz], [tcx, pk, tcz], cTR);
@@ -221,17 +222,17 @@ export class Church {
     const crossM = crossG.mesh(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0.1 })); ex.add(crossM);
     // ---- vestibule wings beside the tower ----
     for (const sx of [-1, 1]) {
-      const x0 = sx * TW, x1 = sx * WINGX, top = F + 2.85;
-      wall(tg, x0, WINGZ, x1, WINGZ, [0, -1], sy, top, [{ at: sx * (TW + WINGX) / 2, w: 0.56, y0: F + 0.5, y1: F + 2.05, peak: F + 2.42 }], cT);
+      const x0 = sx * TW, x1 = sx * WINGX, top = F + 3.05;
+      // (the front wall of the wings is part of the flush lower front above)
       wall(tg, x1, WINGZ, x1, NZ0, [sx, 0], sy, top, [], cT);
       wall(conc, x0, WINGZ, x1, WINGZ, [0, -1], -0.4, sy, [], cS); wall(conc, x1, WINGZ, x1, NZ0, [sx, 0], -0.4, sy, [], cS);
-      const cxw = sx * (TW + WINGX) / 2;
-      glass.quad([cxw - 0.28, F + 0.5, WINGZ + 0.05], [cxw + 0.28, F + 0.5, WINGZ + 0.05], [cxw + 0.28, F + 2.05, WINGZ + 0.05], [cxw - 0.28, F + 2.05, WINGZ + 0.05], 0xffffff);
-      trim.box(cxw, F + 1.28, WINGZ + 0.04, 0.56, 0.05, 0.03, W); trim.box(cxw, F + 2.05, WINGZ + 0.04, 0.56, 0.05, 0.03, W);
+      const cxw = sx * 1.46;
+      glass.quad([cxw - 0.26, F + 1.08, WINGZ + 0.05], [cxw + 0.26, F + 1.08, WINGZ + 0.05], [cxw + 0.26, F + 2.5, WINGZ + 0.05], [cxw - 0.26, F + 2.5, WINGZ + 0.05], 0xffffff);
+      trim.box(cxw, F + 1.85, WINGZ + 0.04, 0.52, 0.05, 0.03, W); trim.box(cxw, F + 2.5, WINGZ + 0.04, 0.52, 0.05, 0.03, W);
       // white downspout at the outer corner, with its kick-out at the bottom
       trim.box(sx * (WINGX + 0.07), (top + 0.3) / 2 + 0.1, WINGZ - 0.07, 0.07, top - 0.1, 0.07, W); trim.beam([sx * (WINGX + 0.07), 0.32, WINGZ - 0.07], [sx * (WINGX + 0.75), 0.12, WINGZ - 0.35], 0.07, W);
-      glass.tri([cxw - 0.28, F + 2.05, WINGZ + 0.05], [cxw + 0.28, F + 2.05, WINGZ + 0.05], [cxw, F + 2.42, WINGZ + 0.05], 0xffffff);
-      trimOutline(trim, (s, y) => [s, y, WINGZ - 0.03], [[cxw - 0.28, F + 0.5], [cxw - 0.28, F + 2.05], [cxw, F + 2.42], [cxw + 0.28, F + 2.05], [cxw + 0.28, F + 0.5]], 0.1, W, true);
+      glass.tri([cxw - 0.26, F + 2.5, WINGZ + 0.05], [cxw + 0.26, F + 2.5, WINGZ + 0.05], [cxw, F + 2.72, WINGZ + 0.05], 0xffffff);
+      trimOutline(trim, (s, y) => [s, y, WINGZ - 0.03], [[cxw - 0.26, F + 1.08], [cxw - 0.26, F + 2.5], [cxw, F + 2.72], [cxw + 0.26, F + 2.5], [cxw + 0.26, F + 1.08]], 0.1, W, true);
       trim.box(sx * (WINGX + 0.015), (sy + top) / 2, WINGZ - 0.015, 0.12, top - sy, 0.12, W);
       // shed roof with white edge
       const ro = 0.3; const a = [x0, top + 0.75, WINGZ - ro], b = [x1 + sx * ro, top + 0.12, WINGZ - ro], c = [x1 + sx * ro, top + 0.12, NZ0], d = [x0, top + 0.75, NZ0];
@@ -241,7 +242,7 @@ export class Church {
       tg.tri([x0, top, WINGZ], [x1, top, WINGZ], [x0, top + 0.7, WINGZ], cT);
     }
     // ---- stairs, landing, railings ----
-    const nSteps = 8, run = 0.3, riseS = F / nSteps, landD = 1.3, sw = 2.6; const cSt = new THREE.Color(this.snow && !V.stepsWood ? 0xdfe4ea : V.steps);
+    const nSteps = 8, run = 0.3, riseS = F / nSteps, landD = 1.3, sw = 2.2; const cSt = new THREE.Color(this.snow && !V.stepsWood ? 0xdfe4ea : V.steps);
     const stepGeo = V.stepsWood ? wood : conc;
     stepGeo.box(0, F / 2 - 0.2, TZ0 - landD / 2, sw, F + 0.4, landD, cSt);
     for (let i = 0; i < nSteps - 1; i++) { const h = F - (i + 1) * riseS; stepGeo.box(0, h / 2 - 0.2, TZ0 - landD - (i + 0.5) * run, sw, h + 0.4, run, cSt); }
@@ -294,17 +295,17 @@ export class Church {
 
   private buildColliders() {
     for (const b of this.bodies) this.phys.world.removeRigidBody(b); this.bodies = [];
-    const { F: FN, FL: F, HW, NZ0, NZ1, T, TW, TZ0, WINGX, WINGZ, PZ } = CH; void TW; void WINGZ;
+    const { F: FN, FL: F, HW, NZ0, NZ1, T, TW, TZ0, WINGX, WINGZ, PZ, MZ0 } = CH; void TW; void WINGZ;
     const box = (cx: number, cy: number, cz: number, sx: number, sy: number, sz: number) => { const w = this.toWorld(cx, cy, cz); this.bodies.push(this.phys.staticBox(w.x, w.y, w.z, sx / 2, sy / 2, sz / 2, this.yaw).body); };
     const H = 6.4;
-    box(-HW + T / 2, H / 2, (NZ0 + NZ1) / 2, T, H, NZ1 - NZ0); box(HW - T / 2, H / 2, (NZ0 + NZ1) / 2, T, H, NZ1 - NZ0); box(0, H / 2, NZ1 - T / 2, HW * 2, H, T);
-    for (const sx of [-1, 1]) { box(sx * (HW + 0.85) / 2, H / 2, NZ0 + T / 2, HW - 0.85, H, T); box(sx * (WINGX - T / 2), H / 2, (TZ0 + NZ0) / 2, T, H, NZ0 - TZ0); box(sx * (WINGX + 0.575) / 2, H / 2, TZ0 + T / 2, WINGX - 0.575, H, T); }
+    box(-HW + T / 2, H / 2, (MZ0 + NZ1) / 2, T, H, NZ1 - MZ0); box(HW - T / 2, H / 2, (MZ0 + NZ1) / 2, T, H, NZ1 - MZ0); box(0, H / 2, NZ1 - T / 2, HW * 2, H, T);
+    for (const sx of [-1, 1]) { box(sx * (HW + 0.85) / 2, H / 2, NZ0 + T / 2, HW - 0.85, H, T); box(sx * (WINGX - T / 2), H / 2, (TZ0 + MZ0) / 2, T, H, MZ0 - TZ0); box(sx * (HW + WINGX - T) / 2, H / 2, MZ0 + T / 2, HW - WINGX + T, H, T); box(sx * (WINGX + 0.575) / 2, H / 2, TZ0 + T / 2, WINGX - 0.575, H, T); }
     box(0, F + 2.12 + 1, TZ0 + T / 2, 1.2, 2, T); box(0, FN + 2.05 + 1.2, NZ0 + T / 2, 1.7, 2.4, T);
     box(0, FN / 2 - 0.25, (NZ0 + NZ1) / 2, HW * 2, FN + 0.5, NZ1 - NZ0);                     // nave floor slab
-    box(0, F / 2 - 0.25, (TZ0 + NZ0) / 2, WINGX * 2, F + 0.5, NZ0 - TZ0);                     // lobby floor slab (lower)
+    box(0, F / 2 - 0.25, (MZ0 + NZ0) / 2, HW * 2, F + 0.5, NZ0 - MZ0); box(0, F / 2 - 0.25, (TZ0 + MZ0) / 2, WINGX * 2, F + 0.5, MZ0 - TZ0);                     // lobby floor slab (lower)
     { const d0 = -4.1 * (HW / 4.9) - 0.44, d1 = d0 + 0.88; box((-HW + d0) / 2, H / 2, PZ + 0.15, d0 + HW, H, 0.3); box((d1 + HW) / 2, H / 2, PZ + 0.15, HW - d1, H, 0.3); box((d0 + d1) / 2, FN + 1.98 + 1.5, PZ + 0.15, 0.9, 3, 0.3); }   // the screen; clergy enter the Meqdes by the side doorway
     // (the stage's colliders are built with the interior)
-    const nSteps = 8, run = 0.3, rise = F / nSteps, landD = 1.3, sw = 2.6;
+    const nSteps = 8, run = 0.3, rise = F / nSteps, landD = 1.3, sw = 2.2;
     box(0, F / 2 - 0.2, TZ0 - landD / 2, sw, F + 0.4, landD);
     for (let i = 0; i < nSteps - 1; i++) { const h = F - (i + 1) * rise; box(0, h / 2 - 0.2, TZ0 - landD - (i + 0.5) * run, sw, h + 0.4, run); }
     const zEnd = TZ0 - landD - (nSteps - 1) * run;
