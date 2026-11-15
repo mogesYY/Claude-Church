@@ -57,7 +57,7 @@ function tentMesh() { const g = new THREE.Group(); const geo = new Geo(); for (c
 function mahlet(c: Ctx, count: number, seed = 80) {
   const ch = c.g.church, R = ch.refs; const out: Npc[] = [];
   R.standing.chanters.slice(0, count).forEach((s, i) => { const n = c.npc(i === 0 ? 'deacon' : i % 3 === 0 ? 'elder' : i % 2 ? 'man' : 'deacon', seed + i, ch.toWorld(s.x, s.y, s.z), ch.faceYaw(s.x > 0 ? -1 : 1, 0.25)); n.fixedY = 1;
-    if (i === 1) { const kb = keberoMesh(0.85); kb.rotation.z = Math.PI / 2; n.human.bones.chest.add(kb); kb.position.set(0, -0.22, 0.26); n.act('drum'); } else { n.human.hold('R', maqomiyaMesh(), [0, -1.02, 0.05]); n.act('chant'); } out.push(n); });
+    if (i === 1) { const kb = keberoMesh(0.85); kb.rotation.z = Math.PI / 2; n.human.bones.chest.add(kb); kb.position.set(0, -0.22, 0.26); n.act('drum'); } else { n.human.hold('R', maqomiyaMesh(), [0, -1.15, 0.05]); n.act('chant'); } out.push(n); });
   return out;
 }
 /** a point on the street grid no farther than `dist` metres from the church (missions stay in the neighbourhood) */
@@ -113,7 +113,7 @@ async function kidan(c: Ctx) {
   g.isaac.hold('R', null);
   // ---- Mahlet: staff, sistrum and drum before the stage ----
   g.audio.chant('mahlet_practice'); g.hud.card(c.text('Mahlet', 'ማኅሌት'), c.text('Staff, sistrum and drum', 'መቋሚያ፣ ጸናጽል፣ ከበሮ'), 3.5);
-  c.obj('Take a maqomiya from the front pew', 'ከፊተኛው ወንበር መቋሚያ ውሰድ'); await c.interact(c.spot('staffs'), 'Take a prayer staff', 'መቋሚያ ውሰድ', 1.8); g.isaac.hold('R', maqomiyaMesh(), [0, -1.02, 0.05]);
+  c.obj('Take a maqomiya from the front pew', 'ከፊተኛው ወንበር መቋሚያ ውሰድ'); await c.interact(c.spot('staffs'), 'Take a prayer staff', 'መቋሚያ ውሰድ', 1.8); g.isaac.hold('R', maqomiyaMesh(), [0, -1.15, 0.05]);
   c.obj('Join the row of chanters', 'ወደ መዘምራኑ ሰልፍ ግባ'); await c.reach(c.spot('mahlet'), 1.0); g.player.yaw = ch.faceYaw(-1, 0.2); g.isaac.play('chant', 1, true);
   for (let i = 0; i < 3; i++) { await c.interact(c.spot('mahlet'), `Keep time with the staff (${i + 1}/3)`, `መቋሚያውን በምት ምታ (${i + 1}/3)`, 2.2, null); g.isaac.play('bow', 0.9); await c.wait(0.9); g.isaac.play('chant', 1, true); }
   await c.talk('c2.qes.mahlet');

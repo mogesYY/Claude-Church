@@ -46,8 +46,8 @@ export function keberoMesh(scale = 1): THREE.Group {
 }
 export function maqomiyaMesh(): THREE.Group {
   const g = new THREE.Group();
-  const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.016, 1.5, 6), new THREE.MeshStandardMaterial({ color: 0x5a2f22, roughness: 0.6 })); staff.position.y = 0.75;
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.035, 0.03), brassMat()); head.position.y = 1.5;
+  const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.016, 1.42, 6), new THREE.MeshStandardMaterial({ color: 0x5a2f22, roughness: 0.6 })); staff.position.y = 0.71;
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.035, 0.03), brassMat()); head.position.y = 1.42;
   const horn1 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.07, 0.03), brassMat()); horn1.position.set(-0.085, 1.535, 0); const horn2 = horn1.clone(); horn2.position.x = 0.085;
   g.add(staff, head, horn1, horn2); return g;
 }
@@ -123,15 +123,15 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   const yellow = new THREE.Color(0xeee486), white = new THREE.Color(0xf4f4f0), pw = new THREE.Color(0xe6e6ea), W = new THREE.Color(0xffffff), redFrame = 0x5a1a16;
   const colliders: number[][] = [];
   // ---------------------------------------------------------------- nave shell
-  // Proportions (estimated from the photos, to be corrected with real measurements): 9.4 m wide, 11.5 m from the back doors to the screen,
-  // walls 2.6 m to the ceiling edge, ceiling sloping up to a flat strip 3.25 m high down the middle.
-  const capY = F + 1.5, ceilEdge = F + 2.6, ceilTop = F + 3.25, flat = 1.15;
+  // Proportions (estimated from the photos, to be corrected with real measurements): 9.4 m wide, 11.5 m from the back doors to the screen, sized against a 1.84 m person in the photos:
+  // walls 3.15 m to the ceiling edge, ceiling sloping up to 3.9 m along the middle.
+  const capY = F + 1.6, ceilEdge = F + 3.15, ceilTop = F + 3.9, flat = 0.9; const { WY0, WY1, WPK } = CH;
   const sideWins = CH.WIN_Z.filter((z) => z < PZ);
   for (const sx of [-1, 1]) {
-    wall(panel, sx * xi, zf, sx * xi, PZ, [-sx, 0], F, capY, sideWins.map((z) => ({ at: z, w: CH.WIN_W, y0: F + 1.0, y1: capY })), pw, 1);
-    wall(paint, sx * xi, zf, sx * xi, PZ, [-sx, 0], capY, ceilEdge, sideWins.map((z) => ({ at: z, w: CH.WIN_W, y0: capY, y1: F + 2.0, peak: F + 2.4 })), yellow);
+    wall(panel, sx * xi, zf, sx * xi, PZ, [-sx, 0], F, capY, sideWins.map((z) => ({ at: z, w: CH.WIN_W, y0: F + WY0, y1: capY })), pw, 1);
+    wall(paint, sx * xi, zf, sx * xi, PZ, [-sx, 0], capY, ceilEdge, sideWins.map((z) => ({ at: z, w: CH.WIN_W, y0: capY, y1: F + WY1, peak: F + WPK })), yellow);
     plain.box(sx * (xi - 0.02), capY, (zf + PZ) / 2, 0.04, 0.06, PZ - zf, white); plain.box(sx * (xi - 0.02), F + 0.06, (zf + PZ) / 2, 0.04, 0.12, PZ - zf, white);
-    for (const z of sideWins) { trimOutline(plain, (s, y) => [sx * (xi - 0.014), y, s], [[z - 0.4, F + 1.0], [z - 0.4, F + 2.0], [z, F + 2.4], [z + 0.4, F + 2.0], [z + 0.4, F + 1.0]], 0.11, white, true); plain.box(sx * (xi - 0.05), F + 0.97, z, 0.12, 0.05, 0.98, white); }
+    for (const z of sideWins) { trimOutline(plain, (s, y) => [sx * (xi - 0.014), y, s], [[z - 0.4, F + WY0], [z - 0.4, F + WY1], [z, F + WPK], [z + 0.4, F + WY1], [z + 0.4, F + WY0]], 0.11, white, true); plain.box(sx * (xi - 0.05), F + WY0 - 0.03, z, 0.12, 0.05, 0.98, white); }
   }
   const slopeY = (x: number) => (Math.abs(x) <= flat ? ceilTop : ceilEdge + (ceilTop - ceilEdge) * (xi - Math.abs(x)) / (xi - flat));
   ceil.quad([-xi, ceilEdge, zf], [-flat, ceilTop, zf], [-flat, ceilTop, PZ], [-xi, ceilEdge, PZ], W); ceil.quad([-flat, ceilTop, zf], [flat, ceilTop, zf], [flat, ceilTop, PZ], [-flat, ceilTop, PZ], W); ceil.quad([flat, ceilTop, zf], [xi, ceilEdge, zf], [xi, ceilEdge, PZ], [flat, ceilTop, PZ], W);
@@ -153,15 +153,15 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   };
   const zb = zf + 0.03;
   const gridA: IconKind[] = ['michael', 'medhaneAlem', 'crucifixion', 'gabriel', 'george', 'grace', 'mary', 'medhaneAlem'];
-  gridA.forEach((k, i) => iconPlane(k, -4.25 + (i % 4) * 0.5, F + 2.32 - Math.floor(i / 4) * 0.62, zb, 0.46, 0, 0.58));     // two rows of four, far left
-  (['gabriel', 'medhaneAlem', 'michael', 'trinity'] as IconKind[]).forEach((k, i) => iconPlane(k, -2.2 + i * 0.42, F + 1.74, zb, 0.39, 0, 0.5));
-  iconPlane('supper', -1.6, F + 2.5, zb, 1.25, 0, 0.8, 0x6a1a1a);
+  gridA.forEach((k, i) => iconPlane(k, -4.25 + (i % 4) * 0.5, F + 2.75 - Math.floor(i / 4) * 0.62, zb, 0.46, 0, 0.58));     // two rows of four, far left
+  (['gabriel', 'medhaneAlem', 'michael', 'trinity'] as IconKind[]).forEach((k, i) => iconPlane(k, -2.2 + i * 0.42, F + 2.0, zb, 0.39, 0, 0.5));
+  iconPlane('supper', -1.6, F + 2.75, zb, 1.25, 0, 0.8, 0x6a1a1a);
   { const tv = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.5), mats.tv); tv.position.set(0.25, F + 2.52, zb + 0.03); root.add(tv); plain.box(0.25, F + 2.52, zb + 0.01, 0.92, 0.56, 0.04, 0x141416); }
   plain.box(0.25, F + 2.14, zb + 0.09, 0.62, 0.03, 0.2, 0x6a4a2e); plain.box(0.3, F + 2.2, zb + 0.1, 0.13, 0.1, 0.14, 0xe8e8e4); plain.box(0.3, F + 2.2, zb + 0.18, 0.07, 0.06, 0.03, 0x0a0a0c);     // stream camera on its shelf above the doors
   const clockAt = (x: number, y: number, z: number, ry: number) => { const cl = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.03, 20), new M({ color: 0xf6f6f2, roughness: 0.4 })); cl.rotation.x = Math.PI / 2; cl.position.set(x, y, z); root.add(cl); const rim = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.012, 6, 20), new M({ color: 0x8a8a8a })); rim.position.set(x, y, z); rim.rotation.y = ry; root.add(rim); };
   clockAt(1.25, F + 2.12, zb + 0.02, 0);
   { const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.05, 14), new M({ color: 0xb3221f, roughness: 0.4 })); bell.rotation.x = Math.PI / 2; bell.position.set(1.7, F + 2.5, zb + 0.03); root.add(bell); }
-  iconPlane('gethsemane', 3.0, F + 2.5, zb, 0.52, 0, 0.7, 0x6a3a2a); iconPlane('mary', 2.45, F + 1.5, zb, 0.72, 0, 0.98, 0xe8e0c8);
+  iconPlane('gethsemane', 3.0, F + 2.7, zb, 0.52, 0, 0.7, 0x6a3a2a); iconPlane('mary', 2.45, F + 1.7, zb, 0.72, 0, 0.98, 0xe8e0c8);
   plain.box(4.05, F + 1.05, zf + 0.02, 0.98, 2.14, 0.05, redFrame); { const d1 = new THREE.Mesh(new THREE.PlaneGeometry(0.84, 2.02), mats.door); d1.position.set(4.05, F + 1.02, zf + 0.05); root.add(d1); } plain.box(3.72, F + 1.0, zf + 0.07, 0.05, 0.05, 0.05, 0xc9a13a);
   // the double doors swing into the nave
   const naveDoors: THREE.Group[] = [];
@@ -171,14 +171,14 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   // ---------------------------------------------------------------- side walls: icons between the windows (photo-left wall = local +x)
   const gaps = sideWins.slice(0, -1).map((z, i) => (z + sideWins[i + 1]) / 2);
   const sideL: IconKind[] = ['george', 'mary', 'gabriel', 'michael'], sideR: IconKind[] = ['michael', 'grace', 'george', 'mary'];
-  gaps.forEach((z, i) => { iconPlane(sideL[i], xi - 0.03, F + 1.8, z, 0.62, -Math.PI / 2, 0.86, i === 0 ? 0x1a1a1a : 0xe8e0c8); iconPlane(sideR[i], -(xi - 0.03), F + 1.8, z, 0.62, Math.PI / 2, 0.86, 0xe8e0c8); });
+  gaps.forEach((z, i) => { iconPlane(sideL[i], xi - 0.03, F + 1.95, z, 0.66, -Math.PI / 2, 0.92, i === 0 ? 0x1a1a1a : 0xe8e0c8); iconPlane(sideR[i], -(xi - 0.03), F + 1.95, z, 0.66, Math.PI / 2, 0.92, 0xe8e0c8); });
   // ---------------------------------------------------------------- the sanctuary screen and the stage (measured off the wide stage photo)
   const wc = new THREE.Color(0xffffff); const DX = -4.1;                                    // the doorway in the screen wall, right of the stage
   wall(wood, -xi, PZ, xi, PZ, [0, -1], F, ceilEdge, [{ at: DX, w: 0.8, y0: F, y1: F + 1.95 }], wc, 1.8); gable(wood, PZ, -1, wc);
   trimOutline(plain, (s2, y) => [s2, y, PZ - 0.015], [[DX - 0.45, F], [DX - 0.45, F + 2.0], [DX + 0.45, F + 2.0], [DX + 0.45, F]], 0.1, redFrame);
   plain.box(DX, F + 0.975, PZ + 0.5, 0.8, 1.95, 0.02, 0x0b0707); for (const sx of [-1, 1]) plain.box(DX + sx * 0.4, F + 0.975, PZ + 0.25, 0.02, 1.95, 0.5, 0x241010); plain.box(DX, F + 1.95, PZ + 0.25, 0.8, 0.02, 0.5, 0x241010); plain.box(DX, F + 0.006, PZ + 0.25, 0.8, 0.012, 0.5, 0x3a1016);
   // the stage: a low carpeted platform with angled front corners and one step all the way round
-  const platY = F + 0.36, stepY = F + 0.18; const stageG = new Geo();
+  const platY = F + 0.42, stepY = F + 0.21; const stageG = new Geo();
   const prism = (pts: number[][], y0: number, y1: number) => { const n = pts.length; for (let i = 1; i < n - 1; i++) stageG.tri([pts[0][0], y1, pts[0][1]], [pts[i][0], y1, pts[i][1]], [pts[i + 1][0], y1, pts[i + 1][1]], W, [pts[0][0] / 2, pts[0][1] / 2, pts[i][0] / 2, pts[i][1] / 2, pts[i + 1][0] / 2, pts[i + 1][1] / 2]);
     for (let i = 0; i < n - 1; i++) { const p0 = pts[i], p1 = pts[i + 1], l = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]); stageG.quad([p0[0], y0, p0[1]], [p1[0], y0, p1[1]], [p1[0], y1, p1[1]], [p0[0], y1, p0[1]], 0xb8a8a8, [0, 0, l / 2, (y1 - y0) / 2]);
       const dx = (p1[0] - p0[0]) / l, dz = (p1[1] - p0[1]) / l; const mm = new THREE.Matrix4().makeRotationY(Math.atan2(-dz, dx)).setPosition((p0[0] + p1[0]) / 2, y1 + 0.004, (p0[1] + p1[1]) / 2); plain.setMatrix(mm); plain.box(0, 0, 0, l, 0.012, 0.05, 0x2e0c14); plain.setMatrix(null); } };
@@ -188,7 +188,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
     colliders.push([(xm + xn) / 2, F + h / 2, (zf2 + PZ) / 2, xm - xn, h, PZ - zf2], [(x1 + x0) / 2, F + h / 2, (zc + PZ) / 2, x1 - x0, h, PZ - zc], [(x1 + x0) / 2 + (xm - x1 + xn - x0) / 4, F + h / 2, ((zc + zf2) / 2 + PZ) / 2, (x1 - x0 + xm - xn) / 2, h, PZ - (zc + zf2) / 2]); }
   { const sm = stageG.mesh(new M({ map: runnerTex, normalMap: mats.runner.normalMap, vertexColors: true, roughness: 1, side: THREE.DoubleSide }), false); sm.receiveShadow = true; root.add(sm); }
   // three carved arches: the centre one wider and taller
-  const arches: [number, number, number][] = [[2.28, 1.15, 1.28], [0, 1.58, 1.5], [-2.47, 1.1, 1.3]];
+  const arches: [number, number, number][] = [[2.28, 1.15, 1.45], [0, 1.58, 1.71], [-2.47, 1.1, 1.45]];
   const curtains: THREE.Mesh[] = [];
   for (const [ax, aw, ah] of arches) {
     const r = aw / 2, pts: number[][] = [[ax - r, platY]]; for (let i = 0; i <= 14; i++) { const a2 = Math.PI - (i / 14) * Math.PI; pts.push([ax + Math.cos(a2) * r, platY + ah + Math.sin(a2) * r]); } pts.push([ax + r, platY]);
@@ -203,20 +203,20 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   }
   // pictures on the screen, positions measured from the photo (photo-left = local +x; heights are above the stage)
   const zs = PZ - 0.035, S = platY;
-  iconPlane('medhaneAlem', 4.03, S + 1.95, zs, 0.6, Math.PI, 0.86, 0x1a1a1a);                 // Christ with the open book
-  iconPlane('crucifixion', 3.37, S + 1.3, zs, 0.55, Math.PI, 0.72, 0x8a8a8a);                 // crucifixion
-  iconPlane('thorns', 1.29, S + 2.25, zs, 0.78, Math.PI, 0.9, 0x1a1a1a);                     // Christ crowned with thorns
-  iconPlane('mary', 1.29, S + 1.35, zs, 0.58, Math.PI, 0.82, 0xb8b8b8);                      // St Mary with the Child (blue)
-  iconPlane('gabriel', 1.29, S + 0.6, zs, 0.56, Math.PI, 0.62, 0xb8b8b8);                    // angel picture behind the lace stand
-  iconPlane('trinity', 0, S + 2.6, zs, 0.98, Math.PI, 0.7, 0x101010);                        // Holy Trinity above the centre arch
-  iconPlane('mary', -1.34, S + 1.87, zs, 1.05, Math.PI, 1.72, 0x3a2a6a);                     // the tall St Mary banner
-  iconPlane('medhaneAlem', -1.3, S + 0.56, zs - 0.03, 0.62, Math.PI, 0.9, 0xe8c890);        // portrait of Christ standing on the stage in its carved frame
-  G.band.box(-1.3, S + 0.56, zs - 0.012, 0.86, 1.12, 0.02, W, 0.14);
-  iconPlane('grace', -3.45, S + 1.4, zs, 0.7, Math.PI, 1.0, 0x1a1a1a);                       // St Mary in white
-  iconPlane('michael', -3.45, S + 0.6, zs, 0.6, Math.PI, 0.56, 0x2a4a8a);                    // angel picture below it
-  for (const sx of [-1, 1]) { const tv = new THREE.Mesh(new THREE.PlaneGeometry(1.22, 0.68), mats.tv); tv.position.set(sx * 2.97, S + 2.15, PZ - 0.07); tv.rotation.y = Math.PI; root.add(tv); plain.box(sx * 2.97, S + 2.15, PZ - 0.04, 1.28, 0.74, 0.05, 0x101012); }
-  clockAt(2.1, S + 2.05, PZ - 0.04, 0); plain.box(-4.35, S + 2.0, PZ - 0.03, 0.34, 0.28, 0.02, 0xeeeeea); plain.box(-4.35, S + 2.0, PZ - 0.045, 0.02, 0.26, 0.01, 0x8a8a8a); plain.box(-4.35, S + 2.0, PZ - 0.045, 0.32, 0.02, 0.01, 0x8a8a8a);
-  for (const sx of [-1, 1]) { plain.box(sx * (xi - 0.28), F + 2.3, PZ - 0.3, 0.34, 0.5, 0.3, 0x141416); plain.box(sx * (xi - 0.28), F + 2.03, PZ - 0.26, 0.38, 0.03, 0.36, 0xe8e8e4); }
+  iconPlane('medhaneAlem', 4.03, S + 2.20, zs, 0.66, Math.PI, 0.95, 0x1a1a1a);                 // Christ with the open book
+  iconPlane('crucifixion', 3.37, S + 1.47, zs, 0.61, Math.PI, 0.79, 0x8a8a8a);                 // crucifixion
+  iconPlane('thorns', 1.29, S + 2.54, zs, 0.86, Math.PI, 0.99, 0x1a1a1a);                     // Christ crowned with thorns
+  iconPlane('mary', 1.29, S + 1.53, zs, 0.64, Math.PI, 0.90, 0xb8b8b8);                      // St Mary with the Child (blue)
+  iconPlane('gabriel', 1.29, S + 0.68, zs, 0.62, Math.PI, 0.68, 0xb8b8b8);                    // angel picture behind the lace stand
+  iconPlane('trinity', 0, S + 2.94, zs, 1.08, Math.PI, 0.77, 0x101010);                        // Holy Trinity above the centre arch
+  iconPlane('mary', -1.34, S + 2.11, zs, 1.16, Math.PI, 1.89, 0x3a2a6a);                     // the tall St Mary banner
+  iconPlane('medhaneAlem', -1.3, S + 0.63, zs - 0.03, 0.68, Math.PI, 0.99, 0xe8c890);        // portrait of Christ standing on the stage in its carved frame
+  G.band.box(-1.3, S + 0.63, zs - 0.012, 0.92, 1.23, 0.02, W, 0.14);
+  iconPlane('grace', -3.45, S + 1.58, zs, 0.77, Math.PI, 1.10, 0x1a1a1a);                       // St Mary in white
+  iconPlane('michael', -3.45, S + 0.68, zs, 0.66, Math.PI, 0.62, 0x2a4a8a);                    // angel picture below it
+  for (const sx of [-1, 1]) { const tv = new THREE.Mesh(new THREE.PlaneGeometry(1.22, 0.68), mats.tv); tv.position.set(sx * 2.97, S + 2.43, PZ - 0.07); tv.rotation.y = Math.PI; root.add(tv); plain.box(sx * 2.97, S + 2.43, PZ - 0.04, 1.28, 0.74, 0.05, 0x101012); }
+  clockAt(2.1, S + 2.32, PZ - 0.04, 0); plain.box(-4.35, S + 2.26, PZ - 0.03, 0.34, 0.28, 0.02, 0xeeeeea); plain.box(-4.35, S + 2.26, PZ - 0.045, 0.02, 0.26, 0.01, 0x8a8a8a); plain.box(-4.35, S + 2.26, PZ - 0.045, 0.32, 0.02, 0.01, 0x8a8a8a);
+  for (const sx of [-1, 1]) { plain.box(sx * (xi - 0.28), F + 2.8, PZ - 0.3, 0.34, 0.5, 0.3, 0x141416); plain.box(sx * (xi - 0.28), F + 2.53, PZ - 0.26, 0.38, 0.03, 0.36, 0xe8e8e4); }
   // black metal equipment shelf on the floor against the screen, left of the stage: mixer, amplifier, router
   { const ex = 4.12, ez = PZ - 0.42; for (const y of [0.3, 0.95, 1.5]) plain.box(ex, F + y, ez, 1.1, 0.03, 0.5, 0x151517); for (const [dx, dz] of [[-0.53, -0.23], [0.53, -0.23], [-0.53, 0.23], [0.53, 0.23]]) plain.box(ex + dx, F + 0.78, ez + dz, 0.035, 1.56, 0.035, 0x151517); plain.box(ex - 0.2, F + 1.0, ez, 0.5, 0.07, 0.36, 0x2a2a2e); plain.box(ex + 0.3, F + 1.06, ez, 0.4, 0.2, 0.3, 0x1e1e22); plain.box(ex - 0.1, F + 1.54, ez, 0.3, 0.05, 0.2, 0x0e0e10); for (let k = 0; k < 3; k++) plain.box(ex - 0.2 + k * 0.1, F + 1.66, ez, 0.012, 0.2, 0.012, 0x0a0a0a); colliders.push([ex, F + 0.8, ez, 1.15, 1.6, 0.55]); }
   // on the stage: the lace-draped stand before the left pillar; the round dotted-cloth table with the vase of white flowers beside the portrait; the folding metal stand; the microphone

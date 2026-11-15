@@ -9,9 +9,9 @@ import { buildInterior, InteriorRefs } from './interior';
 export type ChurchVariant = 'current' | 'blueFlag' | 'brownTower';
 export const CH = {
   // F = nave floor; FL = lobby floor / front-door threshold. You enter at FL and climb five steps to the nave.
-  F: 2.1, FL: 1.25, HW: 4.9, NZ0: -5.5, NZ1: 9.0, T: 0.2, EAVE: 4.85, PITCH: 0.6,
+  F: 2.1, FL: 1.25, HW: 4.9, NZ0: -5.5, NZ1: 9.0, T: 0.2, EAVE: 5.5, PITCH: 0.6,
   TW: 1.7, TZ0: -8.6, TY: 9.7, WINGX: 2.8, WINGZ: -8.6, PZ: 6.2,
-  WIN_Z: [-4.2, -1.9, 0.4, 2.7, 5.0], WIN_W: 0.8,
+  WIN_Z: [-4.2, -1.9, 0.4, 2.7, 5.0], WIN_W: 0.8, WY0: 1.05, WY1: 2.3, WPK: 2.8,   // window sill / spring / peak above the nave floor
 };
 const VARIANTS: Record<ChurchVariant, { tower: number; vertical: boolean; nave: number; skirt: number; steps: number; stepsWood: boolean; door: number; dome: number; cross: number; banner: boolean; roof: number; rail: number }> = {
   current: { tower: 0x6f7f98, vertical: false, nave: 0xe9e2c0, skirt: 0x3b5a60, steps: 0xc4c1b8, stepsWood: false, door: 0x9a9ea6, dome: 0xd9a927, cross: 0xf4f4f0, banner: false, roof: 0x5c5148, rail: 0x9c9e9c },
@@ -140,7 +140,7 @@ export class Church {
     const tower = new Geo(), stucco = new Geo(), roof = new Geo(), trim = new Geo(), conc = new Geo(), iron = new Geo(), glass = new Geo(), gR = new Geo(), gG = new Geo(), louvre = new Geo(), wood = new Geo();
     const cT = new THREE.Color(V.tower), cN = new THREE.Color(V.nave), cS = new THREE.Color(V.skirt), W = new THREE.Color(0xf4f4f0), cRoof = new THREE.Color(this.snow ? 0xf2f5fa : V.roof);
     const sy = F - 0.12; // top of the dark skirt
-    const win = (z: number): Hole => ({ at: z, w: CH.WIN_W, y0: FN + 1.0, y1: FN + 2.0, peak: FN + 2.4 });
+    const win = (z: number): Hole => ({ at: z, w: CH.WIN_W, y0: FN + CH.WY0, y1: FN + CH.WY1, peak: FN + CH.WPK });
     const rise = HW * PITCH;
     // ---- nave ----
     for (const sx of [-1, 1]) {
@@ -148,7 +148,7 @@ export class Church {
       wall(conc, sx * HW, NZ0, sx * HW, NZ1, [sx, 0], -0.4, sy, [], cS);
       trim.box(sx * (HW + 0.02), sy, (NZ0 + NZ1) / 2, 0.06, 0.1, NZ1 - NZ0, W);
       for (const z of CH.WIN_Z) {
-        this.windowDress(trim, glass, CH.WIN_Z.indexOf(z) % 2 ? gG : gR, (s, y) => [sx * (HW + 0.025), y, s], (s, y) => [sx * (HW - 0.1), y, s], z, CH.WIN_W, FN + 1.0, FN + 2.0, FN + 2.4, W);
+        this.windowDress(trim, glass, CH.WIN_Z.indexOf(z) % 2 ? gG : gR, (s, y) => [sx * (HW + 0.025), y, s], (s, y) => [sx * (HW - 0.1), y, s], z, CH.WIN_W, FN + CH.WY0, FN + CH.WY1, FN + CH.WPK, W);
         // basement window (white louvre panel) in the skirt
         trim.box(sx * (HW + 0.03), 0.55, z, 0.05, 0.5, 0.8, W); louvre.box(sx * (HW + 0.05), 0.55, z, 0.03, 0.4, 0.7, 0xe8e8e4);
       }
