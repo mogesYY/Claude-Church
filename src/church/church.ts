@@ -303,7 +303,7 @@ export class Church {
     box(0, FN / 2 - 0.25, (NZ0 + NZ1) / 2, HW * 2, FN + 0.5, NZ1 - NZ0);                     // nave floor slab
     box(0, F / 2 - 0.25, (TZ0 + NZ0) / 2, WINGX * 2, F + 0.5, NZ0 - TZ0);                     // lobby floor slab (lower)
     box(0, H / 2, PZ + 0.15, HW * 2, H, 0.3);                                              // Meqdes screen: never passable
-    box(0, FN + 0.14, PZ - 0.8, HW * 2 - 2 * T, 0.28, 1.6);                                  // the stage
+    // (the stage's colliders are built with the interior)
     const nSteps = 8, run = 0.3, rise = F / nSteps, landD = 1.3, sw = 2.6;
     box(0, F / 2 - 0.2, TZ0 - landD / 2, sw, F + 0.4, landD);
     for (let i = 0; i < nSteps - 1; i++) { const h = F - (i + 1) * rise; box(0, h / 2 - 0.2, TZ0 - landD - (i + 0.5) * run, sw, h + 0.4, run); }

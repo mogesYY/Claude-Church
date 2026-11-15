@@ -92,7 +92,7 @@ async function kidan(c: Ctx) {
   await c.interact(c.spot('candleL'), 'Light the candles', 'ሻማ አብራ'); R.setCandles(3);
   await c.interact(c.spot('candleR'), 'Light the candles', 'ሻማ አብራ'); R.setCandles(6);
   c.obj('Prepare the censer', 'ጽናውን አዘጋጅ'); await c.interact(c.spot('censer'), 'Prepare the censer', 'ጽናውን አዘጋጅ'); R.censerLit = true;
-  g.weather.smokeSources.push({ pos: ch.toWorld(2.0, F + 1.45, CH.PZ - 0.5), rate: 5, acc: 0 });
+  g.weather.smokeSources.push({ pos: ch.toWorld(-2.75, F + 1.15, CH.PZ - 0.55), rate: 5, acc: 0 });
   c.obj('Start the livestream at the back of the church', 'በኋላ ያለውን ቀጥታ ስርጭት ጀምር');
   await c.interact(c.spot('camera'), 'Start the @EOTCBrandon stream', 'ስርጭቱን ጀምር', 1.9); R.streamOn = true; g.hud.toast(c.text('Livestream is on — the camera above the doors is live', 'ቀጥታ ስርጭት ተጀምሯል'));
   g.audio.music(null);
