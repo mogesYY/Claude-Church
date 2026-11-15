@@ -5,7 +5,7 @@ export interface InputState {
   sprint: boolean; jump: boolean; brake: boolean;
   throttle: number; steer: number;   // driving
 }
-type Btn = 'interact' | 'enter' | 'phone' | 'jump' | 'horn' | 'lights' | 'radio' | 'camera' | 'skip' | 'wipers' | 'back';
+type Btn = 'interact' | 'enter' | 'phone' | 'jump' | 'horn' | 'lights' | 'radio' | 'camera' | 'skip' | 'wipers' | 'back' | 'switch' | 'rage' | 'radioPrev';
 
 export class Input {
   state: InputState = { moveX: 0, moveY: 0, lookX: 0, lookY: 0, sprint: false, jump: false, brake: false, throttle: 0, steer: 0 };
@@ -41,7 +41,7 @@ export class Input {
   wantLock = true;
 
   private onKeyPress(code: string) {
-    const map: Record<string, Btn> = { KeyE: 'interact', KeyF: 'enter', Tab: 'phone', KeyP: 'phone', Space: 'jump', KeyH: 'horn', KeyL: 'lights', KeyR: 'radio', KeyC: 'camera', Enter: 'skip', KeyV: 'wipers', Escape: 'back' };
+    const map: Record<string, Btn> = { KeyE: 'interact', KeyF: 'enter', Tab: 'phone', KeyP: 'phone', Space: 'jump', KeyH: 'horn', KeyL: 'lights', KeyR: 'radio', KeyT: 'radioPrev', KeyQ: 'switch', KeyG: 'rage', KeyC: 'camera', Enter: 'skip', KeyV: 'wipers', Escape: 'back' };
     const b = map[code]; if (b) this.pressed.add(b);
   }
   press(b: Btn) { this.pressed.add(b); }

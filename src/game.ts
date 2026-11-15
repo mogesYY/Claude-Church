@@ -13,7 +13,8 @@ import { Weather } from './world/weather';
 import { Park } from './world/park';
 import type { Season } from './world/materials';
 import { Church, CH } from './church/church';
-import { Human, makeIsaac, Outfit } from './char/human';
+import { Human, Outfit } from './char/human';
+import { Duo } from './duo';
 import { Pedestrians } from './char/npc';
 import { Traffic } from './vehicles/traffic';
 import type { Car } from './vehicles/car';
@@ -35,7 +36,7 @@ export class Game {
   debugCam: { pos: THREE.Vector3; look: THREE.Vector3 } | null = null;
   updaters: ((dt: number) => void)[] = [];
   focusPos = new THREE.Vector3();
-  park!: Park; facePhoto: HTMLImageElement | null = null; wantPause = false; private jump = false; private last = performance.now(); private waiters: (() => void)[] = []; private shaftT = 0; private wasInside = false; private lowFpsT = 0;
+  park!: Park; facePhoto: HTMLImageElement | null = null; zekPhoto: HTMLImageElement | null = null; duo!: Duo; wantPause = false; private jump = false; private last = performance.now(); private waiters: (() => void)[] = []; private shaftT = 0; private wasInside = false; private lowFpsT = 0;
 
   async boot() {
     const canvas = document.getElementById('game') as HTMLCanvasElement; if (this.auto) document.body.classList.add('auto');
@@ -60,10 +61,11 @@ export class Game {
     this.rig = new CameraRig(this.engine.camera, this.phys);
     // Isaac's face: his own front photo projected onto the head (public/char/isaac_face.png, built by tools/make_face.py)
     this.facePhoto = await new Promise<HTMLImageElement | null>((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = `${import.meta.env.BASE_URL}char/isaac_face.png`; setTimeout(() => res(null), 8000); });
+    this.zekPhoto = await new Promise<HTMLImageElement | null>((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = `${import.meta.env.BASE_URL}char/zekariah_face.png`; setTimeout(() => res(null), 8000); });
     this.setOutfit('netela');
     this.shoePair = new THREE.Group(); for (const dx of [-0.07, 0.07]) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.27), new THREE.MeshStandardMaterial({ color: 0x18181a, roughness: 0.7 })); s.position.set(dx, 0.04, 0); this.shoePair.add(s); }
     this.shoePair.position.copy(this.church.toWorld(-2.1, CH.FL, -5.98)); this.shoePair.rotation.y = this.church.group.rotation.y; this.shoePair.visible = false; this.engine.scene.add(this.shoePair);
-    this.hud = new Hud(this); this.story = new Story(this); await this.story.load(); this.photo = new PhotoMode(this);
+    this.hud = new Hud(this); this.duo = new Duo(this); this.story = new Story(this); await this.story.load(); this.photo = new PhotoMode(this);
     this.applyQuality();
     // Esc while the mouse is captured only releases the capture (the browser keeps the key): treat that as "pause"
     document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement && this.ready && !this.hud.phoneOpen && !this.hud.titleOpen && this.mode !== 'photo' && !document.querySelector('.minigame')) this.wantPause = true; });
@@ -81,13 +83,13 @@ export class Game {
     const q = new URLSearchParams(location.search);
     for (let i = 0; i < 40 && !this.world.ready(); i++) await this.wait(0.15);
     this.hud.loading(false); this.ready = true;
-    if (q.has('chapter')) this.story.start(Math.max(0, Math.min(4, +q.get('chapter')! - 1)), true); else if (q.has('roam')) this.story.freeRoam(); else this.hud.showTitle();
+    if (q.has('chapter')) this.story.start(Math.max(0, Math.min(2, +q.get('chapter')! - 1)), true); else if (q.has('roam')) this.story.freeRoam(); else this.hud.showTitle();
   }
 
   // ------------------------------------------------------------------ helpers
   nextFrame() { return new Promise<void>((r) => this.waiters.push(r)); }
   async wait(s: number) { let t = 0; while (t < s) { await this.nextFrame(); t += this.dt; } }
-  setOutfit(o: Outfit) { this.outfit = o; const held = this.isaac?.held ?? {}; const parent = this.isaac?.root.parent ?? this.player.group; const pos = this.isaac?.root.position.clone(), rot = this.isaac?.root.rotation.y ?? 0; if (this.isaac) { parent.remove(this.isaac.root); this.isaac.dispose(); } this.isaac = makeIsaac(o, this.save.data.moustache, this.facePhoto); parent.add(this.isaac.root); if (pos) { this.isaac.root.position.copy(pos); this.isaac.root.rotation.y = rot; } if (held.R) this.isaac.hold('R', held.R, held.R.position.toArray() as any, [held.R.rotation.x, held.R.rotation.y, held.R.rotation.z]); if (this.mode === 'car') this.isaac.play('drive', 1, true); }
+  setOutfit(o: Outfit) { this.outfit = o; const held = this.isaac?.held ?? {}; const parent = this.isaac?.root.parent ?? this.player.group; const pos = this.isaac?.root.position.clone(), rot = this.isaac?.root.rotation.y ?? 0; if (this.isaac) { parent.remove(this.isaac.root); this.isaac.dispose(); } this.isaac = this.duo ? this.duo.make(this.duo.active, o) : new Duo0(this).isaac(o); parent.add(this.isaac.root); this.duo?.rebuildBuddy(o); if (pos) { this.isaac.root.position.copy(pos); this.isaac.root.rotation.y = rot; } if (held.R) this.isaac.hold('R', held.R, held.R.position.toArray() as any, [held.R.rotation.x, held.R.rotation.y, held.R.rotation.z]); if (this.mode === 'car') this.isaac.play('drive', 1, true); }
   setSeason(s: Season) { this.world.setSeason(s); this.park?.setSeason(s); this.engine.applyTime(true); }
   shoeSide = 1;
   setShoes(off: boolean) { this.shoesOff = off; this.shoePair.visible = off; const lp = this.church.toLocal(this.player.pos); this.shoePair.position.copy(this.church.toWorld(-2.1, CH.FL, -5.98)); }
@@ -109,10 +111,10 @@ export class Game {
     if (this.mode !== 'foot') return; this.mode = 'car'; this.activeCar = car; car.occupied = true; car.parked = false; car.enableLamps(this.engine.quality !== 'low'); this.player.setCollides(false);
     this.player.group.remove(this.isaac.root); car.mesh.add(this.isaac.root); this.isaac.root.position.set(car.seat.x, car.seat.y - 0.52, car.seat.z); this.isaac.root.rotation.y = Math.PI; this.isaac.seated = true; this.isaac.play('drive', 1, true);
     const f = car.forward(); this.rig.yaw = Math.atan2(-f.x, -f.z); this.rig.pitch = 0.24; this.rig.snap(); this.audio.door(); if (this.engine.sunElevation < 0.05) car.headlights = true;
-    if (!this.audio.chantPlaying) { this.audio.radioIndex = -1; const n = this.audio.nextRadio(); if (n) this.hud.radio(`♪ ${this.i18n.t('radio')}: ${n}.mp3`); }   // a mezmur comes on with the engine
+    this.duo.onEnterCar(car); if (!this.audio.chantPlaying) { this.duo.radioI = -1; this.duo.radio(1); }   // a mezmur comes on with the engine
   }
   exitCar(force = false) {
-    const car = this.activeCar; if (!car) return; if (!force && Math.abs(car.speed) > 2.5) return; if (this.audio.radioIndex >= 0) { this.audio.radioIndex = -1; this.audio.chant(null); }
+    const car = this.activeCar; if (!car) return; if (!force && Math.abs(car.speed) > 2.5) return; if (this.duo.radioI >= 0) { this.duo.radioI = -1; this.audio.radioIndex = -1; this.audio.chant(null); } this.duo.onExitCar(car);
     car.mesh.remove(this.isaac.root); this.player.group.add(this.isaac.root); this.isaac.root.position.set(0, 0, 0); this.isaac.root.rotation.y = 0; this.isaac.seated = false; this.isaac.stop();
     const left = new THREE.Vector3(1, 0, 0).applyQuaternion(car.quat); const p = car.pos.clone().addScaledVector(left, car.spec.W / 2 + 0.75); const f = car.forward();
     this.player.teleport(p.x, Math.max(this.world.height(p.x, p.z), car.pos.y - 0.3) + 0.1, p.z, Math.atan2(-f.x, -f.z)); this.player.setCollides(true);
@@ -148,7 +150,6 @@ export class Game {
         if (inp.take('horn')) { this.audio.horn(); c.honk = 0.5; }
         if (inp.take('lights')) c.headlights = !c.headlights;
         if (inp.take('wipers')) c.wipersOn = !c.wipersOn;
-        if (inp.take('radio')) { const n = this.audio.nextRadio(); this.hud.radio(n ? `♪ ${this.i18n.t('radio')}: ${n}.mp3` : this.i18n.t('radioOff')); }
         if (!this.story.promptOwner) this.hud.prompt(null);
       }
     }
@@ -175,6 +176,7 @@ export class Game {
     // characters
     this.isaac.wind = this.engine.interior ? 0 : this.weather.wind; if (this.mode === 'car') this.isaac.play('drive', 1, true);
     this.isaac.update(dt, this.mode === 'foot' ? this.player.speed : this.mode === 'cutscene' ? this.scriptSpeed : 0, this.mode !== 'foot' || this.player.grounded);
+    if (!menu) this.duo.update(dt);
     for (const u of this.updaters.slice()) u(dt);
     this.story.update(dt);
     const f = this.focusPos;
@@ -202,3 +204,7 @@ export class Game {
     this.engine.tick(dt); this.engine.render(this.debugCam ? this.debugCam.look : this.mode === 'cutscene' && this.cutCam ? this.cutCam.look : this.mode === 'photo' ? cam.position : f);
   }
 }
+
+import { makeIsaac as _mkIsaac } from './char/human';
+/** used only for the very first build of Isaac, before the Duo exists */
+class Duo0 { constructor(private g: Game) {} isaac(o: Outfit) { return _mkIsaac(o, this.g.save.data.moustache, this.g.facePhoto); } }

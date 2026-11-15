@@ -62,6 +62,7 @@ export class Pedestrians {
         const npc = new Npc('neighbour', this.seed++, this.winter); npc.speed = 1.15 + this.rnd() * 0.4; this.scene.add(npc.human.root); this.list.push({ npc, road: ri, seg: si, t: 0, dir: 1, side: this.rnd() < 0.5 ? 1 : -1 }); break; }
     }
     for (const p of this.list) {
+      if ((p.npc as any).downT > 0) { (p.npc as any).downT -= dt; if ((p.npc as any).downT <= 0) p.npc.human.root.rotation.x = 0; else continue; }   // knocked down by a car
       const r = W.data.roads[p.road]; const a = r.pts[p.seg], b = r.pts[p.seg + 1]; const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; p.t += (p.npc.speed * dt * p.dir) / len;
       if (p.t > 1) { if (p.seg < r.pts.length - 2) { p.seg++; p.t = 0; } else { p.dir = -1; p.t = 1; } } else if (p.t < 0) { if (p.seg > 0) { p.seg--; p.t = 1; } else { p.dir = 1; p.t = 0; } }
       const A = r.pts[p.seg], B = r.pts[p.seg + 1]; const L = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1; const dx = (B[0] - A[0]) / L, dz = (B[1] - A[1]) / L; const off = (r.w / 2 + 2.45) * p.side;

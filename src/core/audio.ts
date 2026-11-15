@@ -74,7 +74,7 @@ export class Audio {
     if (this.chantName === (name ?? '')) return; this.chantName = name ?? '';
     if (this.chantEl) { this.chantEl.pause(); this.chantEl = null; } if (this.chantSynth) { this.chantSynth = false; this.music(null); }
     if (!name || !this.ctx) return;
-    const a = new window.Audio(`${import.meta.env.BASE_URL}audio/chant/${name}.mp3`); a.loop = true; a.volume = Math.min(1, vol * this.volume);
+    const a = new window.Audio(`${import.meta.env.BASE_URL}audio/${name.includes('/') ? name : 'chant/' + name}.mp3`); a.loop = true; a.volume = Math.min(1, vol * this.volume);
     const fallback = () => { if (this.chantName !== name || !this.ctx) return; this.music(/fasika_tensae|meskel|procession|mezmur|mahlet/.test(name) ? 'festive' : 'solemn'); this.chantSynth = true; };
     a.addEventListener('error', fallback); a.play().then(() => { if (this.chantName === name) this.chantEl = a; else a.pause(); }).catch(fallback);
   }

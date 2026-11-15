@@ -2,6 +2,17 @@
 
 **Live link:** https://mogesyy.github.io/Claude-Church/
 
+## Pass 6 (latest)
+
+- **Church at the surveyed footprint** (10.5 m x 18.5 m from the Manitoba Lands outline in the map data); front rebuilt from the close-up photo (narrow blue entry block before the cream gable, door-side windows, cream-wall windows, 2.2 m stairs); shoe room, back wall, stage, arches and ceiling re-measured against people in the photos. Heights remain photo estimates.
+- **The Meqdes can be entered** by the doorway beside the stage (Isaac and Zekariah are deacons). It was not photographed, so the room is a plain design with a fully covered menber; the Tabot is not modelled.
+- **Deacon Zekariah** is a second playable character with his own photographed face. The two are always together; **Q** switches who you control and the other follows, and rides in the passenger seat.
+- **Car radio menu**: every recording is on it (2 mezmur, Kidase, Mahlet, Meskel, Siqlet, Fasika, and the three music tracks). **R** next, **T** previous; the list shows on screen.
+- **Crashes**: driving into a pedestrian knocks them down; hitting a traffic car stops it and bounces yours. Each crash fills **Zekariah's rage meter**.
+- **Demon form**: when the meter is full, **G** turns Zekariah into a 10-foot horned figure who can pull the heads off pedestrians (stylised, no blood). It ends only by going to Qesis Andualem in front of the church for **nisiha**; then he is himself again and the meter is empty.
+- Level 2 no longer makes you drive anywhere: get in the truck and you arrive at Dinsdale Park.
+- Not changed in this pass: character and driving animation smoothness.
+
 ## Pass 5 (this update)
 
 **Church rebuilt from the new photos and videos**

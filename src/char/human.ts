@@ -400,3 +400,8 @@ export class Human {
 export function makeIsaac(outfit: Outfit = 'netela', moustache = true, photo: HTMLImageElement | null = null): Human {
   return new Human({ seed: 11, height: 1.84, build: 0.9, skin: photo ? 0xa2604a : 0x7a4a30, outfit, hair: 'fade', moustache, photo, shirt: 0x1d1e22, pants: 0x1f232b, toque: outfit === 'winter' ? 0x1c1c20 : null });
 }
+
+/** Deacon Zekariah: his own photographed face (public/char/zekariah_face.png), rounder afro, a little shorter than Isaac */
+export function makeZek(outfit: Outfit = 'netela', photo: HTMLImageElement | null = null): Human {
+  return new Human({ seed: 23, height: 1.78, build: 1.0, skin: photo ? 0xad775b : 0x8a5a3a, outfit, hair: 'afro', moustache: false, photo, shirt: 0xf2f0ea, pants: 0x1b1d24 });
+}

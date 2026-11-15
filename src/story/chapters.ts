@@ -138,7 +138,7 @@ async function meskel(c: Ctx) {
   await c.settle(); await c.fadeIn(); await c.title(1); await c.talk('c3.qes.1', 'c3.isaac.1');
   const site = g.park.P(-26, -8, 0.02);   // Dinsdale Park: the lawn beside the gravel turnaround
   c.obj('Get in the truck (F) — the Demera is built at Dinsdale Park', 'መኪናው ውስጥ ግባ (F) — ደመራው በዲንስዴል ፓርክ ይሠራል'); await c.drive(car);
-  const north = near(c, 140, 0); g.hud.toast(c.text('W drive · S brake / reverse · A/D steer · Space handbrake', 'W መንዳት · S ፍሬን/ወደ ኋላ · A/D መሪ · Space ፍሬን'), 7); c.obj('Drive toward the river — follow the gold line', 'ወደ ወንዙ ንዳ — የወርቁን መስመር ተከተል'); await c.reach(north.road, 16, false); await goPark(c, car);
+  await goPark(c, car);
   c.obj('Get out of the truck (F)', 'ከመኪናው ውረድ (F)'); await c.onFoot(); qes.place(site.clone().add(V(3, 0.1, 2)), 0); qes.face(g.player.pos);
   c.obj('Raise the Demera on the lawn', 'ደመራውን በሜዳው ላይ ትከል'); await c.interact(site, 'Build the Demera', 'ደመራውን ሥራ', 2.2, 'reach', 1.4);
   const demera = c.prop(demeraMesh()) as THREE.Group; demera.position.copy(site); demera.scale.setScalar(0.01); for (let t = 0; t < 1; t += g.dt / 1.5) { demera.scale.setScalar(Math.min(1, t)); await g.nextFrame(); c.check(); } demera.scale.setScalar(1);
