@@ -62,7 +62,7 @@ export class Game {
     this.facePhoto = await new Promise<HTMLImageElement | null>((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = `${import.meta.env.BASE_URL}char/isaac_face.png`; setTimeout(() => res(null), 8000); });
     this.setOutfit('netela');
     this.shoePair = new THREE.Group(); for (const dx of [-0.07, 0.07]) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.27), new THREE.MeshStandardMaterial({ color: 0x18181a, roughness: 0.7 })); s.position.set(dx, 0.04, 0); this.shoePair.add(s); }
-    this.shoePair.position.copy(this.church.toWorld(-1.75, CH.FL, -6.15)); this.shoePair.rotation.y = this.church.group.rotation.y; this.shoePair.visible = false; this.engine.scene.add(this.shoePair);
+    this.shoePair.position.copy(this.church.toWorld(-2.1, CH.FL, -5.98)); this.shoePair.rotation.y = this.church.group.rotation.y; this.shoePair.visible = false; this.engine.scene.add(this.shoePair);
     this.hud = new Hud(this); this.story = new Story(this); await this.story.load(); this.photo = new PhotoMode(this);
     this.applyQuality();
     // Esc while the mouse is captured only releases the capture (the browser keeps the key): treat that as "pause"
@@ -90,7 +90,7 @@ export class Game {
   setOutfit(o: Outfit) { this.outfit = o; const held = this.isaac?.held ?? {}; const parent = this.isaac?.root.parent ?? this.player.group; const pos = this.isaac?.root.position.clone(), rot = this.isaac?.root.rotation.y ?? 0; if (this.isaac) { parent.remove(this.isaac.root); this.isaac.dispose(); } this.isaac = makeIsaac(o, this.save.data.moustache, this.facePhoto); parent.add(this.isaac.root); if (pos) { this.isaac.root.position.copy(pos); this.isaac.root.rotation.y = rot; } if (held.R) this.isaac.hold('R', held.R, held.R.position.toArray() as any, [held.R.rotation.x, held.R.rotation.y, held.R.rotation.z]); if (this.mode === 'car') this.isaac.play('drive', 1, true); }
   setSeason(s: Season) { this.world.setSeason(s); this.park?.setSeason(s); this.engine.applyTime(true); }
   shoeSide = 1;
-  setShoes(off: boolean) { this.shoesOff = off; this.shoePair.visible = off; const lp = this.church.toLocal(this.player.pos); this.shoePair.position.copy(this.church.toWorld(-1.75, CH.FL, -6.15)); }
+  setShoes(off: boolean) { this.shoesOff = off; this.shoePair.visible = off; const lp = this.church.toLocal(this.player.pos); this.shoePair.position.copy(this.church.toWorld(-2.1, CH.FL, -5.98)); }
   tp(x: number, z: number, yaw?: number) { this.player.teleport(x, this.world.height(x, z) + 0.05, z, yaw); if (yaw !== undefined) this.rig.yaw = yaw; this.rig.snap(); }
   cam(px?: number, py?: number, pz?: number, lx = 0, ly = 0, lz = 0) { this.debugCam = px === undefined ? null : { pos: new THREE.Vector3(px, py, pz), look: new THREE.Vector3(lx, ly, lz) }; }
   camLocal(px: number, py: number, pz: number, lx: number, ly: number, lz: number) { const a = this.church.toWorld(px, py, pz), b = this.church.toWorld(lx, ly, lz); this.cam(a.x, a.y, a.z, b.x, b.y, b.z); }
@@ -159,13 +159,13 @@ export class Game {
     if (this.mode !== 'photo' || !this.photo.tracing) this.phys.update(dt);
     this.player.syncVisual(1);
     if (this.mode === 'car' && this.activeCar) { this.activeCar.sync(); this.focusPos.copy(this.activeCar.pos); this.player.teleport(this.activeCar.pos.x, this.activeCar.pos.y, this.activeCar.pos.z); } else this.focusPos.copy(this.player.group.position);
-    // church rules: shoes off inside the nave; nobody but clergy passes the curtain
+    // church rules: shoes off inside the nave; clergy may pass into the Meqdes
     const local = this.church.toLocal(this.player.pos);
     const inside = this.church.isInside(this.debugCam ? this.debugCam.pos : this.cutCam && this.mode === 'cutscene' ? this.cutCam.pos : this.mode === 'photo' ? this.engine.camera.position : this.player.pos);
     if (this.mode === 'foot') {
       const inNave = local.z > CH.NZ0 + 0.35 && Math.abs(local.x) < CH.HW && local.y > CH.F - 0.3 && local.z < CH.NZ1;
       if (inNave && !this.shoesOff) { const p = this.church.toWorld(-0.9, CH.FL, -7.9); this.player.teleport(p.x, p.y, p.z); if (this.time - this.shoeWarnT > 3) { this.hud.toast(this.i18n.t('shoesFirst'), 3); this.shoeWarnT = this.time; } }
-      if (inNave && local.z > CH.PZ - 0.75 && this.time - this.meqdesT > 8) { this.hud.toast(this.i18n.t('sanctuary'), 3.5); this.meqdesT = this.time; }
+      // (Isaac is a deacon: he may enter the Meqdes by the side doorway)
       if (!this.church.isInside(this.player.pos) && this.shoesOff && local.z < CH.TZ0 - 1.5) this.setShoes(false);
     }
     if (inside !== this.engine.interior) { this.engine.interior = inside; this.engine.applyTime(); this.shaftT = 0; }

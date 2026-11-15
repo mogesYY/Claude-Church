@@ -9,9 +9,9 @@ import { buildInterior, InteriorRefs } from './interior';
 export type ChurchVariant = 'current' | 'blueFlag' | 'brownTower';
 export const CH = {
   // F = nave floor; FL = lobby floor / front-door threshold. You enter at FL and climb five steps to the nave.
-  F: 2.1, FL: 1.25, HW: 4.9, NZ0: -5.5, NZ1: 9.0, T: 0.2, EAVE: 5.5, PITCH: 0.6,
-  TW: 1.7, TZ0: -8.6, TY: 9.7, WINGX: 2.8, WINGZ: -8.6, PZ: 6.2,
-  WIN_Z: [-4.2, -1.9, 0.4, 2.7, 5.0], WIN_W: 0.8, WY0: 1.05, WY1: 2.3, WPK: 2.8,   // window sill / spring / peak above the nave floor
+  F: 2.1, FL: 1.25, HW: 5.25, NZ0: -5.5, NZ1: 9.9, T: 0.2, EAVE: 5.65, PITCH: 0.6,
+  TW: 1.82, TZ0: -8.6, TY: 10.4, WINGX: 4.6, WINGZ: -8.6, PZ: 6.9,   // footprint 10.5 m x 18.5 m, as surveyed in the Manitoba Lands Initiative / OSM building outline
+  WIN_Z: [-4.1, -1.5, 1.1, 3.7, 6.3], WIN_W: 0.8, WY0: 1.1, WY1: 2.3, WPK: 2.85,   // window sill / spring / peak above the nave floor
 };
 const VARIANTS: Record<ChurchVariant, { tower: number; vertical: boolean; nave: number; skirt: number; steps: number; stepsWood: boolean; door: number; dome: number; cross: number; banner: boolean; roof: number; rail: number }> = {
   current: { tower: 0x6f7f98, vertical: false, nave: 0xe9e2c0, skirt: 0x3b5a60, steps: 0xc4c1b8, stepsWood: false, door: 0x9a9ea6, dome: 0xd9a927, cross: 0xf4f4f0, banner: false, roof: 0x5c5148, rail: 0x9c9e9c },
@@ -302,7 +302,7 @@ export class Church {
     box(0, F + 2.12 + 1, TZ0 + T / 2, 1.2, 2, T); box(0, FN + 2.05 + 1.2, NZ0 + T / 2, 1.7, 2.4, T);
     box(0, FN / 2 - 0.25, (NZ0 + NZ1) / 2, HW * 2, FN + 0.5, NZ1 - NZ0);                     // nave floor slab
     box(0, F / 2 - 0.25, (TZ0 + NZ0) / 2, WINGX * 2, F + 0.5, NZ0 - TZ0);                     // lobby floor slab (lower)
-    box(0, H / 2, PZ + 0.15, HW * 2, H, 0.3);                                              // Meqdes screen: never passable
+    { const d0 = -4.1 * (HW / 4.9) - 0.44, d1 = d0 + 0.88; box((-HW + d0) / 2, H / 2, PZ + 0.15, d0 + HW, H, 0.3); box((d1 + HW) / 2, H / 2, PZ + 0.15, HW - d1, H, 0.3); box((d0 + d1) / 2, FN + 1.98 + 1.5, PZ + 0.15, 0.9, 3, 0.3); }   // the screen; clergy enter the Meqdes by the side doorway
     // (the stage's colliders are built with the interior)
     const nSteps = 8, run = 0.3, rise = F / nSteps, landD = 1.3, sw = 2.6;
     box(0, F / 2 - 0.2, TZ0 - landD / 2, sw, F + 0.4, landD);

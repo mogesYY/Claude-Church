@@ -90,14 +90,16 @@ export function umbrellaMesh(color = 0x8a1f3a, open = true): THREE.Group {
 }
 
 export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
-  const root = ch.interior; const { F, FL, HW, NZ0, T, TW, TZ0, PZ, WINGX } = CH; void TW;
+  const root = ch.interior; const { F, FL, NZ0, T, TZ0, PZ } = CH;
+  // the interior is authored for a 9.8 m wide building and stretched to the real surveyed width
+  const kx = CH.HW / 4.9, HW = 4.9, WINGX = CH.WINGX / kx, TW = CH.TW / kx, ZE = CH.NZ1 - T; root.scale.x = kx;
   const xi = HW - T, zf = NZ0 + T, low = engine.quality === 'low';
   const M = THREE.MeshStandardMaterial;
   // ---------------------------------------------------------------- materials
   const panelTex = canvasTex(128, 128, (c, w, h) => { speckle(c, w, h, [228, 228, 232], 5, 31); for (let i = 0; i < 6; i++) { c.fillStyle = 'rgba(0,0,0,0.20)'; c.fillRect((i * w) / 6, 0, 1.5, h); c.fillStyle = 'rgba(255,255,255,0.25)'; c.fillRect((i * w) / 6 + 2, 0, 1.5, h); } });
   const creamTex = canvasTex(128, 128, (c, w, h) => { speckle(c, w, h, [232, 226, 204], 5, 33); for (let i = 0; i < 6; i++) { c.fillStyle = 'rgba(0,0,0,0.16)'; c.fillRect((i * w) / 6, 0, 1.5, h); } });
   const woodTex = canvasTex(256, 256, (c, w, h) => { speckle(c, w, h, [190, 104, 44], 16, 37, 1.5); const r = mulberry(8); c.strokeStyle = 'rgba(90,36,8,0.26)'; for (let i = 0; i < 90; i++) { const x = r() * w; c.lineWidth = 0.6 + r() * 1.6; c.beginPath(); c.moveTo(x, 0); c.bezierCurveTo(x + 14 * (r() - 0.5), h * 0.3, x + 18 * (r() - 0.5), h * 0.7, x + 10 * (r() - 0.5), h); c.stroke(); } });
-  const oakTex = canvasTex(256, 256, (c, w, h) => { speckle(c, w, h, [196, 136, 66], 12, 61, 1.5); const r = mulberry(18); c.strokeStyle = 'rgba(110,62,20,0.22)'; for (let i = 0; i < 80; i++) { const y = r() * h; c.lineWidth = 0.6 + r(); c.beginPath(); c.moveTo(0, y); c.bezierCurveTo(w * 0.3, y + 6 * (r() - 0.5), w * 0.7, y + 8 * (r() - 0.5), w, y + 5 * (r() - 0.5)); c.stroke(); } });
+  const oakTex = canvasTex(256, 256, (c, w, h) => { speckle(c, w, h, [170, 106, 50], 12, 61, 1.5); const r = mulberry(18); c.strokeStyle = 'rgba(110,62,20,0.22)'; for (let i = 0; i < 80; i++) { const y = r() * h; c.lineWidth = 0.6 + r(); c.beginPath(); c.moveTo(0, y); c.bezierCurveTo(w * 0.3, y + 6 * (r() - 0.5), w * 0.7, y + 8 * (r() - 0.5), w, y + 5 * (r() - 0.5)); c.stroke(); } });
   const doorTex = canvasTex(128, 256, (c, w, h) => { speckle(c, w, h, [176, 112, 52], 12, 67, 1.5); const r = mulberry(28); c.strokeStyle = 'rgba(80,40,10,0.3)'; for (let i = 0; i < 26; i++) { c.lineWidth = 1 + r() * 2; c.beginPath(); const x = r() * w; c.moveTo(x, 0); c.bezierCurveTo(x + 30 * (r() - 0.5), h * 0.3, x + 40 * (r() - 0.5), h * 0.7, x + 20 * (r() - 0.5), h); c.stroke(); } }, { repeat: false });
   const carpetTex = canvasTex(256, 256, (c, w, h) => { speckle(c, w, h, [118, 34, 30], 10, 41, 0.5); const r = mulberry(12); for (let i = 0; i < 30; i++) { const x = r() * w, y = r() * h, R = 12 + r() * 24; for (const [ox, oy] of [[0, 0], [w, 0], [-w, 0], [0, h], [0, -h]]) { c.fillStyle = i % 3 ? 'rgba(196,170,104,0.9)' : 'rgba(170,140,80,0.9)'; c.beginPath(); c.arc(x + ox, y + oy, R, 0, 7); c.fill(); c.fillStyle = 'rgb(118,34,30)'; c.beginPath(); c.arc(x + ox, y + oy, R * 0.72, 0, 7); c.fill(); c.strokeStyle = '#c8aa68'; c.lineWidth = 2.5; c.beginPath(); c.arc(x + ox, y + oy, R * 0.42, 0, 7); c.stroke(); } } });
   const runnerTex = canvasTex(64, 64, (c, w, h) => speckle(c, w, h, [98, 18, 34], 12, 43, 0.4));
@@ -125,7 +127,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   // ---------------------------------------------------------------- nave shell
   // Proportions (estimated from the photos, to be corrected with real measurements): 9.4 m wide, 11.5 m from the back doors to the screen, sized against a 1.84 m person in the photos:
   // walls 3.15 m to the ceiling edge, ceiling sloping up to 3.9 m along the middle.
-  const capY = F + 1.6, ceilEdge = F + 3.15, ceilTop = F + 3.9, flat = 0.9; const { WY0, WY1, WPK } = CH;
+  const capY = F + CH.WY1, ceilEdge = F + 3.3, ceilTop = F + 4.05, flat = 0.9; const { WY0, WY1, WPK } = CH;
   const sideWins = CH.WIN_Z.filter((z) => z < PZ);
   for (const sx of [-1, 1]) {
     wall(panel, sx * xi, zf, sx * xi, PZ, [-sx, 0], F, capY, sideWins.map((z) => ({ at: z, w: CH.WIN_W, y0: F + WY0, y1: capY })), pw, 1);
@@ -134,7 +136,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
     for (const z of sideWins) { trimOutline(plain, (s, y) => [sx * (xi - 0.014), y, s], [[z - 0.4, F + WY0], [z - 0.4, F + WY1], [z, F + WPK], [z + 0.4, F + WY1], [z + 0.4, F + WY0]], 0.11, white, true); plain.box(sx * (xi - 0.05), F + WY0 - 0.03, z, 0.12, 0.05, 0.98, white); }
   }
   const slopeY = (x: number) => (Math.abs(x) <= flat ? ceilTop : ceilEdge + (ceilTop - ceilEdge) * (xi - Math.abs(x)) / (xi - flat));
-  ceil.quad([-xi, ceilEdge, zf], [-flat, ceilTop, zf], [-flat, ceilTop, PZ], [-xi, ceilEdge, PZ], W); ceil.quad([-flat, ceilTop, zf], [flat, ceilTop, zf], [flat, ceilTop, PZ], [-flat, ceilTop, PZ], W); ceil.quad([flat, ceilTop, zf], [xi, ceilEdge, zf], [xi, ceilEdge, PZ], [flat, ceilTop, PZ], W);
+  ceil.quad([-xi, ceilEdge, zf], [-flat, ceilTop, zf], [-flat, ceilTop, ZE], [-xi, ceilEdge, ZE], W); ceil.quad([-flat, ceilTop, zf], [flat, ceilTop, zf], [flat, ceilTop, ZE], [-flat, ceilTop, ZE], W); ceil.quad([flat, ceilTop, zf], [xi, ceilEdge, zf], [xi, ceilEdge, ZE], [flat, ceilTop, ZE], W);
   /** fills the gable above a wall whose top is ceilEdge (facing n) */
   const gable = (g: Geo, z: number, nz: number, col: THREE.Color | number) => { const P = (x: number, y: number) => [x, y, z]; const q = (a: number[], b: number[], c2: number[], d: number[]) => (nz > 0 ? g.quad(a, b, c2, d, col) : g.quad(b, a, d, c2, col)); q(P(-xi, ceilEdge), P(-flat, ceilEdge), P(-flat, ceilTop), P(-xi, ceilEdge + 0.001)); q(P(-flat, ceilEdge), P(flat, ceilEdge), P(flat, ceilTop), P(-flat, ceilTop)); q(P(flat, ceilEdge), P(xi, ceilEdge), P(xi, ceilEdge + 0.001), P(flat, ceilTop)); };
   carpet.quad([-xi, F + 0.004, PZ], [xi, F + 0.004, PZ], [xi, F + 0.004, zf], [-xi, F + 0.004, zf], W, [0, 0, (2 * xi) / 2.4, (PZ - zf) / 2.4]);
@@ -152,16 +154,17 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
     const fm = new THREE.Matrix4().makeRotationY(rotY).setPosition(x, y, z); plain.setMatrix(fm); plain.box(0, 0, -0.012, w + 0.05, h + 0.05, 0.016, frameCol); plain.setMatrix(null);
   };
   const zb = zf + 0.03;
+  // positions read off the back-wall photo against the 2.05 m doors (facing the back wall, its left is local -x)
   const gridA: IconKind[] = ['michael', 'medhaneAlem', 'crucifixion', 'gabriel', 'george', 'grace', 'mary', 'medhaneAlem'];
-  gridA.forEach((k, i) => iconPlane(k, -4.25 + (i % 4) * 0.5, F + 2.75 - Math.floor(i / 4) * 0.62, zb, 0.46, 0, 0.58));     // two rows of four, far left
-  (['gabriel', 'medhaneAlem', 'michael', 'trinity'] as IconKind[]).forEach((k, i) => iconPlane(k, -2.2 + i * 0.42, F + 2.0, zb, 0.39, 0, 0.5));
-  iconPlane('supper', -1.6, F + 2.75, zb, 1.25, 0, 0.8, 0x6a1a1a);
-  { const tv = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.5), mats.tv); tv.position.set(0.25, F + 2.52, zb + 0.03); root.add(tv); plain.box(0.25, F + 2.52, zb + 0.01, 0.92, 0.56, 0.04, 0x141416); }
-  plain.box(0.25, F + 2.14, zb + 0.09, 0.62, 0.03, 0.2, 0x6a4a2e); plain.box(0.3, F + 2.2, zb + 0.1, 0.13, 0.1, 0.14, 0xe8e8e4); plain.box(0.3, F + 2.2, zb + 0.18, 0.07, 0.06, 0.03, 0x0a0a0c);     // stream camera on its shelf above the doors
+  gridA.forEach((k, i) => iconPlane(k, -3.72 + (i % 4) * 0.35, F + 2.83 - Math.floor(i / 4) * 0.66, zb, 0.33, 0, 0.63));      // two rows of four, straddling the panel line
+  (['gabriel', 'medhaneAlem', 'michael', 'trinity'] as IconKind[]).forEach((k, i) => iconPlane(k, -2.28 + i * 0.4, F + 2.04, zb, 0.38, 0, 0.66));
+  iconPlane('supper', -1.57, F + 3.0, zb, 1.3, 0, 1.02, 0x6a1a1a);
+  { const tv = new THREE.Mesh(new THREE.PlaneGeometry(0.94, 0.58), mats.tv); tv.position.set(-0.16, F + 3.0, zb + 0.05); root.add(tv); plain.box(-0.16, F + 3.0, zb + 0.03, 1.0, 0.64, 0.04, 0x141416); }
+  plain.box(0, F + 2.42, zb + 0.1, 0.8, 0.035, 0.22, 0x6a4a2e); plain.box(0, F + 2.3, zb + 0.12, 0.2, 0.12, 0.16, 0x1a1a1c); plain.box(0, F + 2.3, zb + 0.21, 0.09, 0.07, 0.03, 0x0a0a0c);     // stream camera hanging under its shelf above the doors
   const clockAt = (x: number, y: number, z: number, ry: number) => { const cl = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.03, 20), new M({ color: 0xf6f6f2, roughness: 0.4 })); cl.rotation.x = Math.PI / 2; cl.position.set(x, y, z); root.add(cl); const rim = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.012, 6, 20), new M({ color: 0x8a8a8a })); rim.position.set(x, y, z); rim.rotation.y = ry; root.add(rim); };
-  clockAt(1.25, F + 2.12, zb + 0.02, 0);
-  { const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.05, 14), new M({ color: 0xb3221f, roughness: 0.4 })); bell.rotation.x = Math.PI / 2; bell.position.set(1.7, F + 2.5, zb + 0.03); root.add(bell); }
-  iconPlane('gethsemane', 3.0, F + 2.7, zb, 0.52, 0, 0.7, 0x6a3a2a); iconPlane('mary', 2.45, F + 1.7, zb, 0.72, 0, 0.98, 0xe8e0c8);
+  clockAt(0.72, F + 2.36, zb + 0.02, 0);
+  { const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.05, 14), new M({ color: 0xb3221f, roughness: 0.4 })); bell.rotation.x = Math.PI / 2; bell.position.set(1.72, F + 2.8, zb + 0.03); root.add(bell); }
+  iconPlane('gethsemane', 3.05, F + 3.1, zb, 0.88, 0, 1.2, 0x6a3a2a); iconPlane('mary', 2.6, F + 1.68, zb, 1.05, 0, 1.5, 0x1a1a1a);
   plain.box(4.05, F + 1.05, zf + 0.02, 0.98, 2.14, 0.05, redFrame); { const d1 = new THREE.Mesh(new THREE.PlaneGeometry(0.84, 2.02), mats.door); d1.position.set(4.05, F + 1.02, zf + 0.05); root.add(d1); } plain.box(3.72, F + 1.0, zf + 0.07, 0.05, 0.05, 0.05, 0xc9a13a);
   // the double doors swing into the nave
   const naveDoors: THREE.Group[] = [];
@@ -176,7 +179,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   const wc = new THREE.Color(0xffffff); const DX = -4.1;                                    // the doorway in the screen wall, right of the stage
   wall(wood, -xi, PZ, xi, PZ, [0, -1], F, ceilEdge, [{ at: DX, w: 0.8, y0: F, y1: F + 1.95 }], wc, 1.8); gable(wood, PZ, -1, wc);
   trimOutline(plain, (s2, y) => [s2, y, PZ - 0.015], [[DX - 0.45, F], [DX - 0.45, F + 2.0], [DX + 0.45, F + 2.0], [DX + 0.45, F]], 0.1, redFrame);
-  plain.box(DX, F + 0.975, PZ + 0.5, 0.8, 1.95, 0.02, 0x0b0707); for (const sx of [-1, 1]) plain.box(DX + sx * 0.4, F + 0.975, PZ + 0.25, 0.02, 1.95, 0.5, 0x241010); plain.box(DX, F + 1.95, PZ + 0.25, 0.8, 0.02, 0.5, 0x241010); plain.box(DX, F + 0.006, PZ + 0.25, 0.8, 0.012, 0.5, 0x3a1016);
+  for (const sx of [-1, 1]) plain.box(DX + sx * 0.41, F + 0.975, PZ + 0.15, 0.02, 1.95, 0.3, redFrame); plain.box(DX, F + 1.96, PZ + 0.15, 0.84, 0.02, 0.3, redFrame); plain.box(DX, F + 0.006, PZ + 0.15, 0.8, 0.012, 0.3, 0x3a1016);
   // the stage: a low carpeted platform with angled front corners and one step all the way round
   const platY = F + 0.42, stepY = F + 0.21; const stageG = new Geo();
   const prism = (pts: number[][], y0: number, y1: number) => { const n = pts.length; for (let i = 1; i < n - 1; i++) stageG.tri([pts[0][0], y1, pts[0][1]], [pts[i][0], y1, pts[i][1]], [pts[i + 1][0], y1, pts[i + 1][1]], W, [pts[0][0] / 2, pts[0][1] / 2, pts[i][0] / 2, pts[i][1] / 2, pts[i + 1][0] / 2, pts[i + 1][1] / 2]);
@@ -233,30 +236,30 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
     // left of the stage, on the floor: the low table with a white cloth over maroon, the white stool, and the bench along the side wall
     plain.box(3.1, F + 0.24, PZ - 1.75, 0.95, 0.48, 0.6, 0x7a1c26); plain.box(3.1, F + 0.487, PZ - 1.75, 0.8, 0.014, 0.62, 0xf4f2ec); colliders.push([3.1, F + 0.25, PZ - 1.75, 0.97, 0.5, 0.62]);
     plain.box(3.55, F + 0.55, PZ - 0.95, 0.3, 0.03, 0.3, 0xf4f4f0); for (const [dx, dz] of [[-0.12, -0.12], [0.12, -0.12], [-0.12, 0.12], [0.12, 0.12]]) plain.box(3.55 + dx, F + 0.27, PZ - 0.95 + dz, 0.025, 0.54, 0.025, 0xf4f4f0);
-    oak.box(xi - 0.3, F + 0.43, 3.6, 0.42, 0.05, 2.6, W, 1.2); oak.box(xi - 0.07, F + 0.7, 3.6, 0.04, 0.54, 2.6, W, 1.2); oak.box(xi - 0.3, F + 0.2, 3.6, 0.4, 0.4, 2.56, W, 1.2); colliders.push([xi - 0.3, F + 0.48, 3.6, 0.5, 0.96, 2.65]); }
-  // ---------------------------------------------------------------- pews: long oak benches with solid curved ends and book racks; open floor before the stage
-  const rows: number[] = []; for (let z = -4.3; z <= 1.5; z += 0.96) rows.push(z);
-  const men: THREE.Vector3[] = [], women: THREE.Vector3[] = []; const endGeo = new THREE.CylinderGeometry(0.27, 0.27, 0.05, 16, 1, false, 0, Math.PI); endGeo.rotateZ(Math.PI / 2); endGeo.rotateX(-Math.PI / 2);
+ }
+  // ---------------------------------------------------------------- pews: long benches right back to the rear wall, a clear floor before the stage
+  const rows: number[] = []; for (let z = zf + 0.36; z <= 2.3; z += 0.9) rows.push(z); const frontZ = rows[rows.length - 1];
+  const men: THREE.Vector3[] = [], women: THREE.Vector3[] = []; const endGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.05, 14, 1, false, 0, Math.PI); endGeo.rotateZ(Math.PI / 2); endGeo.rotateX(-Math.PI / 2);
   for (const z of rows) for (const sx of [-1, 1]) {
     const x0 = sx * 0.9, x1 = sx * (xi - 0.12), cx = (x0 + x1) / 2, len = Math.abs(x1 - x0);
     oak.box(cx, F + 0.43, z, len, 0.05, 0.42, W, 1.2);
     { const bm = new THREE.Matrix4().makeRotationX(0.16).setPosition(cx, F + 0.68, z - 0.215); oak.setMatrix(bm); oak.box(0, 0, 0, len, 0.54, 0.035, W, 1.2); oak.setMatrix(null); }
     oak.box(cx, F + 0.965, z - 0.262, len, 0.04, 0.07, W, 1.2); oak.box(cx, F + 0.2, z + 0.17, len, 0.4, 0.03, W, 1.2);
-    for (const ex of [x0, x1]) { oak.box(ex, F + 0.36, z - 0.03, 0.05, 0.72, 0.54, W, 1.2); oak.merge(endGeo, new THREE.Matrix4().makeTranslation(ex, F + 0.72, z - 0.03), W); }
-    for (let k = 0; k < 3; k++) oak.box(cx + (k - 1) * len * 0.3, F + 0.6, z - 0.33, 0.5, 0.14, 0.06, W, 1.2);                       // hymn-book racks on the back
+    for (const ex of [x0, x1]) { oak.box(ex, F + 0.39, z - 0.03, 0.05, 0.78, 0.54, W, 1.2); oak.merge(endGeo, new THREE.Matrix4().makeScale(1, 1, 1.35).setPosition(ex, F + 0.78, z - 0.03), W); }
+    if (z > zf + 0.5) for (let k = 0; k < 3; k++) oak.box(cx + (k - 1) * len * 0.3, F + 0.6, z - 0.33, 0.5, 0.14, 0.06, W, 1.2);
     colliders.push([cx, F + 0.48, z - 0.05, len + 0.06, 0.96, 0.56]);
-    for (let k = 0; k < 4; k++) (sx > 0 ? men : women).push(new THREE.Vector3(sx * (1.35 + k * 0.82), F, z + 0.42));
+    if (z > zf + 0.5) for (let k = 0; k < 4; k++) (sx > 0 ? men : women).push(new THREE.Vector3(sx * (1.35 + k * 0.82), F, z + 0.42));
   }
-  oak.box(-(xi - 0.3), F + 0.43, 3.2, 0.42, 0.05, 2.6, W, 1.2); oak.box(-(xi - 0.07), F + 0.7, 3.2, 0.04, 0.54, 2.6, W, 1.2); oak.box(-(xi - 0.3), F + 0.2, 3.2, 0.4, 0.4, 2.56, W, 1.2); colliders.push([-(xi - 0.3), F + 0.48, 3.2, 0.5, 0.96, 2.65]);   // the bench along the right wall at the front
+  for (const sx of [-1, 1]) { oak.box(sx * (xi - 0.3), F + 0.43, 4.1, 0.42, 0.05, 2.4, W, 1.2); oak.box(sx * (xi - 0.07), F + 0.7, 4.1, 0.04, 0.54, 2.4, W, 1.2); oak.box(sx * (xi - 0.3), F + 0.2, 4.1, 0.4, 0.4, 2.36, W, 1.2); colliders.push([sx * (xi - 0.3), F + 0.48, 4.1, 0.5, 0.96, 2.45]); }   // benches along both side walls at the front
   // ---------------------------------------------------------------- open floor: the upholstered chair, a folding chair, the kebero
-  wood.box(0, F + 0.46, 2.9, 0.54, 0.09, 0.52, 0x2a160c); wood.box(0, F + 0.92, 2.66, 0.52, 0.84, 0.07, 0x2a160c); for (const [dx, dz] of [[-0.23, -0.21], [0.23, -0.21], [-0.23, 0.21], [0.23, 0.21]]) wood.box(dx, F + 0.21, 2.9 + dz, 0.055, 0.42, 0.055, 0x1a0c06);
-  plain.box(0, F + 0.52, 2.9, 0.46, 0.05, 0.44, 0xd8c8a4); plain.box(0, F + 0.95, 2.7, 0.42, 0.66, 0.03, 0x5a5048); colliders.push([0, F + 0.5, 2.85, 0.58, 1.0, 0.62]);
-  plain.box(-1.5, F + 0.45, 3.5, 0.4, 0.03, 0.4, 0x141416); plain.box(-1.5, F + 0.72, 3.69, 0.4, 0.26, 0.02, 0x141416); for (const dx of [-0.19, 0.19]) { plain.beam([-1.5 + dx, F, 3.3], [-1.5 + dx, F + 0.86, 3.7], 0.02, 0x141416); plain.beam([-1.5 + dx, F, 3.7], [-1.5 + dx, F + 0.45, 3.32], 0.02, 0x141416); }
-  plain.box(-0.95, F + 0.14, 4.0, 0.3, 0.28, 0.3, 0xf4f4f0);
-  const k1 = keberoMesh(1.2); k1.position.set(-0.85, F + 0.38, 3.2); k1.rotation.set(0.25, 0.5, Math.PI / 2 - 0.3); root.add(k1);
-  const k2 = keberoMesh(1.05); k2.position.set(1.6, F + 0.35, 3.7); k2.rotation.set(-0.15, 1.9, Math.PI / 2 - 0.2); root.add(k2); colliders.push([-0.85, F + 0.3, 3.2, 0.9, 0.6, 0.7], [1.6, F + 0.3, 3.7, 0.8, 0.6, 0.7]);
-  for (let i = 0; i < 5; i++) { const m = maqomiyaMesh(); m.rotation.set(Math.PI / 2, 0, Math.PI / 2); m.position.set(3.9 - (i % 2) * 0.25, F + 0.475 + 0.012, 1.3 + i * 0.075); root.add(m); }       // prayer staffs lying on the front pew seat
-  const umbrellas = new THREE.Group(); [0x8a1f3a, 0x2a2f7a, 0x1f6a46].forEach((c, i) => { const u = umbrellaMesh(c, false); u.position.set(xi - 0.2 - i * 0.07, F, 1.95 + i * 0.1); u.rotation.z = 0.1; umbrellas.add(u); }); root.add(umbrellas);
+  wood.box(0, F + 0.46, 3.6, 0.54, 0.09, 0.52, 0x2a160c); wood.box(0, F + 0.92, 3.36, 0.52, 0.84, 0.07, 0x2a160c); for (const [dx, dz] of [[-0.23, -0.21], [0.23, -0.21], [-0.23, 0.21], [0.23, 0.21]]) wood.box(dx, F + 0.21, 3.6 + dz, 0.055, 0.42, 0.055, 0x1a0c06);
+  plain.box(0, F + 0.52, 3.6, 0.46, 0.05, 0.44, 0xd8c8a4); plain.box(0, F + 0.95, 3.4, 0.42, 0.66, 0.03, 0x5a5048); colliders.push([0, F + 0.5, 3.55, 0.58, 1.0, 0.62]);
+  plain.box(-1.5, F + 0.45, 4.2, 0.4, 0.03, 0.4, 0x141416); plain.box(-1.5, F + 0.72, 4.39, 0.4, 0.26, 0.02, 0x141416); for (const dx of [-0.19, 0.19]) { plain.beam([-1.5 + dx, F, 4.0], [-1.5 + dx, F + 0.86, 4.4], 0.02, 0x141416); plain.beam([-1.5 + dx, F, 4.4], [-1.5 + dx, F + 0.45, 4.02], 0.02, 0x141416); }
+  plain.box(-0.95, F + 0.14, 4.7, 0.3, 0.28, 0.3, 0xf4f4f0);
+  const k1 = keberoMesh(1.2); k1.position.set(-0.85, F + 0.38, 3.9); k1.rotation.set(0.25, 0.5, Math.PI / 2 - 0.3); root.add(k1);
+  const k2 = keberoMesh(1.05); k2.position.set(1.6, F + 0.35, 4.4); k2.rotation.set(-0.15, 1.9, Math.PI / 2 - 0.2); root.add(k2); colliders.push([-0.85, F + 0.3, 3.9, 0.9, 0.6, 0.7], [1.6, F + 0.3, 4.4, 0.8, 0.6, 0.7]);
+  for (let i = 0; i < 5; i++) { const m = maqomiyaMesh(); m.rotation.set(Math.PI / 2, 0, Math.PI / 2); m.position.set(3.9 - (i % 2) * 0.25, F + 0.487, frontZ - 0.16 + i * 0.075); root.add(m); }       // prayer staffs lying on the front pew seat
+  const umbrellas = new THREE.Group(); [0x8a1f3a, 0x2a2f7a, 0x1f6a46].forEach((c, i) => { const u = umbrellaMesh(c, false); u.position.set(xi - 0.2 - i * 0.07, F, frontZ + 0.45 + i * 0.1); u.rotation.z = 0.1; umbrellas.add(u); }); root.add(umbrellas);
   // candle stands either side of the centre arch, and the censer on its stand
   const candles: Candle[] = []; const candleLights: THREE.PointLight[] = [];
   for (const [bx, by, bz] of [[3.1, F + 0.495, PZ - 1.75], [-3.0, F + 0.41, PZ - 2.2]]) {
@@ -264,34 +267,67 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
     const pl = new THREE.PointLight(0xffa850, 0, 6, 1.8); pl.position.set(bx, by + 0.4, bz - 0.1); root.add(pl); candleLights.push(pl); }
   const censer = censerMesh(); censer.position.set(fsx, platY + 0.51 + 0.2, fsz); root.add(censer);
   const ts = tsenatselMesh(); ts.position.set(fsx + 0.13, platY + 0.53, fsz + 0.1); ts.rotation.z = Math.PI / 2; root.add(ts); const hc = handCrossMesh(); hc.position.set(fsx - 0.13, platY + 0.53, fsz - 0.1); hc.rotation.x = -Math.PI / 2; root.add(hc);
-  const camLed = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), new M({ color: 0x220000, emissive: 0xff2020, emissiveIntensity: 0 })); camLed.position.set(0.36, F + 2.25, zb + 0.19); root.add(camLed);
-  // ---------------------------------------------------------------- the lobby: lower floor, five carpeted steps up between paneled walls to the cross doors;
-  //                                                                  basement doorway on the left, shoe shelves and coat nook on the right
-  const lx = WINGX - T, lz0 = TZ0 + T, lTop = FL + 2.7, sx0 = 0.92, sz0 = -7.35, nS = 5, rise = (F - FL) / nS, run = (NZ0 - 0.55 - sz0) / nS;
+  const camLed = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), new M({ color: 0x220000, emissive: 0xff2020, emissiveIntensity: 0 })); camLed.position.set(0.07, F + 2.33, zb + 0.22); root.add(camLed);
+  // ---------------------------------------------------------------- the entry (shoe) room, from the lobby photo and walkthrough:
+  // door level floor; in the middle five carpeted steps with metal nosings rise between two panelled walls to the cross doors;
+  // left of the steps a wall with the red-framed basement doorway; right of the steps a white post, then the open alcove with the tall
+  // pine shoe shelves under the sloping underside of the upper stair, and the white coat closet with its rail, hangers and table.
+  const lx = WINGX - T, lz0 = TZ0 + T, lTop = FL + 2.75, sx0 = 0.95, sz0 = -7.4, nS = 5, rise = (F - FL) / nS, run = 0.27, zTop = sz0 + nS * run;
   for (const sx of [-1, 1]) wall(cream, sx * lx, lz0, sx * lx, NZ0, [-sx, 0], FL, lTop, [], W, 1);
-  const lwin = (sx: number) => ({ at: sx * (CH.TW + WINGX) / 2, w: 0.56, y0: FL + 0.5, y1: FL + 2.05, peak: FL + 2.42 });
+  const lwin = (sx: number) => ({ at: sx * (TW + WINGX) / 2, w: 0.56, y0: FL + 0.5, y1: FL + 2.05, peak: FL + 2.42 });
   wall(cream, -lx, lz0, lx, lz0, [0, 1], FL, lTop, [{ at: 0, w: 1.15, y0: FL, y1: FL + 2.12 }, lwin(-1), lwin(1)], W, 1);
-  for (const sx of [-1, 1]) { wall(cream, sx * sx0, NZ0, sx * lx, NZ0, [0, -1], FL, lTop, [], W, 1); wall(cream, sx * sx0, sz0, sx * sx0, NZ0, [sx, 0], FL, lTop, [], W, 1); wall(cream, sx * sx0, sz0, sx * sx0, NZ0, [-sx, 0], FL, F + 2.75, [], W, 1); wall(cream, sx * sx0, sz0, sx * (sx0 + 0.12), sz0, [0, -1], FL, lTop, [], W, 1); }
+  // stairwell walls (inner faces) and the wall above the nave doors
+  for (const sx of [-1, 1]) wall(cream, sx * sx0, sz0, sx * sx0, NZ0, [-sx, 0], FL, F + 2.75, [], W, 1);
   wall(cream, -sx0, NZ0, sx0, NZ0, [0, -1], F, F + 2.75, [{ at: 0, w: 1.7, y0: F, y1: F + 2.05 }], W, 1);
-  trimOutline(plain, (s, y) => [s, y, NZ0 - 0.014], [[-0.9, F], [-0.9, F + 2.12], [0.9, F + 2.12], [0.9, F]], 0.13, redFrame);
+  trimOutline(plain, (s2, y) => [s2, y, NZ0 - 0.014], [[-0.9, F], [-0.9, F + 2.12], [0.9, F + 2.12], [0.9, F]], 0.13, redFrame);
   G.paint.quad([-lx, lTop, lz0], [lx, lTop, lz0], [lx, lTop, NZ0], [-lx, lTop, NZ0], 0xeeeadc); G.paint.quad([-sx0, F + 2.75, sz0], [sx0, F + 2.75, sz0], [sx0, F + 2.75, NZ0], [-sx0, F + 2.75, NZ0], 0xeeeadc);
+  wall(cream, -sx0, sz0, sx0, sz0, [0, -1], lTop, F + 2.75, [], W, 1);
   G.lobby.quad([-lx, FL + 0.004, NZ0], [lx, FL + 0.004, NZ0], [lx, FL + 0.004, lz0], [-lx, FL + 0.004, lz0], W, [0, 0, 5, 3]);
-  for (let i = 0; i < nS; i++) { const y = FL + (i + 1) * rise, z = sz0 + (i + 0.5) * run; const top = i === nS - 1; G.lobby.box(0, y - rise / 2, z, 2 * sx0, rise, run, W, 0.6); plain.box(0, y + 0.006, z - run / 2 + 0.03, 2 * sx0, 0.012, 0.06, 0xc8ccd0); colliders.push([0, (FL + y) / 2, z, 2 * sx0, y - FL, run]); void top; }
-  carpet.quad([-sx0, F + 0.004, NZ0], [sx0, F + 0.004, NZ0], [sx0, F + 0.004, sz0 + nS * run], [-sx0, F + 0.004, sz0 + nS * run], W, [0, 0, 0.8, 0.25]);
-  colliders.push([0, (FL + F) / 2, (sz0 + nS * run + NZ0) / 2, 2 * sx0, F - FL, NZ0 - (sz0 + nS * run)]);
-  for (const sx of [-1, 1]) { colliders.push([sx * (sx0 + 0.06), FL + 1.5, (sz0 + NZ0) / 2, 0.12, 3, NZ0 - sz0]); plain.beam([sx * (sx0 - 0.07), FL + 0.95, sz0 - 0.1], [sx * (sx0 - 0.07), F + 0.95, sz0 + nS * run], 0.05, 0x6a3a1c, 0.09); plain.beam([sx * (sx0 - 0.02), FL + 0.02, sz0], [sx * (sx0 - 0.02), F + 0.02, sz0 + nS * run], 0.03, redFrame, 0.16); }
-  plain.box(sx0 + 0.02, FL + 1.1, sz0 + 0.5, 0.02, 0.12, 0.16, 0x151515);                                              // light switch plate
-  // left: the basement doorway (dark red frame); the stair beyond is not part of the game
-  plain.box(lx - 0.02, FL + 1.05, -7.6, 0.06, 2.16, 1.0, redFrame); plain.box(lx - 0.035, FL + 1.02, -7.6, 0.05, 2.02, 0.84, 0x2a2e33);
-  // right: tall shoe shelves under the slope of the upper stair, then the coat nook with its rail, hangers and table
-  const shoes = new THREE.Group(); root.add(shoes); const sr = mulberry(3); const shx = -1.75, shz = NZ0 - 0.2;
-  for (let k = 0; k < 9; k++) wood.box(shx, FL + 0.08 + k * 0.24, shz, 0.9, 0.025, 0.34, 0xd8b078); for (const dx of [-0.45, 0.45]) wood.box(shx + dx, FL + 1.05, shz, 0.03, 2.1, 0.34, 0xd8b078);
-  for (let i = 0; i < 9; i++) for (const dx of [-0.07, 0.07]) { const sh = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.07, 0.24), new M({ color: [0x1a1a1c, 0x3a2a20, 0x5a5a60, 0xf0f0f0, 0x2a3a5a][Math.floor(sr() * 5)], roughness: 0.7 })); sh.position.set(shx - 0.25 + (i % 3) * 0.25 + dx, FL + 0.14 + Math.floor(i / 3) * 0.24, shz); shoes.add(sh); }
-  G.paint.quad([-sx0 - 0.13, FL + 1.3, NZ0 - 0.02], [-sx0 - 0.13, lTop, NZ0 - 1.5], [-2.25, lTop, NZ0 - 1.5], [-2.25, FL + 1.3, NZ0 - 0.02], 0xeeeadc);           // sloping soffit of the stair above
-  colliders.push([shx, FL + 1.05, shz, 0.95, 2.1, 0.4]);
-  plain.box(-2.45, FL + 1.85, -6.3, 0.03, 0.03, 1.4, 0xe8e8e8); for (let i = 0; i < 5; i++) { plain.box(-2.45, FL + 1.78, -6.9 + i * 0.3, 0.3, 0.02, 0.02, 0xf4f4f4); }
-  plain.box(-2.35, FL + 0.74, -6.4, 0.5, 0.03, 1.5, 0xf2f2ee); for (const dz of [-0.7, 0.7]) plain.box(-2.35, FL + 0.37, -6.4 + dz, 0.45, 0.74, 0.03, 0xf2f2ee);
-  [0x18181a, 0x2a2a30, 0xd8347a, 0x3a3a40].forEach((c, i) => plain.box(-2.38, FL + 0.84, -6.9 + i * 0.32, 0.4, 0.16, 0.3, c)); colliders.push([-2.35, FL + 0.4, -6.4, 0.55, 0.8, 1.55]);
+  for (let i = 0; i < nS; i++) { const y = FL + (i + 1) * rise, z = sz0 + (i + 0.5) * run; G.lobby.box(0, y - rise / 2, z, 2 * sx0, rise, run, W, 0.6, 0b010010); plain.box(0, y + 0.004, z - run / 2 + 0.028, 2 * sx0 - 0.12, 0.012, 0.055, 0xc4c8cc); plain.box(0, y - 0.012, z - run / 2 - 0.004, 2 * sx0 - 0.12, 0.03, 0.008, 0xc4c8cc); colliders.push([0, (FL + y) / 2, z, 2 * sx0, y - FL, run]); }
+  carpet.quad([-sx0, F + 0.004, NZ0], [sx0, F + 0.004, NZ0], [sx0, F + 0.004, zTop], [-sx0, F + 0.004, zTop], W, [0, 0, 0.8, 0.25]);
+  colliders.push([0, (FL + F) / 2, (zTop + NZ0) / 2, 2 * sx0, F - FL, NZ0 - zTop]);
+  for (const sx of [-1, 1]) {
+    colliders.push([sx * (sx0 + 0.06), FL + 1.5, (sz0 + NZ0) / 2, 0.12, 3, NZ0 - sz0]);
+    plain.beam([sx * (sx0 - 0.045), FL + 0.86, sz0 - 0.12], [sx * (sx0 - 0.045), F + 0.86, zTop - 0.12], 0.04, 0x5e3418, 0.085);                                    // wooden handrail
+    for (const t of [0.12, 0.88]) plain.box(sx * (sx0 - 0.02), FL + 0.82 + (F - FL) * t, sz0 - 0.12 + (zTop - sz0) * t, 0.04, 0.05, 0.04, 0x3a3a3a);
+    plain.beam([sx * (sx0 - 0.03), FL + 0.1, sz0 - 0.02], [sx * (sx0 - 0.03), F + 0.12, zTop], 0.035, redFrame, 0.26);                                              // dark red stringer
+    plain.box(sx * (sx0 - 0.03), F + 0.07, (zTop + NZ0) / 2, 0.035, 0.14, NZ0 - zTop, redFrame);
+  }
+  plain.box(sx0 - 0.012, FL + 1.22, sz0 + 0.42, 0.02, 0.16, 0.2, 0x151515);                                              // black plate on the left wall
+  for (const sx of [-1, 1]) { const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.27), new M({ color: 0xf6f6f2, roughness: 0.9 })); void paper; void sx; }
+  // left of the steps: the wall facing the entrance with the basement doorway (dark red frame, stairs going down in the dark)
+  wall(cream, sx0, sz0, lx, sz0, [0, -1], FL, lTop, [{ at: 1.72, w: 0.86, y0: FL, y1: FL + 2.02 }], W, 1);
+  trimOutline(plain, (s2, y) => [s2, y, sz0 - 0.014], [[1.24, FL], [1.24, FL + 2.08], [2.2, FL + 2.08], [2.2, FL]], 0.11, redFrame);
+  plain.box(1.72, FL + 1.01, sz0 + 0.5, 0.86, 2.02, 0.02, 0x15171a); for (const sx of [-1, 1]) plain.box(1.72 + sx * 0.43, FL + 1.01, sz0 + 0.25, 0.02, 2.02, 0.5, 0xb8b4a8); plain.box(1.72, FL + 0.3, sz0 + 0.3, 0.86, 0.02, 0.6, 0x2a2a2c);
+  colliders.push([(sx0 + lx) / 2, FL + 1.5, (sz0 + NZ0) / 2, lx - sx0, 3, NZ0 - sz0]);
+  // right of the steps: the stairwell wall's outer face, the white post, the alcove
+  wall(cream, -sx0 - 0.12, sz0, -sx0 - 0.12, NZ0, [-1, 0], FL, lTop, [], W, 1); wall(cream, -sx0 - 0.12, sz0, -sx0, sz0, [0, -1], FL, lTop, [], W, 1); wall(cream, -lx, NZ0, -sx0, NZ0, [0, -1], FL, lTop, [], W, 1);
+  plain.box(-sx0 - 0.06, FL + 1.375, sz0 - 0.02, 0.17, 2.75, 0.17, 0xf2efe4);
+  const shoes = new THREE.Group(); root.add(shoes); const sr = mulberry(3); const shx = -1.95, shz = NZ0 - 0.17, pine = 0xe2bc84;
+  for (let k = 0; k < 9; k++) wood.box(shx, FL + 0.1 + k * 0.265, shz, 0.74, 0.022, 0.32, pine); for (const dx of [-0.38, 0.38]) wood.box(shx + dx, FL + 1.12, shz, 0.025, 2.24, 0.32, pine); wood.box(shx, FL + 2.235, shz, 0.78, 0.025, 0.32, pine);
+  for (const [k, dx, col] of [[3, -0.2, 0x3a3a40], [3, 0.12, 0x18181a], [0, 0.05, 0x2a2a30], [1, -0.18, 0x5a4a3a], [2, 0.2, 0xe8e8e8]] as [number, number, number][]) for (const d of [-0.06, 0.06]) { const sh = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.07, 0.24), new M({ color: col, roughness: 0.7 })); sh.position.set(shx + dx + d, FL + 0.145 + k * 0.265, shz); shoes.add(sh); } void sr;
+  colliders.push([shx, FL + 1.1, shz, 0.8, 2.2, 0.36]);
+  // the sloping underside of the upper stair: high beside the stairwell wall, coming down toward the outer wall
+  G.paint.quad([-sx0 - 0.12, lTop, NZ0 - 1.25], [-sx0 - 0.12, lTop, NZ0], [-lx, FL + 1.35, NZ0], [-lx, FL + 1.35, NZ0 - 1.25], 0xe8e2d0); G.paint.quad([-lx, FL + 1.35, NZ0 - 1.25], [-sx0 - 0.12, lTop, NZ0 - 1.25], [-sx0 - 0.12, lTop, NZ0 - 1.251], [-lx, lTop, NZ0 - 1.25], 0xe8e2d0);
+  plain.beam([-sx0 - 0.14, lTop - 0.03, NZ0 - 1.25], [-lx, FL + 1.33, NZ0 - 1.25], 0.05, 0xf2efe4, 0.09);
+  // the white coat closet on the outer wall, nearer the front door: side panels, shelf, rail with hangers, white table with coats
+  const cz0 = -7.95, cz1 = -6.55, cd = 0.62;
+  for (const z of [cz0, cz1]) plain.box(-lx + cd / 2, FL + 1.1, z, cd, 2.2, 0.03, 0xf4f2ea); plain.box(-lx + cd / 2, FL + 2.2, (cz0 + cz1) / 2, cd, 0.03, cz1 - cz0, 0xf4f2ea);
+  plain.box(-lx + 0.32, FL + 2.02, (cz0 + cz1) / 2, 0.028, 0.028, cz1 - cz0, 0xf8f8f8); for (let i = 0; i < 6; i++) { const hz = cz0 + 0.18 + i * 0.2; plain.box(-lx + 0.32, FL + 1.93, hz, 0.36, 0.012, 0.012, 0xfafafa); plain.beam([-lx + 0.32, FL + 2.02, hz], [-lx + 0.32, FL + 1.93, hz], 0.01, 0xfafafa); }
+  plain.box(-lx + 0.36, FL + 0.76, (cz0 + cz1) / 2, 0.66, 0.03, cz1 - cz0 - 0.1, 0xf6f6f2); for (const dz of [cz0 + 0.12, cz1 - 0.12]) for (const dx of [0.08, 0.62]) plain.box(-lx + dx, FL + 0.38, dz, 0.03, 0.76, 0.03, 0xf6f6f2);
+  [0x18181a, 0x24242a, 0xd8347a, 0x2e2e36].forEach((c2, i) => plain.box(-lx + 0.36, FL + 0.86 + (i % 2) * 0.05, cz0 + 0.25 + i * 0.3, 0.45, 0.16, 0.3, c2)); colliders.push([-lx + 0.36, FL + 0.45, (cz0 + cz1) / 2, 0.7, 0.9, cz1 - cz0]);
+  // ---------------------------------------------------------------- the Meqdes behind the screen. Not photographed: a plain, reverent room.
+  // The menber (the ark's throne) stands in the middle completely covered with brocade; the Tabot itself is never modelled or shown.
+  { const z0 = PZ + 0.3; for (const sx of [-1, 1]) wall(cream, sx * xi, z0, sx * xi, ZE, [-sx, 0], F, ceilEdge, [], W, 1);
+    wall(cream, -xi, ZE, xi, ZE, [0, -1], F, ceilEdge, [], W, 1); gable(cream, ZE, -1, W);
+    wall(wood, -xi, z0, xi, z0, [0, 1], F, ceilEdge, [{ at: DX, w: 0.8, y0: F, y1: F + 1.95 }], wc, 1.8); gable(wood, z0, 1, wc);
+    runner.quad([-xi, F + 0.004, ZE], [xi, F + 0.004, ZE], [xi, F + 0.004, z0], [-xi, F + 0.004, z0], W, [0, 0, 4, 1.4]);
+    const mz = (z0 + ZE) / 2 + 0.1; G.brocade.box(0, F + 0.75, mz, 1.0, 1.5, 1.0, W, 0.5, 0b011111); const cloth = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.5, 1.12), mats.curtain); cloth.position.set(0, F + 1.5, mz); root.add(cloth);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 10, 0, 6.3, 0, Math.PI / 2), mats.curtain); dome.scale.y = 0.55; dome.position.set(0, F + 1.75, mz); root.add(dome);
+    const mc = handCrossMesh(); mc.scale.setScalar(1.3); mc.position.set(0, F + 1.98, mz); root.add(mc); colliders.push([0, F + 0.9, mz, 1.15, 1.8, 1.15]);
+    G.lace.box(2.6, F + 0.42, ZE - 0.4, 1.3, 0.84, 0.55, W, 0.5); colliders.push([2.6, F + 0.42, ZE - 0.4, 1.32, 0.86, 0.58]);
+    for (let i = 0; i < 2; i++) { const u = umbrellaMesh([0xb08a1e, 0x8a1f3a][i], false); u.position.set(xi - 0.25, F, z0 + 0.5 + i * 0.25); u.rotation.z = 0.1; root.add(u); }
+    const ml = new THREE.PointLight(0xffe2b0, 0, 9, 1.6); ml.position.set(0, F + 2.8, mz - 0.4); root.add(ml); (root.userData as any).meqdesLight = ml; }
   // ---------------------------------------------------------------- lights: chandelier, ceiling fan, recessed lights
   const chg = new THREE.Group(); chg.position.set(0, ceilTop - 0.02, 1.2);
   const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.5, 6), mats.brass); stem.position.y = -0.25; chg.add(stem); const hub = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), mats.brass); hub.position.y = -0.55; chg.add(hub);
@@ -306,13 +342,15 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   const add = (g: Geo, mat: THREE.Material) => { if (g.count) { const m = g.mesh(mat, false); m.receiveShadow = true; root.add(m); } };
   add(panel, mats.panel); add(cream, mats.cream); add(paint, mats.paint); add(ceil, mats.ceil); add(wood, mats.wood); add(oak, mats.oak); add(plain, mats.plain); add(carpet, mats.carpet); add(runner, mats.runner); add(G.lobby, mats.lobby); add(G.band, mats.band); add(G.brocade, mats.brocade); add(G.dotted, mats.dotted); add(G.lace, mats.lace);
   // ---------------------------------------------------------------- places
-  const chanters = [new THREE.Vector3(2.0, F, 2.5), new THREE.Vector3(-2.2, F, 2.5), new THREE.Vector3(2.2, F, 3.4), new THREE.Vector3(-2.4, F, 3.4), new THREE.Vector3(1.9, F, 4.15), new THREE.Vector3(-2.0, F, 4.15), new THREE.Vector3(3.2, F, 3.0), new THREE.Vector3(-3.0, F, 3.9)];
+  const chanters = [new THREE.Vector3(2.0, F, 3.20), new THREE.Vector3(-2.2, F, 3.20), new THREE.Vector3(2.2, F, 4.10), new THREE.Vector3(-2.4, F, 4.10), new THREE.Vector3(1.9, F, 4.85), new THREE.Vector3(-2.0, F, 4.85), new THREE.Vector3(3.2, F, 3.70), new THREE.Vector3(-3.0, F, 4.60)];
   const spots: Record<string, THREE.Vector3> = {
-    street: new THREE.Vector3(0, 0, -14.5), stairsBottom: new THREE.Vector3(0, 0, -12.4), landing: new THREE.Vector3(0, FL, -9.3), vestibule: new THREE.Vector3(0, FL, -7.9), shoeRack: new THREE.Vector3(-1.75, FL, -6.35), shoeRackR: new THREE.Vector3(-1.9, FL, -7.2),
-    naveDoor: new THREE.Vector3(0, F, -5.9), aisleBack: new THREE.Vector3(0, F, -4.4), aisleMid: new THREE.Vector3(0, F, 0), aisleFront: new THREE.Vector3(0, F, 3.9), candleL: new THREE.Vector3(3.1, F, PZ - 2.6), candleR: new THREE.Vector3(-2.8, F, PZ - 2.95),
-    censer: new THREE.Vector3(-2.6, platY, PZ - 1.05), camera: new THREE.Vector3(1.6, F, -4.6), kebero: new THREE.Vector3(-0.85, F, 2.5), curtain: new THREE.Vector3(0, platY, PZ - 0.7), priest: new THREE.Vector3(0.8, F, 4.2), deacon: new THREE.Vector3(0.75, platY, PZ - 1.1),
-    umbrellas: new THREE.Vector3(xi - 1.0, F, 1.9), lectern: new THREE.Vector3(-3.85, F, PZ - 2.55), bell: new THREE.Vector3(0.75, platY, PZ - 1.1), mahlet: new THREE.Vector3(0.9, F, 3.3), staffs: new THREE.Vector3(3.2, F, 2.15),
+    street: new THREE.Vector3(0, 0, -14.5), stairsBottom: new THREE.Vector3(0, 0, -12.4), landing: new THREE.Vector3(0, FL, -9.3), vestibule: new THREE.Vector3(0, FL, -7.9), shoeRack: new THREE.Vector3(-1.95, FL, -6.2), shoeRackR: new THREE.Vector3(-1.9, FL, -7.3),
+    naveDoor: new THREE.Vector3(0, F, -5.9), aisleBack: new THREE.Vector3(0, F, -4.3), aisleMid: new THREE.Vector3(0, F, 0), aisleFront: new THREE.Vector3(0, F, 4.6), candleL: new THREE.Vector3(3.1, F, PZ - 2.6), candleR: new THREE.Vector3(-2.8, F, PZ - 2.95),
+    censer: new THREE.Vector3(-2.6, platY, PZ - 1.05), camera: new THREE.Vector3(0.4, F, -4.5), kebero: new THREE.Vector3(-0.85, F, 3.2), curtain: new THREE.Vector3(0, platY, PZ - 0.7), priest: new THREE.Vector3(0.8, F, 4.9), deacon: new THREE.Vector3(0.75, platY, PZ - 1.1),
+    umbrellas: new THREE.Vector3(xi - 1.0, F, frontZ + 0.6), lectern: new THREE.Vector3(-3.85, F, PZ - 2.55), bell: new THREE.Vector3(0.75, platY, PZ - 1.1), mahlet: new THREE.Vector3(0.9, F, 4.0), staffs: new THREE.Vector3(3.2, F, frontZ + 0.75),
   };
+  spots.meqdes = new THREE.Vector3(-4.1, F, PZ + 1.0);
+  for (const c of colliders) { c[0] *= kx; c[3] *= kx; } for (const v of [...Object.values(spots), ...men, ...women, ...chanters]) v.x *= kx;
   let lightLevel = 0;
   const refs: InteriorRefs = {
     colliders, spots, candles, candleLights, chandelier, censer, censerLit: false, camLed, streamOn: false, shoes, umbrellas, keberos: [k1, k2], standing: { men, women, chanters }, naveDoorWant: 0,
@@ -323,7 +361,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
       const fl = 0.85 + 0.15 * Math.sin(t * 11) * Math.sin(t * 7.3);
       candleLights[0].intensity = nL * 1.6 * fl; candleLights[1].intensity = nR * 1.6 * (1.7 - fl);
       for (const c of candles) if (c.lit) { c.flame.scale.y = 1.7 + 0.4 * Math.sin(t * 13 + c.pos.x * 30); c.flame.position.x = c.pos.x + Math.sin(t * 9 + c.pos.x * 20) * 0.003; }
-      chandelier.intensity = 40 * lightLevel; fill.intensity = 12 * lightLevel; vest.intensity = 9 * Math.max(0.4, lightLevel);
+      chandelier.intensity = 40 * lightLevel; ((root.userData as any).meqdesLight as THREE.PointLight).intensity = 6 + 10 * lightLevel; fill.intensity = 12 * lightLevel; vest.intensity = 9 * Math.max(0.4, lightLevel);
       mats.bulb.emissiveIntensity = 0.2 + 1.6 * lightLevel; mats.ceil.emissiveIntensity = 0.3 + 0.5 * lightLevel;
       fanBlades.rotation.y = t * 2.4;
       censer.rotation.z = Math.sin(t * 1.6) * (refs.censerLit ? 0.12 : 0.02);
