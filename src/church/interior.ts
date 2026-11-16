@@ -276,7 +276,7 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   for (const sx of [-1, 1]) wall(cream, sx * lx, lz0, sx * lx, NZ0, [-sx, 0], FL, lTop, [], W, 1);
   const lwin = (sx: number) => ({ at: sx * (TW + WINGX) / 2, w: 0.56, y0: FL + 0.5, y1: FL + 2.05, peak: FL + 2.42 });
   const cwin = (sx: number) => ({ at: sx * 3.6 / kx, w: 0.5 / kx, y0: FL + 1.15, y1: FL + 2.3, peak: FL + 2.55 });
-  wall(cream, -lx, lz0, lx, lz0, [0, 1], FL, lTop, [{ at: (sx0 - vx) / 2, w: sx0 + vx, y0: FL, y1: vTop }, cwin(-1), cwin(1)], W, 1);
+  wall(cream, -lx, lz0, lx, lz0, [0, 1], FL, lTop, [{ at: 0, w: 2 * vx, y0: FL, y1: vTop }, cwin(-1), cwin(1)], W, 1);
   const vwin = (sx: number) => ({ at: sx * 1.46 / kx, w: 0.52 / kx, y0: FL + 1.08, y1: FL + 2.5, peak: FL + 2.72 });
   // the small entry vestibule inside the blue front block: the outside door and a tall window either side of it
   for (const sx of [-1, 1]) wall(cream, sx * vx, vz0, sx * vx, lz0, [-sx, 0], FL, vTop, [], W, 1);
@@ -301,13 +301,11 @@ export function buildInterior(ch: Church, engine: Engine): InteriorRefs {
   }
   plain.box(sx0 - 0.012, FL + 1.22, sz0 + 0.42, 0.02, 0.16, 0.2, 0x151515);                                              // black plate on the left wall
   for (const sx of [-1, 1]) { const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.27), new M({ color: 0xf6f6f2, roughness: 0.9 })); void paper; void sx; }
-  // left of the steps: the stairwell's left wall runs on to the front wall; in that stretch, before the first step, is the red-framed
-  // basement doorway. The basement stair behind it runs along the front wall under the left-most front window.
-  { const wx = sx0 + 0.12, dz = (lz0 + sz0) / 2 + 0.02, dw = Math.min(0.82, sz0 - lz0 - 0.14);
-    wall(cream, wx - 0.12, lz0, wx - 0.12, sz0, [-1, 0], FL, lTop, [{ at: dz, w: dw, y0: FL, y1: FL + 2.02 }], W, 1);
-    trimOutline(plain, (s2, y) => [wx - 0.134, y, s2], [[dz - dw / 2 - 0.05, FL], [dz - dw / 2 - 0.05, FL + 2.08], [dz + dw / 2 + 0.05, FL + 2.08], [dz + dw / 2 + 0.05, FL]], 0.11, redFrame);
-    plain.box(wx + 0.5, FL + 1.01, dz, 0.02, 2.02, dw, 0x15171a); for (const s3 of [-1, 1]) plain.box(wx + 0.2, FL + 1.01, dz + s3 * dw / 2, 0.62, 2.02, 0.02, 0xb8b4a8); plain.box(wx + 0.2, FL + 0.3, dz, 0.62, 0.02, dw, 0x2a2a2c);
-    colliders.push([(wx - 0.12 + lx) / 2, FL + 1.5, (lz0 + NZ0) / 2, lx - wx + 0.12, 3, NZ0 - lz0]); }
+  // left of the steps: the wall facing the entrance with the red-framed basement doorway (stairs going down in the dark behind it)
+  wall(cream, sx0, sz0, lx, sz0, [0, -1], FL, lTop, [{ at: 1.72, w: 0.86, y0: FL, y1: FL + 2.02 }], W, 1);
+  trimOutline(plain, (s2, y) => [s2, y, sz0 - 0.014], [[1.24, FL], [1.24, FL + 2.08], [2.2, FL + 2.08], [2.2, FL]], 0.11, redFrame);
+  plain.box(1.72, FL + 1.01, sz0 + 0.5, 0.86, 2.02, 0.02, 0x15171a); for (const sx of [-1, 1]) plain.box(1.72 + sx * 0.43, FL + 1.01, sz0 + 0.25, 0.02, 2.02, 0.5, 0xb8b4a8); plain.box(1.72, FL + 0.3, sz0 + 0.3, 0.86, 0.02, 0.6, 0x2a2a2c);
+  colliders.push([(sx0 + lx) / 2, FL + 1.5, (sz0 + NZ0) / 2, lx - sx0, 3, NZ0 - sz0]);
   // right of the steps: the stairwell wall's outer face, the white post, the alcove
   wall(cream, -sx0 - 0.12, sz0, -sx0 - 0.12, NZ0, [-1, 0], FL, lTop, [], W, 1); wall(cream, -sx0 - 0.12, sz0, -sx0, sz0, [0, -1], FL, lTop, [], W, 1); wall(cream, -lx, NZ0, -sx0, NZ0, [0, -1], FL, lTop, [], W, 1);
   plain.box(-sx0 - 0.06, FL + 1.375, sz0 - 0.02, 0.17, 2.75, 0.17, 0xf2efe4);

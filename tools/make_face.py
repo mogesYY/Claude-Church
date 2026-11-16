@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Projects reference/isaac/isaac_01.webp onto the game's head UV layout (equirect, front = u 0.25).
-Run:  python3 -I tools/make_face.py [isaac|zekariah]   ->  public/char/<name>_face.png  (and prints the average skin colour)
+Run:  python3 -I tools/make_face.py [isaac|zekariah|nigerte|nebs]   ->  public/char/<name>_face.png  (and prints the average skin colour)
 Landmarks were measured by hand on the photo: pupils (340,692) and (487,690), lip seam y=862, chin y=965."""
 import math, sys
 from PIL import Image, ImageFilter
@@ -11,7 +11,9 @@ PXM = 147 / 0.063                          # photo pixels per metre (interpupill
 CX_PX, EYE_PY = 413.5, 691.0
 WHO = sys.argv[1] if len(sys.argv) > 1 else 'isaac'
 CFG = {'isaac': ('reference/isaac/isaac_01.webp', 147, 413.5, 691.0, [(730, 790, 290, 350), (730, 790, 480, 540), (570, 610, 360, 470)]),
-       'zekariah': ('reference/zekariah/zek_3057.jpg', 200, 515.0, 655.0, [(760, 820, 340, 400), (760, 820, 640, 700), (520, 560, 450, 580)])}[WHO]
+       'zekariah': ('reference/zekariah/zek_3057.jpg', 200, 515.0, 655.0, [(760, 820, 340, 400), (760, 820, 640, 700), (520, 560, 450, 580)]),
+       'nigerte': ('reference/deacons/nigerte_front.jpg', 360, 755.0, 930.0, [(1080, 1160, 480, 560), (1080, 1160, 950, 1030), (730, 790, 650, 850)]),
+       'nebs': ('reference/deacons/nebs_front.jpg', 315, 748.0, 1102.0, [(1330, 1400, 520, 600), (1330, 1400, 900, 980), (935, 975, 650, 850)])}[WHO]
 PXM = CFG[1] / 0.063; CX_PX, EYE_PY = CFG[2], CFG[3]
 src = np.asarray(Image.open(CFG[0]).convert('RGB')).astype(np.float32)
 sh, sw = src.shape[:2]

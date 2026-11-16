@@ -405,3 +405,8 @@ export function makeIsaac(outfit: Outfit = 'netela', moustache = true, photo: HT
 export function makeZek(outfit: Outfit = 'netela', photo: HTMLImageElement | null = null): Human {
   return new Human({ seed: 23, height: 1.78, build: 1.0, skin: photo ? 0xad775b : 0x8a5a3a, outfit, hair: 'afro', moustache: false, photo, shirt: 0xf2f0ea, pants: 0x1b1d24 });
 }
+
+/** a young deacon with a white turban (Nigerte, Nebs): photographed face, own height and skin tone */
+export function makeDeacon(outfit: Outfit, photo: HTMLImageElement | null, seed: number, height: number, skin: number): Human {
+  return new Human({ seed, height, build: 0.92, skin, outfit, hair: 'covered', turban: true, moustache: false, photo, shirt: 0xf2f0ea, pants: 0xf0eee6, headScale: 1.06 });
+}

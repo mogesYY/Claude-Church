@@ -2,6 +2,17 @@
 
 **Live link:** https://mogesyy.github.io/Claude-Church/
 
+## Pass 7 (latest)
+
+- **Four deacons, always together:** Isaac, Zekariah, Nigerte and Nebs, each with his own photographed face. **Q** cycles, **1–4** picks one directly; the others follow on foot and ride in the car.
+- **Zekariah:** the demon form is now a black, winged, horned figure with burning eyes and a red glow, not a tinted human.
+- **Nigerte:** when the demon appears he grows to twenty feet. Controlling him, four blows (**E**) subdue the demon; nisiha with the Qesis still works too.
+- **Nebs:** in deacon vestments, outside the church, he takes up the cross and bell, rises off the ground in a ring of flame with a halo, and a choir joins in. All four vest for the Kidase in level 1; **O** changes vestments in free roam.
+- **Isaac:** arrow keys **Up, Up, Down, Left** — everything on the map except the church disappears, holy fire rings the church, trumpets sound and all four rise. The same code restores the world.
+- **Sound:** **M** turns all sound off and on. The constant car engine drone is removed. The choir and trumpets are synthesized because no recordings exist; drop `public/audio/sfx/angels.mp3` and `trumpets.mp3` in to replace them.
+- **Shoe room:** the basement doorway is back in the wall that faces the entrance, left of the steps.
+- The faces of all four are public files on the site, because the game has to load them. The photos themselves are not in the repository.
+
 ## Pass 6 (latest)
 
 - **Church at the surveyed footprint** (10.5 m x 18.5 m from the Manitoba Lands outline in the map data); front rebuilt from the close-up photo (narrow blue entry block before the cream gable, door-side windows, cream-wall windows, 2.2 m stairs); shoe room, back wall, stage, arches and ceiling re-measured against people in the photos. Heights remain photo estimates.

@@ -36,7 +36,7 @@ export class Game {
   debugCam: { pos: THREE.Vector3; look: THREE.Vector3 } | null = null;
   updaters: ((dt: number) => void)[] = [];
   focusPos = new THREE.Vector3();
-  park!: Park; facePhoto: HTMLImageElement | null = null; zekPhoto: HTMLImageElement | null = null; duo!: Duo; wantPause = false; private jump = false; private last = performance.now(); private waiters: (() => void)[] = []; private shaftT = 0; private wasInside = false; private lowFpsT = 0;
+  park!: Park; facePhoto: HTMLImageElement | null = null; zekPhoto: HTMLImageElement | null = null; photos: Record<string, HTMLImageElement | null> = {}; duo!: Duo; wantPause = false; private jump = false; private last = performance.now(); private waiters: (() => void)[] = []; private shaftT = 0; private wasInside = false; private lowFpsT = 0;
 
   async boot() {
     const canvas = document.getElementById('game') as HTMLCanvasElement; if (this.auto) document.body.classList.add('auto');
@@ -62,6 +62,7 @@ export class Game {
     // Isaac's face: his own front photo projected onto the head (public/char/isaac_face.png, built by tools/make_face.py)
     this.facePhoto = await new Promise<HTMLImageElement | null>((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = `${import.meta.env.BASE_URL}char/isaac_face.png`; setTimeout(() => res(null), 8000); });
     this.zekPhoto = await new Promise<HTMLImageElement | null>((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = `${import.meta.env.BASE_URL}char/zekariah_face.png`; setTimeout(() => res(null), 8000); });
+    for (const n of ['nigerte', 'nebs']) this.photos[n] = await new Promise<HTMLImageElement | null>((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = `${import.meta.env.BASE_URL}char/${n}_face.png`; setTimeout(() => res(null), 8000); });
     this.setOutfit('netela');
     this.shoePair = new THREE.Group(); for (const dx of [-0.07, 0.07]) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.27), new THREE.MeshStandardMaterial({ color: 0x18181a, roughness: 0.7 })); s.position.set(dx, 0.04, 0); this.shoePair.add(s); }
     this.shoePair.position.copy(this.church.toWorld(-2.1, CH.FL, -5.98)); this.shoePair.rotation.y = this.church.group.rotation.y; this.shoePair.visible = false; this.engine.scene.add(this.shoePair);

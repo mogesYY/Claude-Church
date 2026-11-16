@@ -59,7 +59,7 @@ export class Audio {
 
   // ---- loops ----
   setEngine(on: boolean, speed = 0, throttle = 0, slush = 0) {
-    const c = this.ctx; if (!c) return;
+    const c = this.ctx; if (!c || this.noSynth) return;   // the constant engine drone was removed at Isaac's request
     if (on && !this.engine) { const o = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(); o.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 300; g.gain.value = 0; o.connect(f); o2.connect(f); f.connect(g); g.connect(this.dry); o.start(); o2.start(); const tn = this.noise(true), tf = c.createBiquadFilter(), tire = c.createGain(); tf.type = 'bandpass'; tf.frequency.value = 900; tf.Q.value = 0.4; tire.gain.value = 0; tn.connect(tf); tf.connect(tire); tire.connect(this.dry); this.engine = { o, o2, g, f, tire }; }
     if (!this.engine) return; const e = this.engine, t = c.currentTime;
     if (!on) { e.g.gain.setTargetAtTime(0, t, 0.1); e.tire.gain.setTargetAtTime(0, t, 0.1); return; }
@@ -141,6 +141,22 @@ export class Audio {
   private pausedAll = false;
   pauseAll(p: boolean) { if (p === this.pausedAll) return; this.pausedAll = p; try { if (p) { window.speechSynthesis?.pause(); this.voiceEl?.pause(); this.chantEl?.pause(); this.musicEl?.pause(); this.ctx?.suspend(); } else { window.speechSynthesis?.resume(); this.voiceEl?.play().catch(() => {}); this.chantEl?.play().catch(() => {}); this.musicEl?.play().catch(() => {}); this.ctx?.resume(); } } catch { /* ignore */ } }
 
+  // ---- the two sounds made for the deacons' abilities (replace with recordings: audio/sfx/angels.mp3, audio/sfx/trumpets.mp3)
+  private angelEl: HTMLAudioElement | null = null; private angelNodes: { g: GainNode; os: OscillatorNode[] } | null = null;
+  angels(on: boolean) {
+    const c = this.ctx; if (this.angelEl) { this.angelEl.pause(); this.angelEl = null; } if (this.angelNodes && c) { const n = this.angelNodes; n.g.gain.setTargetAtTime(0, c.currentTime, 0.6); setTimeout(() => n.os.forEach((o) => o.stop()), 2500); this.angelNodes = null; }
+    if (!on || !c) return;
+    const synth = () => { if (this.angelNodes) return; const g = c.createGain(); g.gain.value = 0; g.gain.setTargetAtTime(0.16, c.currentTime, 1.5); const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 0.7; f.connect(g); g.connect(this.dry); const r = c.createGain(); r.gain.value = 0.9; g.connect(r); r.connect(this.wet);
+      const os: OscillatorNode[] = []; for (const fq of [293.66, 369.99, 440, 587.33, 739.99, 880]) for (const det of [-6, 5]) { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = fq; o.detune.value = det; const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = 4.6 + Math.random(); lg.gain.value = 3.5; l.connect(lg); lg.connect(o.frequency); const og = c.createGain(); og.gain.value = 0.08; o.connect(og); og.connect(f); o.start(); l.start(); os.push(o, l); }
+      this.angelNodes = { g, os }; };
+    const a = new window.Audio(`${import.meta.env.BASE_URL}audio/sfx/angels.mp3`); a.loop = true; a.volume = Math.min(1, 0.8 * this.volume); a.addEventListener('error', synth); a.play().then(() => { this.angelEl = a; }).catch(synth);
+  }
+  trumpets() {
+    const c = this.ctx; if (!c) return;
+    const synth = () => { const t0 = c.currentTime + 0.05; const seq: [number, number, number][] = [[392, 0, 0.35], [392, 0.4, 0.2], [392, 0.62, 0.2], [523.25, 0.85, 0.7], [659.25, 1.6, 0.5], [783.99, 2.15, 1.6]];
+      for (const [fq, at, len] of seq) for (const m of [1, 1.5, 2]) { const o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(); o.type = 'sawtooth'; o.frequency.value = fq * (m === 1.5 ? 1.2599 : m); f.type = 'lowpass'; f.frequency.setValueAtTime(500, t0 + at); f.frequency.linearRampToValueAtTime(2600, t0 + at + 0.09); f.Q.value = 2; g.gain.setValueAtTime(0.0001, t0 + at); g.gain.linearRampToValueAtTime(m === 1 ? 0.14 : 0.06, t0 + at + 0.05); g.gain.setValueAtTime(m === 1 ? 0.12 : 0.05, t0 + at + len); g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + len + 0.35); o.connect(f); f.connect(g); this.out(g, 0.6); o.start(t0 + at); o.stop(t0 + at + len + 0.5); } };
+    const a = new window.Audio(`${import.meta.env.BASE_URL}audio/sfx/trumpets.mp3`); a.volume = Math.min(1, this.volume); a.addEventListener('error', synth); a.play().catch(synth);
+  }
   get chantPlaying() { return this.chantName !== ''; }
   nextRadio(): string { this.radioIndex++; if (this.radioIndex >= this.radioSlots.length) { this.radioIndex = -1; this.chant(null); return ''; } const n = this.radioSlots[this.radioIndex]; this.chant(n, 0.6); return n; }
 

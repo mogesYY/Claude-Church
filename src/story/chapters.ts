@@ -97,7 +97,7 @@ async function kidan(c: Ctx) {
   await c.interact(c.spot('camera'), 'Start the @EOTCBrandon stream', 'ስርጭቱን ጀምር', 1.9); R.streamOn = true; g.hud.toast(c.text('Livestream is on — the camera above the doors is live', 'ቀጥታ ስርጭት ተጀምሯል'));
   g.audio.music(null);
   // ---- the Kidase ----
-  await c.fadeOut(0.8);
+  await c.fadeOut(0.8); g.setOutfit('deacon');   // all four deacons vest for the Kidase
   const people = c.congregation(g.engine.quality === 'low' ? 14 : g.engine.quality === 'ultra' ? 48 : 40, 40);
   const chanters = mahlet(c, 4);
   qes.place(c.spot('curtain'), ch.faceYaw(0, -1)); qes.human.hold('R', null); const qc = censerMesh(); qes.human.hold('R', qc, [0, -0.02, 0.03]); (qc.getObjectByName('ember') as any).material.emissiveIntensity = 2.5; qes.act('censer');
@@ -118,7 +118,7 @@ async function kidan(c: Ctx) {
   for (let i = 0; i < 3; i++) { await c.interact(c.spot('mahlet'), `Keep time with the staff (${i + 1}/3)`, `መቋሚያውን በምት ምታ (${i + 1}/3)`, 2.2, null); g.isaac.play('bow', 0.9); await c.wait(0.9); g.isaac.play('chant', 1, true); }
   await c.talk('c2.qes.mahlet');
   await c.cut(async () => {
-    await c.fadeOut(1.2); g.audio.chant(null); g.isaac.hold('R', null); g.isaac.stop();
+    await c.fadeOut(1.2); g.audio.chant(null); g.isaac.hold('R', null); g.isaac.stop(); g.setOutfit('netelaPuffer');
     g.weather.snowfall = 0.15; g.engine.setDateTime(1, 11, 11.6); g.weather.smokeSources = [];
     for (const n of chanters) n.human.hold('R', null); c.place(c.L(-1.6, 0.02, -15.5), ch.faceYaw(0.3, 1)); g.isaac.play('talk', 1, true);
     exodus(c, [...people, ...chanters]); g.audio.music('festive');

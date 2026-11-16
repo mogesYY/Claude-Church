@@ -12,7 +12,7 @@ const S: Record<string, [string, string]> = {
   summer: ['Summer', 'በጋ'], autumn: ['Autumn', 'መኸር'], winter: ['Winter', 'ክረምት'], spring: ['Spring', 'ጸደይ'],
   radio: ['Radio', 'ሬዲዮ'], radioOff: ['Radio off', 'ሬዲዮ ጠፍቷል'], church: ['Medhane Alem Church', 'መድኃኔ ዓለም ቤተ ክርስቲያን'],
   loading: ['Loading the neighbourhood…', 'ሰፈሩ በመጫን ላይ…'], clickToPlay: ['Click to play', 'ለመጫወት ይጫኑ'],
-  controls: ['WASD move · Mouse look · Shift run · Space jump/brake · E interact · F car · Tab phone · L lights · V wipers · R/T radio · Q switch deacon · G rage', 'WASD መንቀሳቀስ · ማውስ መመልከት · Shift መሮጥ · E ተግባር · F መኪና · Tab ስልክ'],
+  controls: ['WASD move · Mouse look · Shift run · Space jump/brake · E interact · F car · Tab phone · L lights · V wipers · R/T radio · Q or 1-4 switch deacon · G rage · M sound', 'WASD መንቀሳቀስ · ማውስ መመልከት · Shift መሮጥ · E ተግባር · F መኪና · Tab ስልክ'],
   sanctuary: ['Only the clergy enter the Meqdes.', 'ወደ መቅደስ የሚገቡት ካህናት ብቻ ናቸው።'],
   shoesFirst: ['Remove your shoes before entering the church.', 'ወደ ቤተ ክርስቲያን ከመግባትዎ በፊት ጫማዎን ያውልቁ።'],
   pathTrace: ['Ray-traced render', 'ሬይ-ትሬስ ምስል'], capture: ['Save photo', 'ፎቶ አስቀምጥ'], exitPhoto: ['Exit photo mode', 'ከፎቶ ሁነታ ውጣ'], samples: ['samples', 'ናሙናዎች'],
