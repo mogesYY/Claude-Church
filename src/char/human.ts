@@ -7,7 +7,7 @@ export type Outfit = 'netela' | 'netelaPuffer' | 'deacon' | 'casual' | 'winter' 
 export type HairStyle = 'fade' | 'short' | 'grey' | 'bald' | 'afro' | 'covered';
 export interface HumanOpts {
   seed?: number; height?: number; build?: number; skin?: number; outfit?: Outfit; hair?: HairStyle; moustache?: boolean; beard?: number | null;
-  female?: boolean; photo?: HTMLImageElement | null; robeColor?: number; shirt?: number; pants?: number; headScale?: number; turban?: boolean; cap?: number | null; toque?: number | null; lod?: boolean;
+  female?: boolean; face?: FaceShape | null; photo?: HTMLImageElement | null; robeColor?: number; shirt?: number; pants?: number; headScale?: number; turban?: boolean; cap?: number | null; toque?: number | null; lod?: boolean;
 }
 
 const BONES = ['hips', 'spine', 'chest', 'neck', 'head', 'shoulderL', 'upperArmL', 'foreArmL', 'handL', 'shoulderR', 'upperArmR', 'foreArmR', 'handR', 'upLegL', 'legL', 'footL', 'upLegR', 'legR', 'footR', 'clothB', 'clothL', 'clothR'] as const;
@@ -119,26 +119,30 @@ function hairline(dx: number, ny: number, dz: number, style: HairStyle) {
   return (back + (side - back) * sb) * (1 - fs) + front * fs;
 }
 
-function headGeometry(female: boolean) {
-  const g = new THREE.SphereGeometry(1, 44, 32); const p = g.attributes.position; const v = new THREE.Vector3();
+/** per-person head shape, read off the front and profile photos (1 = the default head) */
+export interface FaceShape { width?: number; jaw?: number; chin?: number; cheek?: number; nose?: number; noseW?: number; lips?: number; brow?: number }
+function headGeometry(female: boolean, fs: FaceShape | null = null) {
+  const F = { width: 1, jaw: 1, chin: 1, cheek: 0, nose: 0.6, noseW: 1.15, lips: 1, brow: 1, ...(fs ?? {}) };
+  const g = new THREE.SphereGeometry(1, fs ? 88 : 44, fs ? 64 : 32); const p = g.attributes.position; const v = new THREE.Vector3();
   const bump = (d: THREE.Vector3, cx: number, cy: number, cz: number, s: number) => Math.exp(-((d.x - cx) ** 2 + (d.y - cy) ** 2 + (d.z - cz) ** 2) / (2 * s * s));
   for (let i = 0; i < p.count; i++) {
-    v.fromBufferAttribute(p, i).normalize(); const d = v.clone(); let rx = 0.068, ry = 0.118, rz = 0.094;
+    v.fromBufferAttribute(p, i).normalize(); const d = v.clone(); let rx = 0.068 * F.width, ry = 0.118, rz = 0.094;
     // slim oval face: jaw tapers to a defined chin
-    const jaw = smooth(-0.05, -0.95, d.y); rx *= 1 + 0.07 * Math.exp(-((d.y + 0.72) ** 2) / 0.05) * (d.z > -0.2 ? 1 : 0.3); rx *= 1 + 0.12 * smooth(-0.1, 0.5, d.y) * smooth(0.75, 0.1, d.z); rx *= 1 + 0.06 * Math.exp(-((d.y + 0.5) ** 2) / 0.03) * smooth(0.5, -0.1, d.z); rz *= 1 + 0.05 * smooth(0.2, 0.8, d.y) * smooth(-0.2, 0.6, d.z); rz *= 1 - 0.1 * jaw;
+    const jaw = smooth(-0.05, -0.95, d.y); rx *= 1 + 0.07 * Math.exp(-((d.y + 0.72) ** 2) / 0.05) * (d.z > -0.2 ? 1 : 0.3); rx *= 1 + 0.12 * smooth(-0.1, 0.5, d.y) * smooth(0.75, 0.1, d.z); rx *= 1 + 0.06 * Math.exp(-((d.y + 0.5) ** 2) / 0.03) * smooth(0.5, -0.1, d.z); rz *= 1 + 0.05 * smooth(0.2, 0.8, d.y) * smooth(-0.2, 0.6, d.z); rz *= 1 - 0.1 * jaw; rx *= 1 + (F.jaw - 1) * smooth(0.05, -0.6, d.y) * (d.z > -0.3 ? 1 : 0.35);
     if (d.z < 0) { rz *= 1 + 0.07 * smooth(0, -1, d.z) * smooth(-0.6, 0.5, d.y); }
-    let x = d.x * rx, y = d.y * ry, z = d.z * rz;
+    let x = d.x * rx, y = d.y * ry * (1 + (F.chin - 1) * smooth(-0.45, -1, d.y)), z = d.z * rz;
     const front = smooth(0.2, 0.8, d.z);
     z *= 1 - 0.035 * front;                                                    // flatter facial plane
     z += 0.0045 * (bump(d, 0.55, -0.2, 0.78, 0.2) + bump(d, -0.55, -0.2, 0.78, 0.2)); // high cheekbones
     x += 0.004 * (bump(d, 0.64, -0.2, 0.7, 0.2) - bump(d, -0.64, -0.2, 0.7, 0.2));
-    z += 0.0045 * bump(d, 0, 0.17, 0.95, 0.26) * (female ? 0.4 : 1);            // brow
+    z += 0.0045 * F.brow * bump(d, 0, 0.17, 0.95, 0.26) * (female ? 0.4 : 1);            // brow
+    z += 0.006 * F.cheek * (bump(d, 0.5, -0.45, 0.72, 0.24) + bump(d, -0.5, -0.45, 0.72, 0.24)); x += 0.005 * F.cheek * (bump(d, 0.7, -0.45, 0.55, 0.26) - bump(d, -0.7, -0.45, 0.55, 0.26));   // fuller lower cheeks
     z -= 0.0065 * (bump(d, 0.41, 0.0, 0.9, 0.13) + bump(d, -0.41, 0.0, 0.9, 0.13)); // eye sockets
     // straight nose: ridge growing to the tip, flared base
-    const ridge = Math.exp(-(d.x * d.x) / (2 * 0.07 * 0.07)) * smooth(0.14, -0.27, d.y) * smooth(-0.42, -0.3, d.y) * front;
-    z += 0.023 * ridge; z += 0.008 * Math.exp(-(d.x * d.x) / (2 * 0.2 * 0.2)) * bump(d, 0, -0.31, 0.95, 0.09);
+    const nsg = 0.07 * (0.75 + 0.25 * F.noseW); const ridge = Math.exp(-(d.x * d.x) / (2 * nsg * nsg)) * smooth(0.14, -0.27, d.y) * smooth(-0.42, -0.3, d.y) * front;
+    z += 0.023 * F.nose * ridge; z += 0.0075 * (0.5 + 0.5 * F.nose) * Math.exp(-(d.x * d.x) / (2 * (0.2 * F.noseW) ** 2)) * bump(d, 0, -0.31, 0.95, 0.09);
     // full lips
-    z += 0.0085 * Math.exp(-(d.x * d.x) / (2 * 0.2 * 0.2)) * (Math.exp(-((d.y + 0.57) ** 2) / (2 * 0.035 ** 2)) + 1.15 * Math.exp(-((d.y + 0.68) ** 2) / (2 * 0.045 ** 2))) * front;
+    z += 0.0085 * F.lips * Math.exp(-(d.x * d.x) / (2 * 0.2 * 0.2)) * (Math.exp(-((d.y + 0.57) ** 2) / (2 * 0.035 ** 2)) + 1.15 * Math.exp(-((d.y + 0.68) ** 2) / (2 * 0.045 ** 2))) * front;
     z -= 0.003 * Math.exp(-(d.x * d.x) / (2 * 0.2 * 0.2)) * Math.exp(-((d.y + 0.62) ** 2) / (2 * 0.012 ** 2)) * front;
     z += 0.005 * bump(d, 0, -0.88, 0.5, 0.18);       // chin
     p.setXYZ(i, x, y + 0.118, z + 0.012);
@@ -181,7 +185,7 @@ export class Human {
   bones = {} as Record<BoneName, THREE.Bone>;
   skeleton!: THREE.Skeleton;
   body!: THREE.SkinnedMesh; cloth: THREE.SkinnedMesh | null = null; head!: THREE.Mesh;
-  opts: Required<Omit<HumanOpts, 'beard' | 'cap' | 'toque' | 'robeColor' | 'photo'>> & { photo: HTMLImageElement | null; beard: number | null; cap: number | null; toque: number | null; robeColor: number | null };
+  opts: Required<Omit<HumanOpts, 'beard' | 'cap' | 'toque' | 'robeColor' | 'photo' | 'face'>> & { face: FaceShape | null; photo: HTMLImageElement | null; beard: number | null; cap: number | null; toque: number | null; robeColor: number | null };
   // animation state
   phase = 0; speed = 0; action = ''; actionT = 0; actionDur = 1; actionHold = false; private actW = 0; private prevAction = '';
   private clothVel = new THREE.Vector3(); private clothAng = new THREE.Vector2(); private clothAngV = new THREE.Vector2(); private lastPos = new THREE.Vector3(); private lastYaw = 0;
@@ -195,7 +199,7 @@ export class Human {
     this.opts = {
       seed, height: o.height ?? 1.8, build: o.build ?? 1, skin: o.skin ?? 0x5a3420, outfit, hair: o.hair ?? 'short', moustache: o.moustache ?? false, beard: o.beard ?? null,
       female: o.female ?? false, robeColor: o.robeColor ?? null, shirt: o.shirt ?? [0x2a2f38, 0x5a6a78, 0x7a3a34, 0x3a5a48, 0xd8d4c8, 0x444a66][Math.floor(r() * 6)], pants: o.pants ?? [0x23262c, 0x2a3348, 0x3a3a3c, 0x4a4234][Math.floor(r() * 4)],
-      photo: o.photo ?? null, headScale: o.headScale ?? 1, turban: o.turban ?? false, cap: o.cap ?? null, toque: o.toque ?? null, lod: o.lod ?? false,
+      face: o.face ?? null, photo: o.photo ?? null, headScale: o.headScale ?? 1, turban: o.turban ?? false, cap: o.cap ?? null, toque: o.toque ?? null, lod: o.lod ?? false,
     };
     this.height = this.opts.height;
     this.build();
@@ -254,7 +258,7 @@ export class Human {
 
     // ---- head ----
     const hs = o.headScale;
-    this.head = new THREE.Mesh(headGeometry(o.female), new THREE.MeshStandardMaterial({ map: faceTexture({ skin: o.skin, hair: o.hair, moustache: o.moustache, female: o.female, seed: o.seed, beard: o.beard, photo: o.photo }), roughness: 0.58 }));
+    this.head = new THREE.Mesh(headGeometry(o.female, o.face), new THREE.MeshStandardMaterial({ map: faceTexture({ skin: o.skin, hair: o.hair, moustache: o.moustache, female: o.female, seed: o.seed, beard: o.beard, photo: o.photo }), roughness: 0.58 }));
     this.head.castShadow = true; this.head.scale.setScalar(hs); this.bones.head.add(this.head);
     const earM = new THREE.MeshStandardMaterial({ color: skin, roughness: 0.65 });
     for (const s of [1, -1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 8), earM); e.scale.set(0.4, 1.3, 0.85); e.position.set(s * 0.076 * hs, 0.1 * hs, -0.004); e.rotation.y = s * 0.35; this.bones.head.add(e); }
@@ -398,15 +402,20 @@ export class Human {
 
 /** Isaac — the player. Proportions and palette from reference/isaac/*. */
 export function makeIsaac(outfit: Outfit = 'netela', moustache = true, photo: HTMLImageElement | null = null): Human {
-  return new Human({ seed: 11, height: 1.84, build: 0.9, skin: photo ? 0xa2604a : 0x7a4a30, outfit, hair: 'fade', moustache, photo, shirt: 0x1d1e22, pants: 0x1f232b, toque: outfit === 'winter' ? 0x1c1c20 : null });
+  return new Human({ seed: 11, height: 1.84, build: 0.9, skin: photo ? 0xa2604a : 0x7a4a30, outfit, hair: 'fade', moustache, photo, face: { width: 0.97, jaw: 0.9, chin: 1.08, cheek: 0, nose: 0.5, noseW: 1.1, lips: 0.9 }, shirt: 0x1d1e22, pants: 0x1f232b, toque: outfit === 'winter' ? 0x1c1c20 : null });
 }
 
 /** Deacon Zekariah: his own photographed face (public/char/zekariah_face.png), rounder afro, a little shorter than Isaac */
 export function makeZek(outfit: Outfit = 'netela', photo: HTMLImageElement | null = null): Human {
-  return new Human({ seed: 23, height: 1.78, build: 1.0, skin: photo ? 0xad775b : 0x8a5a3a, outfit, hair: 'afro', moustache: false, photo, shirt: 0xf2f0ea, pants: 0x1b1d24 });
+  return new Human({ seed: 23, height: 1.78, build: 1.0, skin: photo ? 0xad775b : 0x8a5a3a, outfit, hair: 'afro', moustache: false, photo, face: { width: 1.1, jaw: 1.22, chin: 1.02, cheek: 0.7, nose: 0.42, noseW: 1.55, lips: 1.05, brow: 0.8 }, shirt: 0xf2f0ea, pants: 0x1b1d24 });
 }
 
 /** a young deacon with a white turban (Nigerte, Nebs): photographed face, own height and skin tone */
-export function makeDeacon(outfit: Outfit, photo: HTMLImageElement | null, seed: number, height: number, skin: number): Human {
-  return new Human({ seed, height, build: 0.92, skin, outfit, hair: 'covered', turban: true, moustache: false, photo, shirt: 0xf2f0ea, pants: 0xf0eee6, headScale: 1.06 });
+export function makeDeacon(outfit: Outfit, photo: HTMLImageElement | null, seed: number, height: number, skin: number, face: FaceShape | null = null, turbanH = 1): Human {
+  const h = new Human({ seed, height, build: 0.92, skin, outfit, hair: 'covered', turban: true, moustache: false, photo, face: face ?? {}, shirt: 0xf2f0ea, pants: 0xf0eee6, headScale: 1.06 });
+  // the tall wound turban from the photos: a full dome of wrapped bands sitting low on the brow, over the small priest-style one
+  const tm = new THREE.MeshStandardMaterial({ color: 0xf4f2ea, roughness: 0.95 }); const tg = new THREE.Group(); const H = 0.085 * turbanH;
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(0.098, 28, 18), tm); dome.scale.set(1.02, H / 0.098 * 1.25, 1.14); dome.position.set(0, 0.2 + H * 0.55, -0.008); tg.add(dome);
+  for (let k = 0; k < 6; k++) { const t = k / 5; const band = new THREE.Mesh(new THREE.TorusGeometry(0.093 * (1 - 0.22 * t * t), 0.017, 8, 30), tm); band.rotation.set(Math.PI / 2 + (k % 2 ? 0.16 : -0.14), 0, k * 0.5); band.scale.set(1.02, 1.14, 1); band.position.set(0, 0.185 + t * H * 1.25, -0.008); tg.add(band); }
+  tg.traverse((o) => { (o as THREE.Mesh).castShadow = true; }); h.bones.head.add(tg); return h;
 }

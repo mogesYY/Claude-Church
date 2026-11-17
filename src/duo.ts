@@ -44,7 +44,7 @@ export class Duo {
     if (e.code.startsWith('Arrow')) { if (this.codeT <= 0) this.code = []; this.code.push(e.code.slice(5)); this.codeT = 2.5; if (this.code.length > 4) this.code.shift(); if (this.code.join() === 'Up,Up,Down,Left') { this.code = []; this.setRapture(!this.rapture); } }
   }
   make(who: Who, o: Outfit): Human {
-    const g = this.g; const h = who === 'isaac' ? makeIsaac(o, g.save.data.moustache, g.facePhoto) : who === 'zek' ? makeZek(o, g.zekPhoto) : who === 'nigerte' ? makeDeacon(o, g.photos.nigerte ?? null, 31, 1.5, 0x6f4d40) : makeDeacon(o, g.photos.nebs ?? null, 37, 1.6, 0x5e463c);
+    const g = this.g; const h = who === 'isaac' ? makeIsaac(o, g.save.data.moustache, g.facePhoto) : who === 'zek' ? makeZek(o, g.zekPhoto) : who === 'nigerte' ? makeDeacon(o, g.photos.nigerte ?? null, 31, 1.5, 0x90644f, { width: 1.14, jaw: 1.3, chin: 0.9, cheek: 1.4, nose: 0.4, noseW: 1.5, lips: 1.05, brow: 0.6 }, 1.15) : makeDeacon(o, g.photos.nebs ?? null, 37, 1.6, 0x80604f, { width: 0.95, jaw: 0.8, chin: 1.12, cheek: 0.1, nose: 0.45, noseW: 1.15, lips: 0.9, brow: 0.6 }, 1.75);
     if (who === 'nigerte' && o !== 'deacon') { const head = h.bones.head; h.root.traverse((ob) => { const m = (ob as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined; if (!m || !m.color) return; let p: THREE.Object3D | null = ob; while (p) { if (p === head) return; p = p.parent; } const c = m.color; if (c.r > 0.75 && c.g > 0.75 && c.b > 0.7) { const mm = m.clone(); mm.color.setHex(0x8cc9ea); (ob as THREE.Mesh).material = mm; } }); }   // his sky-blue gabi
     if (who === 'zek' && this.demon) this.demonize(h, true); return h;
   }
